@@ -39,13 +39,13 @@ async def command_start_handler(message: Message) -> None:
     Этот обработчик получает сообщения с командой '/start'
     """
     id_telegram = message.from_user.id
-    name_telegram = message.from_user.first_name
-    first_name_telegram = message.from_user.last_name
+    first_name_telegram = message.from_user.first_name
+    last_name_telegram = message.from_user.last_name
     username_telegram = message.from_user.username
 
     data = {
         "id_telegram": id_telegram,
-        "name_telegram": name_telegram,
+        "last_name_telegram": last_name_telegram,
         "first_name_telegram": first_name_telegram,
         "username_telegram": username_telegram
     }
