@@ -4,7 +4,7 @@ from aiogram.types import Message
 from loguru import logger
 import asyncio
 from config import layer_name_quickresto
-from keyboards.keyboards import main_menu_keyboard
+from keyboards.inline import main_menu_keyboard
 from services.database import write_to_db_registered_person
 from services.i18n import t
 from services.quickresto_api import print_client_info, auth, headers
