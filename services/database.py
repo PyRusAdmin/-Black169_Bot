@@ -15,6 +15,7 @@ class RegisteredPersons(Model):
     """База данных для хранения данных о пользователях Telegram и QuickResto"""
 
     id_telegram = IntegerField(unique=True)  # id пользователя в Telegram
+    id_quickresto = IntegerField(null=True)  # id пользователя в QuickResto
     phone_telegram = CharField(null=True)  # Номер телефона пользователя в Telegram
     last_name = CharField(null=True)  # Фамилия пользователя QuickResto
     first_name = CharField(null=True)  # Имя пользователя QuickResto
@@ -32,6 +33,7 @@ class RegisteredPersons(Model):
 def write_to_db_registered_person(data):
     """Запись данных о пользователе Telegram в базу данных, а так же из QuickResto"""
     id_telegram = data.get("id_telegram")  # идентификатор пользователя в Telegram
+    id_quickresto = data.get("id_quickresto")  # идентификатор пользователя в QuickResto
     last_name = data.get("last_name")  # фамилия пользователя QuickResto
     first_name = data.get("first_name")  # имя пользователя QuickResto
     patronymic_name = data.get("patronymic_name")  # отчество пользователя QuickResto
@@ -42,6 +44,7 @@ def write_to_db_registered_person(data):
         if db.is_closed():
             db.connect()
         person, created = RegisteredPersons.get_or_create(id_telegram=id_telegram, defaults={
+            "id_quickresto": id_quickresto,  # идентификатор пользователя в QuickResto
             "last_name": last_name,  # фамилия пользователя QuickResto
             "first_name": first_name,  # имя пользователя QuickResto
             "patronymic_name": patronymic_name,  # отчество пользователя QuickResto
@@ -50,6 +53,7 @@ def write_to_db_registered_person(data):
             "phone_telegram": phone_telegram,  # номер телефона пользователя в Telegram
         })
         if not created:
+            person.id_quickresto = id_quickresto  # идентификатор пользователя в QuickResto
             person.last_name = last_name  # фамилия пользователя QuickResto
             person.first_name = first_name  # имя пользователя QuickResto
             person.patronymic_name = patronymic_name  # отчество пользователя QuickResto

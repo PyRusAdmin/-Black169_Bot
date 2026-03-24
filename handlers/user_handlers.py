@@ -40,6 +40,7 @@ async def message_handler(message: Message) -> None:
 
         data = {
             "id_telegram": id_telegram,
+            "id_quickresto": data_customer.get("id"),
             "name_telegram": name_telegram,
             "first_name_telegram": first_name_telegram,
             "username_telegram": username_telegram,
@@ -50,7 +51,7 @@ async def message_handler(message: Message) -> None:
 
         # Сначала удаляем реплай-клавиатуру
         await message.answer(
-            text="✅ Регистрация завершена!",
+            text=t("registration-completed"),
             reply_markup=ReplyKeyboardRemove(remove_keyboard=True),
         )
         # Затем показываем главное меню
