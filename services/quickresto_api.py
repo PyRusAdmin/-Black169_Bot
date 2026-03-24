@@ -86,7 +86,7 @@ def print_client_info(layer_name_quickresto, phone_number, auth, headers):
 
 
 def create_client(name_customer, phone_customer, base_url, auth, headers):
-    """Создание нового клиента"""
+    """Создание нового клиента в QuickResto"""
     try:
         url = f"{base_url}/create"
 
@@ -105,9 +105,6 @@ def create_client(name_customer, phone_customer, base_url, auth, headers):
             ]
         }
 
-        # post - отправка запроса
-        # get - получение данных
-
         response = requests.post(
             url,
             params=query_params,
@@ -117,6 +114,18 @@ def create_client(name_customer, phone_customer, base_url, auth, headers):
             timeout=30
         )
         response.raise_for_status()
-        return response.json()
+        result = response.json()
+        
+        # Возвращаем данные созданного клиента
+        client_data = {
+            'id': result.get('id'),
+            'firstName': name_customer,
+            'phone': phone_customer
+        }
+        
+        logger.info(f"Клиент создан: id={client_data['id']}, имя={name_customer}, телефон={phone_customer}")
+        return client_data
+    
     except Exception as e:
         logger.exception(e)
+        return None
