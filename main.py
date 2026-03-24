@@ -3,80 +3,27 @@ import asyncio
 import logging
 import sys
 
-from aiogram import Bot, Dispatcher, F, Router
-
+from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
-from aiogram.types import Message
 from loguru import logger
 
-from config import TOKEN
-from keyboards.keyboards import contact_keyboard
-from services.database import create_tables, write_to_db_registered_person, write_to_db_start_person
-from services.i18n import t
+from handlers.admin_handlers import router as admin_handlers
+from handlers.user_handlers import router as user_handlers
+from handlers.handlers import router as handlers
 
-router = Router(name=__name__)
-
-dp = Dispatcher()
-dp.include_router(router)
+from config import TOKEN, dp
+from services.database import create_tables
 
 logger.add("log/log.log")
 
 
-@dp.message(CommandStart())
-async def command_start_handler(message: Message) -> None:
-    """
-    Этот обработчик получает сообщения с командой '/start'
-    """
-    id_telegram = message.from_user.id
-    first_name_telegram = message.from_user.first_name
-    last_name_telegram = message.from_user.last_name
-    username_telegram = message.from_user.username
-
-    data = {
-        "id_telegram": id_telegram,
-        "last_name_telegram": last_name_telegram,
-        "first_name_telegram": first_name_telegram,
-        "username_telegram": username_telegram
-    }
-    write_to_db_start_person(data)
-
-    await message.answer(
-        text=t("greet-message"),
-        reply_markup=contact_keyboard()
-    )
-
-
-@router.message(F.contact)
-async def message_handler(message: Message) -> None:
-    """
-    Обработчик сообщений
-    """
-    id_telegram = message.from_user.id
-    name_telegram = message.from_user.first_name
-    first_name_telegram = message.from_user.last_name
-    username_telegram = message.from_user.username
-    phone_telegram = message.contact.phone_number
-    logger.info(f"Пользователь отправил контакт: {phone_telegram}")
-
-    data = {
-        "id_telegram": id_telegram,
-        "name_telegram": name_telegram,
-        "first_name_telegram": first_name_telegram,
-        "username_telegram": username_telegram,
-        "phone_telegram": phone_telegram
-    }
-
-    write_to_db_registered_person(data)
-
-    await message.answer(
-        text=t("registered-message"),
-    )
-
-
 async def main() -> None:
     create_tables()  # Создание таблицы в базе данных
+
+    dp.include_router(handlers)  # Общие хендлеры
+    dp.include_router(user_handlers)  # Хендлеры для пользователей
+    dp.include_router(admin_handlers)  # Хендлеры для администраторов
 
     # Initialize Bot Instance with default properties that will be passed to all API calls
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
