@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from aiogram import F, Router
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 from loguru import logger
-import asyncio
+
 from config import layer_name_quickresto
 from keyboards.inline import main_menu_keyboard
 from services.database import write_to_db_registered_person
@@ -48,14 +48,12 @@ async def message_handler(message: Message) -> None:
 
         write_to_db_registered_person(data)
 
-        sent = await message.answer(
-            text=t("registered-message"),
-            disable_notification=True
+        # Сначала удаляем реплай-клавиатуру
+        await message.answer(
+            text="✅ Регистрация завершена!",
+            reply_markup=ReplyKeyboardRemove(remove_keyboard=True),
         )
-        await asyncio.sleep(5)  # Ждём 5 секунд
-        # Удаляем сообщение
-        await sent.delete()
-
+        # Затем показываем главное меню
         await message.answer(
             text=t("main-menu"),
             reply_markup=main_menu_keyboard(),
