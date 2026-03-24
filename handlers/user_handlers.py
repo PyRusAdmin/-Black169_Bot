@@ -40,10 +40,9 @@ async def message_handler(message: Message) -> None:
 
         data = {
             "id_telegram": id_telegram,
-            "id_quickresto": data_customer.get("id"),
-            "name_telegram": name_telegram,
-            "first_name_telegram": first_name_telegram,
-            "username_telegram": username_telegram,
+            "id_quickresto": data_customer.get("client_id"),
+            "last_name": data_customer.get("lastName"),
+            "first_name": data_customer.get("firstName"),
             "phone_telegram": phone_telegram
         }
 
