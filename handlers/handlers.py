@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 from loguru import logger
@@ -18,7 +18,7 @@ async def command_start_handler(message: Message) -> None:
     Этот обработчик получает сообщения с командой '/start'
     """
     logger.info(f"Получена команда /start от пользователя {message.from_user.id}")
-    
+
     id_telegram = message.from_user.id
     first_name_telegram = message.from_user.first_name
     last_name_telegram = message.from_user.last_name
@@ -39,7 +39,7 @@ async def command_start_handler(message: Message) -> None:
     )
 
 
-@router.message()
+@router.message(F.text)
 async def echo_handler(message: Message) -> None:
     """
     Обработчик всех сообщений для отладки
