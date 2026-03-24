@@ -1,31 +1,34 @@
 # The Black 169 — Telegram Bot
 
 Телеграм-бот для ресторана The Black 169. Позволяет гостям регистрироваться, отслеживать бонусы и получать информацию об
-акциях и мероприятиях.
+акциях и мероприятиях. Интегрирован с системой лояльности QuickResto.
 
 ## Возможности
 
 - Регистрация пользователей по номеру телефона
-- Начисление приветственных бонусов
+- Интеграция с QuickResto API
 - Отслеживание активности пользователей
+- Админ-панель для управления
 
 ## Структура проекта
 
 ```
-├── config.py              # Конфигурация (токен бота)
-├── main.py                # Точка входа, обработчики команд
-├── keyboards/
-│   └── keyboards.py      # Клавиатуры (кнопка отправки контакта)
+├── config.py              # Конфигурация (токен, dispatcher)
+├── main.py                # Точка входа
+├── handlers/
+│   ├── handlers.py        # Общие обработчики
+│   ├── user_handlers.py   # Обработчики пользователей
+│   └── admin_handlers.py  # Обработчики администраторов
 ├── services/
-│   ├── database.py       # Модели и функции для работы с БД
-│   └── i18n.py            # Локализация сообщений
+│   ├── database.py        # Модели и функции для работы с БД
+│   └── i18n.py            # Локализация
 ├── locales/
-│   └── ru.ftl             # Переводы (Fluent)
+│   └── ru.ftl            # Переводы (Fluent)
 ├── doc/
 │   └── Doc.md             # Документация
 ├── log/
-│   └── log.log            # Логи приложения
-└── database.db           # SQLite база данных
+│   └── log.log            # Логи
+└── database.db            # SQLite база данных
 ```
 
 ## База данных
@@ -37,58 +40,61 @@
 | Поле                | Тип      | Описание                   |
 |---------------------|----------|----------------------------|
 | id_telegram         | INTEGER  | Уникальный ID пользователя |
-| last_name_telegram  | TEXT     | Фамилия                    |
-| first_name_telegram | TEXT     | Имя                        |
-| username_telegram   | TEXT     | Username в Telegram        |
-| updated_at          | DATETIME | Дата последнего обновления |
+| last_name_telegram  | TEXT     | Фамилия (Telegram)         |
+| first_name_telegram | TEXT     | Имя (Telegram)             |
+| username_telegram   | TEXT     | Username (Telegram)        |
+| updated_at          | DATETIME | Дата обновления            |
 
 ### Таблица `registered_persons`
 
-Пользователи, отправившие номер телефона.
+Пользователи, отправившие номер телефона. Данные из Telegram и QuickResto.
 
-| Поле                | Тип      | Описание                   |
-|---------------------|----------|----------------------------|
-| id_telegram         | INTEGER  | Уникальный ID пользователя |
-| last_name_telegram  | TEXT     | Фамилия                    |
-| first_name_telegram | TEXT     | Имя                        |
-| username_telegram   | TEXT     | Username в Telegram        |
-| phone_telegram      | TEXT     | Номер телефона             |
-| updated_at          | DATETIME | Дата последнего обновления |
+| Поле            | Тип      | Описание                   |
+|-----------------|----------|----------------------------|
+| id_telegram     | INTEGER  | Уникальный ID пользователя |
+| phone_telegram  | TEXT     | Номер телефона             |
+| last_name       | TEXT     | Фамилия (QuickResto)       |
+| first_name      | TEXT     | Имя (QuickResto)           |
+| patronymic_name | TEXT     | Отчество (QuickResto)      |
+| birthday_user   | TEXT     | Дата рождения              |
+| user_bonus      | TEXT     | Бонусы                     |
+| date_of_visit   | DATETIME | Последнее посещение        |
+| updated_at      | DATETIME | Дата обновления            |
 
 ## Запуск
 
-1. Установить зависимости:
-    ```bash
-    pip install aiogram peewee python-dotenv loguru fluent-runtime
-    ```
+1. Зависимости:
 
-2. Создать файл `.env` с токеном бота:
-    ```
-    BOT_TOKEN=your_token_here
-    ```
+```bash
+pip install aiogram peewee python-dotenv loguru fluent-runtime
+```
 
-3. Запустить бота:
-    ```bash
-    python main.py
-    ```
+2. Файл `.env`:
 
-## Обработчики
+```
+BOT_TOKEN=your_token_here
+```
 
-| Команда/Событие   | Описание                                            |
-|-------------------|-----------------------------------------------------|
-| `/start`          | Приветственное сообщение + кнопка отправки телефона |
-| Отправка контакта | Регистрация пользователя, начисление бонусов        |
+3. Запуск:
+
+```bash
+python main.py
+```
+
+## Архитектура обработчиков
+
+```
+dp (Dispatcher)
+├── handlers        # Общие
+├── user_handlers   # Пользователи
+└── admin_handlers  # Администраторы
+```
 
 ## Логирование
-
-Логи сохраняются в:
 
 - `log/log.log` — файл
 - stdout — консоль
 
 ## Локализация
 
-Сообщения хранятся в формате Fluent в `locales/ru.ftl`. Добавление новых языков:
-
-1. Создать файл `locales/{lang}.ftl`
-2. Добавить локаль в `services/i18n.py`
+Fluent-формат в `locales/ru.ftl`.
