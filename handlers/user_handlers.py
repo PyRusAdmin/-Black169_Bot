@@ -16,12 +16,15 @@ async def message_handler(message: Message) -> None:
     """
     Обработчик сообщений
     """
-    id_telegram = message.from_user.id
-    name_telegram = message.from_user.first_name
-    first_name_telegram = message.from_user.last_name
-    username_telegram = message.from_user.username
-    phone_telegram = message.contact.phone_number
+    id_telegram = message.from_user.id  # получаем id пользователя
+    name_telegram = message.from_user.first_name  # получаем имя пользователя
+    first_name_telegram = message.from_user.last_name  # получаем фамилию пользователя
+    username_telegram = message.from_user.username  # получаем username пользователя
+    phone_telegram = message.contact.phone_number  # получаем контакт пользователя
     logger.info(f"Пользователь отправил контакт: {phone_telegram}")
+
+    phone_telegram = phone_telegram.replace("+", "")
+    logger.info(f"Проверяем контакт: {phone_telegram} в базе QuickResto")
 
     data_customer = print_client_info(
         layer_name_quickresto=layer_name_quickresto,
@@ -47,6 +50,9 @@ async def message_handler(message: Message) -> None:
         await message.answer(
             text=t("registered-message"),
         )
+
+
+
 
     else:
         logger.info(f"Пользователь не найден а базе QuickResto: {phone_telegram}")

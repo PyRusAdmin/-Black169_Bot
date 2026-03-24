@@ -9,6 +9,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
 from loguru import logger
+from rich.console import Console
 
 load_dotenv()
 
@@ -40,3 +41,7 @@ bot = Bot(
     default=DefaultBotProperties(parse_mode=ParseMode.HTML),  # Устанавливаем parse_mode для HTML
     session=session  # Устанавливаем сессию для бота и прокси
 )
+
+"""Красивый вывод данных в консоль"""
+
+console = Console()
