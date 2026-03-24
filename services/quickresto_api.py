@@ -38,40 +38,44 @@ def get_client_phone(layer_name_quickresto, phone_number, auth, headers):
 
 def print_client_info(layer_name_quickresto, phone_number, auth, headers):
     """Выводит информацию о клиенте по номеру телефона в формате JSON из QuickResto"""
-    result = get_client_phone(layer_name_quickresto, phone_number, auth, headers)
+    try:
+        result = get_client_phone(layer_name_quickresto, phone_number, auth, headers)
 
-    if result:
-        console.print_json(json.dumps(result, indent=2, ensure_ascii=False))
+        if result:
+            console.print_json(json.dumps(result, indent=2, ensure_ascii=False))
 
-    # Достаём список клиентов
-    customers = result.get('customers', [])
+        # Достаём список клиентов
+        customers = result.get('customers', [])
 
-    if customers:
-        customer = customers[0]  # Выбираем первого клиента в списке клиентов
-        # Личные данные
-        client_id = customer.get('id')
-        name = customer.get('firstName', '—')
-        surname = customer.get('lastName', '—')
-        guid = customer.get('customerGuid', '—')
+        if customers:
+            customer = customers[0]  # Выбираем первого клиента в списке клиентов
+            # Личные данные
+            client_id = customer.get('id')
+            name = customer.get('firstName', '—')
+            surname = customer.get('lastName', '—')
+            guid = customer.get('customerGuid', '—')
 
-        # Телефон — вложенный список
-        contacts = customer.get('contactMethods', [])
-        phone = contacts[0].get('value') if contacts else '—'
+            # Телефон — вложенный список
+            contacts = customer.get('contactMethods', [])
+            phone = contacts[0].get('value') if contacts else '—'
 
-        console.log(f"ID:      {client_id}")
-        console.log(f"Имя:     {name} {surname}")
-        console.log(f"Телефон: {phone}")
-        console.log(f"GUID:    {guid}")
+            console.log(f"ID:      {client_id}")
+            console.log(f"Имя:     {name} {surname}")
+            console.log(f"Телефон: {phone}")
+            console.log(f"GUID:    {guid}")
 
-        data = {
-            'client_id': client_id,
-            'firstName': name,
-            'lastName': surname,
-            'phone': phone,
-            'guid': guid
-        }
+            data = {
+                'client_id': client_id,
+                'firstName': name,
+                'lastName': surname,
+                'phone': phone,
+                'guid': guid
+            }
 
-        return data
+            return data
 
-    else:
-        logger.warning("Клиент не найден")
+        else:
+            logger.warning("Клиент не найден")
+            return None
+    except Exception as e:
+        logger.exception(f"Ошибка: {e}")
