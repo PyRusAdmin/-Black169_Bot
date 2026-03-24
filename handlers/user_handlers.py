@@ -7,7 +7,7 @@ from config import layer_name_quickresto
 from keyboards.inline import main_menu_keyboard
 from services.database import write_to_db_registered_person
 from services.i18n import t
-from services.quickresto_api import print_client_info, auth, headers
+from services.quickresto_api import print_client_info, auth, headers, create_client, base_url
 
 router = Router(name=__name__)
 
@@ -37,8 +37,13 @@ async def message_handler(message: Message) -> None:
 
         if data_customer is None:
             logger.warning(f"Пользователь не найден а базе QuickResto: {phone_telegram}")
-
-
+            create_client(
+                name_customer=name_telegram,
+                phone_customer=phone_telegram,
+                base_url=base_url,
+                auth=auth,
+                headers=headers
+            )
 
         phone_quickresto = data_customer.get("phone")
         if phone_telegram == phone_quickresto:
