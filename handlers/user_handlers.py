@@ -2,8 +2,9 @@
 from aiogram import F, Router
 from aiogram.types import Message
 from loguru import logger
-
+import asyncio
 from config import layer_name_quickresto
+from keyboards.keyboards import main_menu_keyboard
 from services.database import write_to_db_registered_person
 from services.i18n import t
 from services.quickresto_api import print_client_info, auth, headers
@@ -47,12 +48,18 @@ async def message_handler(message: Message) -> None:
 
         write_to_db_registered_person(data)
 
-        await message.answer(
+        sent = await message.answer(
             text=t("registered-message"),
+            disable_notification=True
         )
+        await asyncio.sleep(5)  # Ждём 5 секунд
+        # Удаляем сообщение
+        await sent.delete()
 
-
-
+        await message.answer(
+            text=t("main-menu"),
+            reply_markup=main_menu_keyboard(),
+        )
 
     else:
         logger.info(f"Пользователь не найден а базе QuickResto: {phone_telegram}")
