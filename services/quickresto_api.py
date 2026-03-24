@@ -115,17 +115,17 @@ def create_client(name_customer, phone_customer, base_url, auth, headers):
         )
         response.raise_for_status()
         result = response.json()
-        
+
         # Возвращаем данные созданного клиента
         client_data = {
             'id': result.get('id'),
             'firstName': name_customer,
             'phone': phone_customer
         }
-        
+
         logger.info(f"Клиент создан: id={client_data['id']}, имя={name_customer}, телефон={phone_customer}")
         return client_data
-    
+
     except Exception as e:
         logger.exception(e)
         return None

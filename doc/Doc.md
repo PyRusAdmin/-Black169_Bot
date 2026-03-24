@@ -6,8 +6,11 @@
 ## Возможности
 
 - Регистрация пользователей по номеру телефона
-- Интеграция с QuickResto API
-- Проверка клиентов по базе QuickResto
+- Автоматическое создание клиентов в QuickResto
+- Интеграция с QuickResto API (поиск, создание клиентов)
+- Главное меню с inline-кнопками
+- Просмотр бонусов, акций, мероприятий
+- Получение подарков и участие в «Колесе подарков»
 - Отслеживание активности пользователей
 - FSM для управления состояниями
 - Поддержка SOCKS5 прокси
@@ -20,21 +23,23 @@
 ├── main.py                # Точка входа
 ├── handlers/
 │   ├── handlers.py        # Общие обработчики (/start, echo)
-│   ├── user_handlers.py  # Обработчики пользователей (контакты)
+│   ├── user_handlers.py   # Обработчики пользователей (контакты, регистрация)
+│   ├── menu_handlers.py   # Обработчики главного меню (callbacks)
 │   └── admin_handlers.py # Обработчики администраторов
 ├── services/
 │   ├── database.py       # Модели и функции для работы с БД
-│   ├── i18n.py          # Локализация
+│   ├── i18n.py           # Локализация
 │   └── quickresto_api.py # Интеграция с QuickResto API
 ├── keyboards/
-│   └── keyboards.py     # Клавиатуры
+│   ├── keyboards.py       # Reply-клавиатуры (кнопка отправки контакта)
+│   └── inline.py         # Inline-клавиатуры (главное меню)
 ├── locales/
-│   └── ru.ftl           # Переводы (Fluent)
+│   └── ru.ftl            # Переводы (Fluent)
 ├── doc/
-│   └── Doc.md           # Документация
+│   └── Doc.md            # Документация
 ├── log/
-│   └── log.log          # Логи
-└── database.db          # SQLite база данных
+│   └── log.log           # Логи
+└── database.db            # SQLite база данных
 ```
 
 ## Конфигурация (.env)
@@ -71,6 +76,7 @@ PORT_PROXY=proxy_port
 | Поле            | Тип      | Описание                   |
 |-----------------|----------|----------------------------|
 | id_telegram     | INTEGER  | Уникальный ID пользователя |
+| id_quickresto   | INTEGER  | ID клиента в QuickResto    |
 | phone_telegram  | TEXT     | Номер телефона             |
 | last_name       | TEXT     | Фамилия (QuickResto)       |
 | first_name      | TEXT     | Имя (QuickResto)           |
@@ -85,14 +91,49 @@ PORT_PROXY=proxy_port
 ```
 dp (Dispatcher)
 ├── handlers        # Общие (/start, echo)
-├── user_handlers   # Пользователи (контакты)
+├── user_handlers   # Пользователи (контакты, регистрация)
+├── menu_handlers   # Главное меню (callbacks)
 └── admin_handlers  # Администраторы
 ```
+
+### Обработчики меню
+
+| Callback                     | Описание            |
+|------------------------------|---------------------|
+| `my_bonuses`                 | Мои бонусы          |
+| `pick_up_gift`               | Забрать подарок     |
+| `bonuses_will_soon_burn_out` | Бонусы скоро сгорят |
+| `gift_wheel`                 | Колесо подарков     |
+| `promotions`                 | Акции               |
+| `events`                     | Мероприятия         |
+| `back_today`                 | Вернуться сегодня   |
+| `contacts`                   | Контакты            |
+| `about_institution`          | О заведении         |
+
+## QuickResto API
+
+### Функции (`services/quickresto_api.py`)
+
+| Функция               | Описание                             |
+|-----------------------|--------------------------------------|
+| `get_client_phone()`  | Поиск клиента по номеру телефона     |
+| `print_client_info()` | Получение информации о клиенте       |
+| `create_client()`     | Создание нового клиента в QuickResto |
+
+## Клавиатуры
+
+### Reply-клавиатуры (`keyboards/keyboards.py`)
+
+- `contact_keyboard()` — кнопка отправки номера телефона
+
+### Inline-клавиатуры (`keyboards/inline.py`)
+
+- `main_menu_keyboard()` — главное меню после авторизации
 
 ## Запуск
 
 ```bash
-pip install aiogram peewee python-dotenv loguru fluent-runtime
+pip install aiogram peewee python-dotenv loguru fluent-runtime requests
 python main.py
 ```
 
