@@ -23,9 +23,13 @@ class RegisteredPersons(Model):
         table_name = "registered_persons"  # название таблицы
 
 
-def write_to_db_registered_person(id_telegram, last_name_telegram, first_name_telegram, username_telegram,
-                                  phone_telegram):
+def write_to_db_registered_person(data):
     """Запись данных о пользователе в базу данных"""
+    id_telegram = data.get("id_telegram")
+    last_name_telegram = data.get("last_name_telegram")
+    first_name_telegram = data.get("first_name_telegram")
+    username_telegram = data.get("username_telegram")
+    phone_telegram = data.get("phone_telegram")
     try:
         person, created = RegisteredPersons.get_or_create(id_telegram=id_telegram, defaults={
             "last_name_telegram": last_name_telegram,
@@ -61,11 +65,16 @@ class StartPersons(Model):
         table_name = "start_persons"  # название таблицы
 
 
-def write_to_db_start_person(id_telegram, last_name_telegram, first_name_telegram, username_telegram):
+def write_to_db_start_person(data):
     """
     Запись данных о пользователе в базу данных, которые запустили Telegram бота через команду /start или вернулись в
     начальное меню
     """
+    id_telegram = data.get("id_telegram")
+    last_name_telegram = data.get("last_name_telegram")
+    first_name_telegram = data.get("first_name_telegram")
+    username_telegram = data.get("username_telegram")
+
     try:
         person, created = StartPersons.get_or_create(id_telegram=id_telegram, defaults={
             "last_name_telegram": last_name_telegram,

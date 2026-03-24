@@ -13,7 +13,7 @@ from loguru import logger
 
 from config import TOKEN
 from keyboards.keyboards import contact_keyboard
-from services.database import create_tables, write_to_db_registered_person
+from services.database import create_tables, write_to_db_registered_person, write_to_db_start_person
 
 router = Router(name=__name__)
 
@@ -43,12 +43,13 @@ async def command_start_handler(message: Message) -> None:
     first_name_telegram = message.from_user.last_name
     username_telegram = message.from_user.username
 
-    write_to_db_person(
-        id_telegram=id_telegram,
-        last_name_telegram=name_telegram,
-        first_name_telegram=first_name_telegram,
-        username_telegram=username_telegram,
-    )
+    data = {
+        "id_telegram": id_telegram,
+        "name_telegram": name_telegram,
+        "first_name_telegram": first_name_telegram,
+        "username_telegram": username_telegram
+    }
+    write_to_db_start_person(data)
 
     await message.answer(
         text=greet_message,
@@ -68,13 +69,15 @@ async def message_handler(message: Message) -> None:
     phone_telegram = message.contact.phone_number
     logger.info(f"Пользователь отправил контакт: {phone_telegram}")
 
-    write_to_db_registered_person(
-        id_telegram=id_telegram,
-        last_name_telegram=name_telegram,
-        first_name_telegram=first_name_telegram,
-        username_telegram=username_telegram,
-        phone_telegram=phone_telegram
-    )
+    data = {
+        "id_telegram": id_telegram,
+        "name_telegram": name_telegram,
+        "first_name_telegram": first_name_telegram,
+        "username_telegram": username_telegram,
+        "phone_telegram": phone_telegram
+    }
+
+    write_to_db_registered_person(data)
 
 
 async def main() -> None:
