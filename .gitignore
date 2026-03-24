@@ -163,3 +163,5 @@ cython_debug/
 #.idea/
 
 /.idea/
+/.qwen/
+/database.db
