@@ -23,23 +23,30 @@ async def message_handler(message: Message) -> None:
     phone_telegram = message.contact.phone_number
     logger.info(f"Пользователь отправил контакт: {phone_telegram}")
 
-    print_client_info(
+    data_customer = print_client_info(
         layer_name_quickresto=layer_name_quickresto,
         phone_number=phone_telegram,
         auth=auth,
         headers=headers
     )
 
-    data = {
-        "id_telegram": id_telegram,
-        "name_telegram": name_telegram,
-        "first_name_telegram": first_name_telegram,
-        "username_telegram": username_telegram,
-        "phone_telegram": phone_telegram
-    }
+    phone_quickresto = data_customer.get("phone")
+    if phone_telegram == phone_quickresto:
+        logger.info(f"Пользователь найден а базе QuickResto: {phone_telegram}")
 
-    write_to_db_registered_person(data)
+        data = {
+            "id_telegram": id_telegram,
+            "name_telegram": name_telegram,
+            "first_name_telegram": first_name_telegram,
+            "username_telegram": username_telegram,
+            "phone_telegram": phone_telegram
+        }
 
-    await message.answer(
-        text=t("registered-message"),
-    )
+        write_to_db_registered_person(data)
+
+        await message.answer(
+            text=t("registered-message"),
+        )
+
+    else:
+        logger.info(f"Пользователь не найден а базе QuickResto: {phone_telegram}")

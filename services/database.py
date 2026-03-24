@@ -39,6 +39,8 @@ def write_to_db_registered_person(data):
     birthday_user = data.get("birthday_user")  # день рождения пользователя QuickResto
     phone_telegram = data.get("phone_telegram")  # номер телефона пользователя в Telegram
     try:
+        if db.is_closed():
+            db.connect()
         person, created = RegisteredPersons.get_or_create(id_telegram=id_telegram, defaults={
             "last_name": last_name,  # фамилия пользователя QuickResto
             "first_name": first_name,  # имя пользователя QuickResto
@@ -58,6 +60,9 @@ def write_to_db_registered_person(data):
         person.save()
     except Exception as e:
         logger.exception(e)
+    finally:
+        if not db.is_closed():
+            db.close()
 
 
 """Запись в базу данных пользователей, которые запустили Telegram бота"""
@@ -88,6 +93,8 @@ def write_to_db_start_person(data):
     username_telegram = data.get("username_telegram")
 
     try:
+        if db.is_closed():
+            db.connect()
         person, created = StartPersons.get_or_create(id_telegram=id_telegram, defaults={
             "last_name_telegram": last_name_telegram,
             "first_name_telegram": first_name_telegram,
@@ -101,6 +108,9 @@ def write_to_db_start_person(data):
         person.save()
     except Exception as e:
         logger.exception(e)
+    finally:
+        if not db.is_closed():
+            db.close()
 
 
 """Всегда в конце, что бы создавать таблицы в базе данных"""
