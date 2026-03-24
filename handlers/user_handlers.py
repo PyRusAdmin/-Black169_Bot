@@ -3,8 +3,10 @@ from aiogram import F, Router
 from aiogram.types import Message
 from loguru import logger
 
+from config import layer_name_quickresto
 from services.database import write_to_db_registered_person
 from services.i18n import t
+from services.quickresto_api import print_client_info, auth, headers
 
 router = Router(name=__name__)
 
@@ -20,6 +22,13 @@ async def message_handler(message: Message) -> None:
     username_telegram = message.from_user.username
     phone_telegram = message.contact.phone_number
     logger.info(f"Пользователь отправил контакт: {phone_telegram}")
+
+    print_client_info(
+        layer_name_quickresto=layer_name_quickresto,
+        phone_number=phone_telegram,
+        auth=auth,
+        headers=headers
+    )
 
     data = {
         "id_telegram": id_telegram,
