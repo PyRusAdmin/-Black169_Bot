@@ -26,7 +26,7 @@ async def message_handler(message: Message) -> None:
 
     phone_telegram = phone_telegram.replace("+", "")
     logger.info(f"Проверяем контакт: {phone_telegram} в базе QuickResto")
-
+    # проверяем контакт в базе QuickResto
     data_customer = print_client_info(
         layer_name_quickresto=layer_name_quickresto,
         phone_number=phone_telegram,
@@ -46,7 +46,7 @@ async def message_handler(message: Message) -> None:
             "phone_telegram": phone_telegram
         }
 
-        write_to_db_registered_person(data)
+        write_to_db_registered_person(data)  # записываем данные в базу данных
 
         # Сначала удаляем реплай-клавиатуру
         await message.answer(

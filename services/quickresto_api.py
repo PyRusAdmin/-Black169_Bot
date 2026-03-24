@@ -65,8 +65,8 @@ def print_client_info(layer_name_quickresto, phone_number, auth, headers):
 
         data = {
             'client_id': client_id,
-            'name': name,
-            'surname': surname,
+            'firstName': name,
+            'lastName': surname,
             'phone': phone,
             'guid': guid
         }
