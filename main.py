@@ -14,6 +14,7 @@ from loguru import logger
 from config import TOKEN
 from keyboards.keyboards import contact_keyboard
 from services.database import create_tables, write_to_db_registered_person, write_to_db_start_person
+from services.i18n import t
 
 router = Router(name=__name__)
 
@@ -21,16 +22,6 @@ dp = Dispatcher()
 dp.include_router(router)
 
 logger.add("log/log.log")
-
-greet_message = (
-    "Добро пожаловать в The Black 169 🖤\n\n"
-    "В этом боте вы сможете:\n"
-    "🔹 проверять бонусы\n"
-    "🎁 узнать акции\n"
-    "🎀 получать подарки\n"
-    "📅 следить за мероприятиями\n\n"
-    "Отправьте свой номер телефона, чтобы начать 📱\n"
-)
 
 
 @dp.message(CommandStart())
@@ -52,7 +43,7 @@ async def command_start_handler(message: Message) -> None:
     write_to_db_start_person(data)
 
     await message.answer(
-        text=greet_message,
+        text=t("greet-message"),
         reply_markup=contact_keyboard()
     )
 
@@ -78,6 +69,10 @@ async def message_handler(message: Message) -> None:
     }
 
     write_to_db_registered_person(data)
+
+    await message.answer(
+        text=t("registered-message"),
+    )
 
 
 async def main() -> None:

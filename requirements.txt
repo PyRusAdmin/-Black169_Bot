@@ -1,0 +1,7 @@
+aiogram~=3.26.0
+loguru~=0.7.3
+pathlib~=1.0.1
+fluent-logger-pyramid~=0.0.3
+peewee~=4.0.2
+dotenv~=0.9.9
+python-dotenv~=1.2.2
