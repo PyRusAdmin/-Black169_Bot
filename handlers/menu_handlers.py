@@ -3,7 +3,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from loguru import logger
 
-from keyboards.inline import back_to_main_menu_keyboard
+from keyboards.inline import back_to_main_menu_keyboard, twist_keyboard
 from services.database import get_user_bonus
 from services.i18n import t
 
@@ -60,6 +60,17 @@ async def gift_wheel_handler(callback: CallbackQuery) -> None:
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Колесо подарков'")
     await callback.message.answer(
         text=t("menu-gift-wheel"),
+        reply_markup=twist_keyboard()
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "twist")
+async def twist_handler(callback: CallbackQuery) -> None:
+    """Обработчик кнопки 'Крутить'"""
+    logger.info(f"Пользователь {callback.from_user.id} нажал 'Крутить'")
+    await callback.message.answer(
+        text=t("winning-message"),
         reply_markup=back_to_main_menu_keyboard()
     )
     await callback.answer()
