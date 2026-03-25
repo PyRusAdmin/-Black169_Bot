@@ -77,11 +77,30 @@ async def twist_handler(callback: CallbackQuery) -> None:
     bonus = random_bonus()  # получаем случайный бонус из списка бонусов
     logger.info(f"Пользователь {callback.from_user.id} выиграл бонус {bonus}")
 
-    await callback.message.answer(
-        text=t("winning-message"),
-        reply_markup=back_to_main_menu_keyboard()
-    )
-    await callback.answer()
+    if bonus == 'Коктейль на выбор':
+        await callback.message.answer(
+            text=t("cocktail-winning-message"),
+            reply_markup=back_to_main_menu_keyboard()
+        )
+        return
+    elif bonus == 'Кальян на выбор':
+        await callback.message.answer(
+            text=t("hookah-winning-message"),
+            reply_markup=back_to_main_menu_keyboard()
+        )
+        return
+    elif bonus == 'Бонус в рублях (1000)':
+        await callback.message.answer(
+            text=t("bonus-winning-message"),
+            reply_markup=back_to_main_menu_keyboard()
+        )
+        return
+    elif bonus == 'Попробуйте завтра':
+        await callback.message.answer(
+            text=t("try-tomorrow-winning-message"),
+            reply_markup=back_to_main_menu_keyboard()
+        )
+        return
 
 
 @router.callback_query(F.data == "promotions")
