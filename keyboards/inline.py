@@ -45,14 +45,15 @@ def back_to_main_menu_keyboard():
 
 
 def twist_keyboard():
-    """Клавиатура для вращения"""
+    """Клавиатура для вращения и возврата в главное меню"""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="В главное меню", callback_data="back_to_main_menu"),
-            ],
-            [
                 InlineKeyboardButton(text="Крутить 🎰", callback_data="twist"),
             ],
+            [
+                InlineKeyboardButton(text="В главное меню", callback_data="back_to_main_menu"),
+            ],
+
         ]
     )

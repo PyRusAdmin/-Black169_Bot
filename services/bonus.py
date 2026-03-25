@@ -7,6 +7,7 @@ import random
 cocktail - коктейль на выбор
 hookah - кальян на выбор
 bonus - бонус в рублях (1000)
+try_tomorrow - попробуйте завтра
 """
 
 
