@@ -3,6 +3,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from loguru import logger
 
+from services.database import get_user_bonus
 from services.i18n import t
 
 router = Router(name=__name__)
@@ -12,7 +13,15 @@ router = Router(name=__name__)
 async def my_bonuses_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Мои бонусы'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Мои бонусы'")
-    await callback.message.answer(text=t("menu-my-bonuses"))
+
+    # Получаем баланс бонусов пользователя
+    bonus = get_user_bonus(callback.from_user.id)
+
+    if bonus:
+        await callback.message.answer(text=f"💰 Ваши бонусы: <b>{bonus}</b>\n\nИспользуйте их при следующем посещении!")
+    else:
+        await callback.message.answer(text="❌ Информация о бонусах не найдена. Пожалуйста, зарегистрируйтесь.")
+
     await callback.answer()
 
 

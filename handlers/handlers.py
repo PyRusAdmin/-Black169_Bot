@@ -4,8 +4,9 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 from loguru import logger
 
+from keyboards.inline import main_menu_keyboard
 from keyboards.keyboards import contact_keyboard
-from services.database import write_to_db_start_person
+from services.database import write_to_db_start_person, is_user_registered
 from services.i18n import t
 
 router = Router(name=__name__)
@@ -29,7 +30,21 @@ async def command_start_handler(message: Message) -> None:
         "first_name_telegram": first_name_telegram,
         "username_telegram": username_telegram
     }
-    write_to_db_start_person(data)
+    write_to_db_start_person(data)  # Записываем данные в базу данных (пользователь который запустил бота)
+
+    """
+    Проверяем был ли уже зарегистрирован пользователь. Проверка происходит по таблице registered_persons. Проверяем по 
+    id_telegram, так как он полностью уникальный в Telegram.
+    """
+
+    if is_user_registered(id_telegram):
+        # Пользователь уже зарегистрирован — показываем главное меню
+        logger.info(f"Пользователь {id_telegram} уже зарегистрирован, показываем главное меню")
+        await message.answer(
+            text=t("main-menu"),
+            reply_markup=main_menu_keyboard(),
+        )
+        return
 
     logger.info(f"Отправка приветственного сообщения пользователю {message.from_user.id}")
     await message.answer(

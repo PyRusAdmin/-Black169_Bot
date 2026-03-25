@@ -117,6 +117,114 @@ def write_to_db_start_person(data):
             db.close()
 
 
+def is_user_registered(id_telegram: int) -> bool:
+    """
+    Проверка, зарегистрирован ли пользователь (есть ли в таблице registered_persons)
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если зарегистрирован, False если нет
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+        exists = RegisteredPersons.get_or_none(RegisteredPersons.id_telegram == id_telegram)
+        return exists is not None
+    except Exception as e:
+        logger.exception(f"Ошибка при проверке регистрации пользователя {id_telegram}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_user_info(id_telegram: int) -> dict | None:
+    """
+    Получение полной информации о пользователе из таблицы registered_persons
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: Словарь с данными пользователя или None если пользователь не найден
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+        user = RegisteredPersons.get_or_none(RegisteredPersons.id_telegram == id_telegram)
+        if user:
+            return {
+                "id_telegram": user.id_telegram,
+                "id_quickresto": user.id_quickresto,
+                "phone_telegram": user.phone_telegram,
+                "last_name": user.last_name,
+                "first_name": user.first_name,
+                "patronymic_name": user.patronymic_name,
+                "birthday_user": user.birthday_user,
+                "user_bonus": user.user_bonus,
+                "date_of_visit": user.date_of_visit,
+                "updated_at": user.updated_at
+            }
+        return None
+    except Exception as e:
+        logger.exception(f"Ошибка при получении данных пользователя {id_telegram}: {e}")
+        return None
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_user_bonus(id_telegram: int) -> str | None:
+    """
+    Получение баланса бонусов пользователя
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: Баланс бонусов или None если пользователь не найден
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+        user = RegisteredPersons.get_or_none(RegisteredPersons.id_telegram == id_telegram)
+        if user:
+            return user.user_bonus
+        return None
+    except Exception as e:
+        logger.exception(f"Ошибка при получении бонусов пользователя {id_telegram}: {e}")
+        return None
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_user_by_phone(phone_telegram: str) -> dict | None:
+    """
+    Получение информации о пользователе по номеру телефона
+
+    :param phone_telegram: Номер телефона пользователя
+    :return: Словарь с данными пользователя или None если пользователь не найден
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+        user = RegisteredPersons.get_or_none(RegisteredPersons.phone_telegram == phone_telegram)
+        if user:
+            return {
+                "id_telegram": user.id_telegram,
+                "id_quickresto": user.id_quickresto,
+                "phone_telegram": user.phone_telegram,
+                "last_name": user.last_name,
+                "first_name": user.first_name,
+                "patronymic_name": user.patronymic_name,
+                "birthday_user": user.birthday_user,
+                "user_bonus": user.user_bonus,
+                "date_of_visit": user.date_of_visit,
+                "updated_at": user.updated_at
+            }
+        return None
+    except Exception as e:
+        logger.exception(f"Ошибка при получении данных пользователя по телефону {phone_telegram}: {e}")
+        return None
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
 """Всегда в конце, что бы создавать таблицы в базе данных"""
 
 
