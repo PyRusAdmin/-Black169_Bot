@@ -182,8 +182,8 @@ async def back_today_handler(callback: CallbackQuery) -> None:
 
 @router.callback_query(F.data == "contacts")
 async def contacts_handler(callback: CallbackQuery) -> None:
-    """Обработчик кнопки 'Контакты'"""
-    logger.info(f"Пользователь {callback.from_user.id} нажал 'Контакты'")
+    """Обработчик кнопки '📍 Контакты'"""
+    logger.info(f"Пользователь {callback.from_user.id} нажал '📍 Контакты'")
     await callback.message.answer(
         text=t("menu-contacts"),
         reply_markup=back_to_main_menu_keyboard()
@@ -193,8 +193,8 @@ async def contacts_handler(callback: CallbackQuery) -> None:
 
 @router.callback_query(F.data == "about_institution")
 async def about_institution_handler(callback: CallbackQuery) -> None:
-    """Обработчик кнопки 'О заведении'"""
-    logger.info(f"Пользователь {callback.from_user.id} нажал 'О заведении'")
+    """Обработчик кнопки 'ℹ️ О заведении'"""
+    logger.info(f"Пользователь {callback.from_user.id} нажал 'ℹ️ О заведении'")
     await callback.message.answer(
         text=t("menu-about-institution"),
         reply_markup=back_to_main_menu_keyboard()
