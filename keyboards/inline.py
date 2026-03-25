@@ -31,3 +31,14 @@ def main_menu_keyboard():
             ],
         ]
     )
+
+
+def back_to_main_menu_keyboard():
+    """Клавиатура для возврата в главное меню"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="В главное меню", callback_data="back_to_main_menu"),
+            ],
+        ]
+    )

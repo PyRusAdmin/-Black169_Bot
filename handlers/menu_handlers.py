@@ -3,6 +3,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from loguru import logger
 
+from keyboards.inline import back_to_main_menu_keyboard
 from services.database import get_user_bonus
 from services.i18n import t
 
@@ -18,9 +19,15 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
     bonus = get_user_bonus(callback.from_user.id)
 
     if bonus:
-        await callback.message.answer(text=f"💰 Ваши бонусы: <b>{bonus}</b>\n\nИспользуйте их при следующем посещении!")
+        await callback.message.answer(
+            text=f"💰 Ваши бонусы: <b>{bonus}</b>\n\nИспользуйте их при следующем посещении!",
+            reply_markup=back_to_main_menu_keyboard()
+        )
     else:
-        await callback.message.answer(text="❌ Информация о бонусах не найдена. Пожалуйста, зарегистрируйтесь.")
+        await callback.message.answer(
+            text="❌ Информация о бонусах не найдена. Пожалуйста, зарегистрируйтесь.",
+            reply_markup=back_to_main_menu_keyboard()
+        )
 
     await callback.answer()
 
@@ -29,7 +36,10 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
 async def pick_up_gift_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Забрать подарок'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Забрать подарок'")
-    await callback.message.answer(text=t("menu-pick-up-gift"))
+    await callback.message.answer(
+        text=t("menu-pick-up-gift"),
+        reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -37,7 +47,10 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
 async def bonuses_will_soon_burn_out_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Бонусы скоро сгорят'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Бонусы скоро сгорят'")
-    await callback.message.answer(text=t("menu-bonuses-will-soon-burn-out"))
+    await callback.message.answer(
+        text=t("menu-bonuses-will-soon-burn-out"),
+        reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -45,7 +58,10 @@ async def bonuses_will_soon_burn_out_handler(callback: CallbackQuery) -> None:
 async def gift_wheel_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Колесо подарков'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Колесо подарков'")
-    await callback.message.answer(text=t("menu-gift-wheel"))
+    await callback.message.answer(
+        text=t("menu-gift-wheel"),
+        reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -53,7 +69,10 @@ async def gift_wheel_handler(callback: CallbackQuery) -> None:
 async def promotions_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Акции'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Акции'")
-    await callback.message.answer(text=t("menu-promotions"))
+    await callback.message.answer(
+        text=t("menu-promotions"),
+        reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -61,7 +80,10 @@ async def promotions_handler(callback: CallbackQuery) -> None:
 async def events_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Мероприятия'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Мероприятия'")
-    await callback.message.answer(text=t("menu-events"))
+    await callback.message.answer(
+        text=t("menu-events"),
+        reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -69,7 +91,10 @@ async def events_handler(callback: CallbackQuery) -> None:
 async def back_today_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Вернуться сегодня'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Вернуться сегодня'")
-    await callback.message.answer(text=t("menu-back-today"))
+    await callback.message.answer(
+        text=t("menu-back-today"),
+        reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -77,7 +102,10 @@ async def back_today_handler(callback: CallbackQuery) -> None:
 async def contacts_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Контакты'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Контакты'")
-    await callback.message.answer(text=t("menu-contacts"))
+    await callback.message.answer(
+        text=t("menu-contacts"),
+        reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -85,5 +113,8 @@ async def contacts_handler(callback: CallbackQuery) -> None:
 async def about_institution_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'О заведении'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'О заведении'")
-    await callback.message.answer(text=t("menu-about-institution"))
+    await callback.message.answer(
+        text=t("menu-about-institution"),
+        reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
