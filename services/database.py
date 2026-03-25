@@ -269,7 +269,8 @@ def write_spin_result(data):
             is_winner=is_winner,
             spun_at=datetime.now()
         )
-        logger.info(f"Записан результат розыгрыша: пользователь {id_telegram}, бонус '{bonus_name}', победитель: {is_winner}")
+        logger.info(
+            f"Записан результат розыгрыша: пользователь {id_telegram}, бонус '{bonus_name}', победитель: {is_winner}")
         return spin
     except Exception as e:
         logger.exception(f"Ошибка при записи результата розыгрыша: {e}")
