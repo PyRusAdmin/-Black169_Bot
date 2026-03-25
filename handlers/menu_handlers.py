@@ -74,8 +74,37 @@ async def twist_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Крутить'. Шанс выпадения бонуса 5 процентов"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Крутить'")
 
+    id_telegram = callback.from_user.id
+
+    # Проверяем, участвовал ли пользователь сегодня
+    if has_user_spun_today(id_telegram):
+        await callback.message.answer(
+            text=(
+                "⛔️ Вы уже участвовали в розыгрыше сегодня.\n\n"
+                "Приходите завтра — у вас будет новая попытка выиграть подарок! 🍀"
+            ),
+            reply_markup=back_to_main_menu_keyboard()
+        )
+        await callback.answer()
+        return
+
+    # Получаем ID пользователя в QuickResto
+    user_info = get_user_info(id_telegram)
+    id_quickresto = user_info.get("id_quickresto") if user_info else None
+
     bonus = random_bonus()  # получаем случайный бонус из списка бонусов
-    logger.info(f"Пользователь {callback.from_user.id} выиграл бонус {bonus}")
+    logger.info(f"Пользователь {id_telegram} выиграл бонус {bonus}")
+
+    # Определяем, является ли пользователь победителем
+    is_winner = bonus != 'Попробуйте завтра'
+
+    # Записываем результат в базу данных
+    write_spin_result({
+        "id_telegram": id_telegram,
+        "id_quickresto": id_quickresto,
+        "bonus_name": bonus,
+        "is_winner": is_winner
+    })
 
     if bonus == 'Коктейль на выбор':
         await callback.message.answer(
