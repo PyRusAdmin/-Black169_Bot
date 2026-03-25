@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from aiogram import F, Router
 from aiogram.filters import CommandStart
-from aiogram.types import CallbackQuery
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message
 from loguru import logger
 
 from keyboards.inline import main_menu_keyboard
@@ -34,13 +33,14 @@ async def command_start_handler(message: Message) -> None:
     write_to_db_start_person(data)  # Записываем данные в базу данных (пользователь который запустил бота)
 
     """
-    Проверяем был ли уже зарегистрирован пользователь. Проверка происходит по таблице registered_persons. Проверяем по 
+    Проверяем был ли уже зарегистрирован пользователь. Проверка происходит по таблице registered_persons. Проверяем по
     id_telegram, так как он полностью уникальный в Telegram.
     """
 
     if is_user_registered(id_telegram):
         # Пользователь уже зарегистрирован — показываем главное меню
         logger.info(f"Пользователь {id_telegram} уже зарегистрирован, показываем главное меню")
+        # Скрываем reply-клавиатуру и показываем inline-меню одним сообщением
         await message.answer(
             text=t("main-menu"),
             reply_markup=main_menu_keyboard(),
@@ -59,12 +59,12 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
     """
     Обработчик кнопки "В главное меню"
     """
-    logger.info(f"Получена команда /start от пользователя {callback.message.from_user.id}")
+    logger.info(f"Пользователь {callback.from_user.id} нажал 'В главное меню'")
 
-    id_telegram = callback.message.from_user.id
-    first_name_telegram = callback.message.from_user.first_name
-    last_name_telegram = callback.message.from_user.last_name
-    username_telegram = callback.message.from_user.username
+    id_telegram = callback.from_user.id
+    first_name_telegram = callback.from_user.first_name
+    last_name_telegram = callback.from_user.last_name
+    username_telegram = callback.from_user.username
 
     data = {
         "id_telegram": id_telegram,
@@ -75,21 +75,24 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
     write_to_db_start_person(data)  # Записываем данные в базу данных (пользователь который запустил бота)
 
     """
-    Проверяем был ли уже зарегистрирован пользователь. Проверка происходит по таблице registered_persons. Проверяем по 
+    Проверяем был ли уже зарегистрирован пользователь. Проверка происходит по таблице registered_persons. Проверяем по
     id_telegram, так как он полностью уникальный в Telegram.
     """
-
     if is_user_registered(id_telegram):
         # Пользователь уже зарегистрирован — показываем главное меню
         logger.info(f"Пользователь {id_telegram} уже зарегистрирован, показываем главное меню")
-        await callback.message.answer(
+        # Сначала скрываем reply-клавиатуру
+        await callback.message.edit_text(
             text=t("main-menu"),
             reply_markup=main_menu_keyboard(),
         )
+        await callback.answer()
         return
 
-    logger.info(f"Отправка приветственного сообщения пользователю {callback.message.from_user.id}")
-    await callback.message.answer(
+    logger.info(f"Отправка приветственного сообщения пользователю {callback.from_user.id}")
+    # Скрываем reply-клавиатуру и показываем приветственное сообщение
+    await callback.message.edit_text(
         text=t("greet-message"),
-        reply_markup=contact_keyboard()
+        reply_markup=contact_keyboard(),
     )
+    await callback.answer()
