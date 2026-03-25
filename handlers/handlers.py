@@ -114,6 +114,3 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
         reply_markup=contact_keyboard(),
     )
     await callback.answer()
-
-
-

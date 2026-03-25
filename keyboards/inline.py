@@ -40,7 +40,7 @@ def back_to_main_menu_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="В главное меню", callback_data="back_to_main_menu"),
+                InlineKeyboardButton(text="🏠 В главное меню", callback_data="back_to_main_menu"),
             ],
         ]
     )
@@ -51,10 +51,10 @@ def twist_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Крутить 🎰", callback_data="twist"),
+                InlineKeyboardButton(text="🎰 Крутить 🎰", callback_data="twist"),
             ],
             [
-                InlineKeyboardButton(text="В главное меню", callback_data="back_to_main_menu"),
+                InlineKeyboardButton(text="🏠 В главное меню", callback_data="back_to_main_menu"),
             ],
 
         ]
@@ -69,16 +69,16 @@ def admin_menu_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Список победителей «Колеса подарков»", callback_data="winners"),
+                InlineKeyboardButton(text="🏆 Список победителей «Колеса подарков»", callback_data="winners"),
             ],
             [
-                InlineKeyboardButton(text="Список пользователей", callback_data="users"),
+                InlineKeyboardButton(text="👥 Список пользователей", callback_data="users"),
             ],
             [
-                InlineKeyboardButton(text="Рассылка сообщений (текст, фото, видео, кнопки)", callback_data="broadcast"),
+                InlineKeyboardButton(text="📨 Рассылка сообщений", callback_data="broadcast"),
             ],
             [
-                InlineKeyboardButton(text="Статистика пользователей", callback_data="stats"),
+                InlineKeyboardButton(text="📊 Статистика пользователей", callback_data="stats"),
             ],
         ]
     )
@@ -89,7 +89,7 @@ def back_to_admin_menu_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="В меню администратора", callback_data="admin_back"),
+                InlineKeyboardButton(text="🔧 В меню администратора", callback_data="admin_back"),
             ],
         ]
     )
