@@ -5,8 +5,9 @@ from loguru import logger
 
 from keyboards.inline import back_to_main_menu_keyboard, twist_keyboard
 from services.bonus import random_bonus
-from services.database import get_user_bonus, get_user_info, has_user_spun_today, write_spin_result, \
-    write_to_db_registered_person
+from services.database import (
+    get_user_bonus, get_user_info, has_user_spun_today, write_spin_result, write_to_db_registered_person
+)
 from services.i18n import t
 from services.quickresto_api import print_full_client_info
 
