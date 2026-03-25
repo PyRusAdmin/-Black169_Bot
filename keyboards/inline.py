@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+"""Клавиатура для обычного пользователя"""
+
 
 def main_menu_keyboard():
     """Клавиатура главного меню после авторизации"""
@@ -55,5 +57,22 @@ def twist_keyboard():
                 InlineKeyboardButton(text="В главное меню", callback_data="back_to_main_menu"),
             ],
 
+        ]
+    )
+
+
+"""Клавиатура для администратора бота"""
+
+
+def admin_menu_keyboard():
+    """Клавиатура для администратора бота"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Список победителей «Колеса подарков»", callback_data="winners"),
+            ],
+            [
+                InlineKeyboardButton(text="Акции", callback_data="promotions"),
+            ],
         ]
     )

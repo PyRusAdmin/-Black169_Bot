@@ -8,14 +8,14 @@ from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
-from loguru import logger
 from rich.console import Console
 
 load_dotenv()
 
-# Токен бота можно получить с помощью https://t.me/BotFather
-TOKEN: str = os.getenv("BOT_TOKEN")
-logger.info(f"Bot token: {TOKEN}")
+"""Считываем данные из файла .env для получения токена бота и ID владельца бота"""
+
+TOKEN: str = os.getenv("BOT_TOKEN")  # Токен бота можно получить с помощью https://t.me/BotFather
+OWNER_ID: int = int(os.getenv("OWNER_ID"))  # ID владельца бота Telegram аккаунта
 
 """QuickResto API"""
 

@@ -4,6 +4,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
 from loguru import logger
 
+from config import OWNER_ID
 from keyboards.inline import main_menu_keyboard
 from keyboards.keyboards import contact_keyboard
 from services.database import write_to_db_start_person, is_user_registered
@@ -23,6 +24,10 @@ async def command_start_handler(message: Message) -> None:
     first_name_telegram = message.from_user.first_name
     last_name_telegram = message.from_user.last_name
     username_telegram = message.from_user.username
+
+    if id_telegram == OWNER_ID:
+        logger.info(f"Пользователь {id_telegram} является владельцем бота")
+        return
 
     data = {
         "id_telegram": id_telegram,
@@ -65,6 +70,10 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
     first_name_telegram = callback.from_user.first_name
     last_name_telegram = callback.from_user.last_name
     username_telegram = callback.from_user.username
+
+    if id_telegram == OWNER_ID:
+        logger.info(f"Пользователь {id_telegram} является владельцем бота")
+        return
 
     data = {
         "id_telegram": id_telegram,
