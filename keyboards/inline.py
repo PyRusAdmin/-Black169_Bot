@@ -72,7 +72,13 @@ def admin_menu_keyboard():
                 InlineKeyboardButton(text="Список победителей «Колеса подарков»", callback_data="winners"),
             ],
             [
-                InlineKeyboardButton(text="Акции", callback_data="promotions"),
+                InlineKeyboardButton(text="Список пользователей", callback_data="users"),
+            ],
+            [
+                InlineKeyboardButton(text="Рассылка сообщений (текст, фото, видео, кнопки)", callback_data="broadcast"),
+            ],
+            [
+                InlineKeyboardButton(text="Статистика пользователей", callback_data="stats"),
             ],
         ]
     )
