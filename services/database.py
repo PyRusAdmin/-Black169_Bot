@@ -14,14 +14,14 @@ db = SqliteDatabase("database.db")
 class RegisteredPersons(Model):
     """База данных для хранения данных о пользователях Telegram и QuickResto"""
 
-    id_telegram = IntegerField(unique=True)  # id пользователя в Telegram
-    id_quickresto = IntegerField(null=True)  # id пользователя в QuickResto
-    phone_telegram = CharField(null=True)  # Номер телефона пользователя в Telegram
-    last_name = CharField(null=True)  # Фамилия пользователя QuickResto
-    first_name = CharField(null=True)  # Имя пользователя QuickResto
-    patronymic_name = CharField(null=True)  # Отчество пользователя QuickResto
-    birthday_user = CharField(null=True)  # День рождения пользователя QuickResto
-    user_bonus = CharField(null=True)  # Бонус пользователя QuickResto
+    id_telegram = IntegerField(unique=True)  # ✅ id пользователя в Telegram
+    id_quickresto = IntegerField(null=True)  # ✅ id пользователя в QuickResto
+    phone_telegram = CharField(null=True)  # ✅ Номер телефона пользователя в Telegram
+    last_name = CharField(null=True)  # ✅ Фамилия пользователя QuickResto
+    first_name = CharField(null=True)  # ✅ Имя пользователя QuickResto
+    patronymic_name = CharField(null=True)  # ✅ Отчество пользователя QuickResto
+    birthday_user = CharField(null=True)  # ✅ День рождения пользователя QuickResto
+    user_bonus = CharField(null=True)  # ✅ Бонус пользователя QuickResto
     date_of_visit = DateTimeField(default=datetime.now)  # Дата и время последнего посещения QuickResto
     updated_at = DateTimeField(default=datetime.now)  # Дата начисления бонусов QuickResto
 

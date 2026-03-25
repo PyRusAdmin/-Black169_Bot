@@ -7,7 +7,7 @@ from config import layer_name_quickresto
 from keyboards.inline import main_menu_keyboard
 from services.database import write_to_db_registered_person
 from services.i18n import t
-from services.quickresto_api import print_client_info, create_client, auth, headers, base_url
+from services.quickresto_api import print_client_info, create_client, auth, headers, base_url, print_full_client_info
 
 router = Router(name=__name__)
 
@@ -81,11 +81,23 @@ async def message_handler(message: Message) -> None:
         if phone_telegram == phone_quickresto:
             logger.success(f"Пользователь найден в базе QuickResto: {phone_telegram}")
 
+            """
+            Если пользователь найден в базе QuickResto, то записываем его в базу данных. Так как QuickResto не 
+            выдает полную информацию о пользователе по номеру телефона, то запрашиваем его данные из базы
+            QuickResto по его ID
+            """
+            id_quickresto = data_customer.get("client_id")
+
+            full_data = print_full_client_info(client_id=id_quickresto)
+
             data = {
                 "id_telegram": id_telegram,
-                "id_quickresto": data_customer.get("client_id"),
-                "last_name": data_customer.get("lastName"),
-                "first_name": data_customer.get("firstName"),
+                "id_quickresto": full_data.get("id"),
+                "last_name": full_data.get("last_name"),
+                "first_name": full_data.get("first_name"),
+                "patronymic_name": full_data.get("middle_name"),
+                "birthday_user": full_data.get("date_of_birth"),
+                "user_bonus": full_data.get("bonus_ledger"),
                 "phone_telegram": phone_telegram
             }
 
