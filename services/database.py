@@ -225,9 +225,158 @@ def get_user_by_phone(phone_telegram: str) -> dict | None:
             db.close()
 
 
+"""
+Таблица для учёта розыгрышей в 'Колесе подарков'
+Фиксирует попытки участия, выигрыши и статус (победитель/не победитель)
+"""
+
+
+class GiftWheelSpins(Model):
+    """База данных для хранения истории розыгрышей 'Колесо подарков'"""
+
+    id_telegram = IntegerField()  # ID пользователя в Telegram
+    id_quickresto = IntegerField(null=True)  # ID пользователя в QuickResto
+    bonus_name = CharField()  # Название выигранного бонуса
+    is_winner = BooleanField(default=False)  # True если выиграл, False если 'Попробуйте завтра'
+    spun_at = DateTimeField(default=datetime.now)  # Дата и время розыгрыша
+
+    class Meta:
+        database = db
+        table_name = "gift_wheel_spins"
+        indexes = (
+            (('id_telegram', 'spun_at'), False),  # Индекс для быстрого поиска по дате
+        )
+
+
+def write_spin_result(data):
+    """
+    Запись результата розыгрыша 'Колесо подарков' в базу данных
+
+    :param data: Словарь с данными: id_telegram, id_quickresto, bonus_name, is_winner
+    """
+    id_telegram = data.get("id_telegram")
+    id_quickresto = data.get("id_quickresto")
+    bonus_name = data.get("bonus_name")
+    is_winner = data.get("is_winner", False)
+
+    try:
+        if db.is_closed():
+            db.connect()
+        spin = GiftWheelSpins.create(
+            id_telegram=id_telegram,
+            id_quickresto=id_quickresto,
+            bonus_name=bonus_name,
+            is_winner=is_winner,
+            spun_at=datetime.now()
+        )
+        logger.info(f"Записан результат розыгрыша: пользователь {id_telegram}, бонус '{bonus_name}', победитель: {is_winner}")
+        return spin
+    except Exception as e:
+        logger.exception(f"Ошибка при записи результата розыгрыша: {e}")
+        return None
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def has_user_spun_today(id_telegram: int) -> bool:
+    """
+    Проверка, участвовал ли пользователь в 'Колесе подарков' сегодня
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если участвовал сегодня, False если нет
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        # Получаем начало текущего дня (00:00:00)
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # Ищем записи за сегодня
+        spin = GiftWheelSpins.get_or_none(
+            (GiftWheelSpins.id_telegram == id_telegram) &
+            (GiftWheelSpins.spun_at >= today_start)
+        )
+        return spin is not None
+    except Exception as e:
+        logger.exception(f"Ошибка при проверке участия пользователя {id_telegram} в розыгрыше: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_user_spin_history(id_telegram: int, limit: int = 10) -> list:
+    """
+    Получение истории розыгрышей пользователя
+
+    :param id_telegram: ID пользователя в Telegram
+    :param limit: Количество последних записей
+    :return: Список словарей с историей розыгрышей
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        spins = (GiftWheelSpins
+                 .select()
+                 .where(GiftWheelSpins.id_telegram == id_telegram)
+                 .order_by(GiftWheelSpins.spun_at.desc())
+                 .limit(limit))
+
+        history = []
+        for spin in spins:
+            history.append({
+                "id_telegram": spin.id_telegram,
+                "bonus_name": spin.bonus_name,
+                "is_winner": spin.is_winner,
+                "spun_at": spin.spun_at
+            })
+        return history
+    except Exception as e:
+        logger.exception(f"Ошибка при получении истории розыгрышей пользователя {id_telegram}: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_all_winners() -> list:
+    """
+    Получение всех победителей розыгрышей (для админ-панели)
+
+    :return: Список словарей с данными победителей
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        winners = (GiftWheelSpins
+                   .select()
+                   .where(GiftWheelSpins.is_winner == True)
+                   .order_by(GiftWheelSpins.spun_at.desc()))
+
+        result = []
+        for winner in winners:
+            result.append({
+                "id_telegram": winner.id_telegram,
+                "id_quickresto": winner.id_quickresto,
+                "bonus_name": winner.bonus_name,
+                "spun_at": winner.spun_at
+            })
+        return result
+    except Exception as e:
+        logger.exception(f"Ошибка при получении списка победителей: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
 """Всегда в конце, что бы создавать таблицы в базе данных"""
 
 
 def create_tables():
     """Создание таблицы в базе данных"""
-    db.create_tables([RegisteredPersons, StartPersons])
+    db.create_tables([RegisteredPersons, StartPersons, GiftWheelSpins])
