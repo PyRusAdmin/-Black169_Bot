@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from aiogram import F, Router
-from aiogram.filters import Command
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery
 from loguru import logger
 
 from config import OWNER_ID
-from keyboards.inline import admin_menu_keyboard
+from keyboards.inline import admin_menu_keyboard, back_to_admin_menu_keyboard
 
 router = Router(name=__name__)
+
+"""Для администратора и владельца боте не будет никаких команд, только инлайн кнопки"""
 
 
 def is_admin(user_id: int) -> bool:
@@ -18,26 +19,6 @@ def is_admin(user_id: int) -> bool:
     :return: True если администратор, False если нет
     """
     return user_id == OWNER_ID
-
-
-@router.message(Command("admin"))
-async def admin_command_handler(message: Message) -> None:
-    """
-    Обработчик команды /admin — открытие админ-панели
-    """
-    logger.info(f"Пользователь {message.from_user.id} запросил админ-панель")
-
-    if not is_admin(message.from_user.id):
-        await message.answer("❌ У вас нет прав для доступа к админ-панели")
-        return
-
-    await message.answer(
-        text=(
-            "🔧 <b>Админ-панель</b>\n\n"
-            "Выберите раздел для управления ботом:"
-        ),
-        reply_markup=admin_menu_keyboard()
-    )
 
 
 @router.callback_query(F.data == "winners")
@@ -61,7 +42,7 @@ async def winners_handler(callback: CallbackQuery) -> None:
             "• Выигранный приз\n"
             "• Дата выигрыша"
         ),
-        reply_markup=admin_menu_keyboard()
+        reply_markup=back_to_admin_menu_keyboard()
     )
     await callback.answer()
 
@@ -88,7 +69,7 @@ async def users_handler(callback: CallbackQuery) -> None:
             "• Дата регистрации\n"
             "• Бонусный баланс"
         ),
-        reply_markup=admin_menu_keyboard()
+        reply_markup=back_to_admin_menu_keyboard()
     )
     await callback.answer()
 
@@ -115,7 +96,7 @@ async def broadcast_handler(callback: CallbackQuery) -> None:
             "• Добавление кнопок\n"
             "• Сегментация аудитории"
         ),
-        reply_markup=admin_menu_keyboard()
+        reply_markup=back_to_admin_menu_keyboard()
     )
     await callback.answer()
 
@@ -142,9 +123,12 @@ async def stats_handler(callback: CallbackQuery) -> None:
             "• Эффективность рассылок\n"
             "• Возврат клиентов"
         ),
-        reply_markup=admin_menu_keyboard()
+        reply_markup=back_to_admin_menu_keyboard()
     )
     await callback.answer()
+
+
+"""Меню администратора"""
 
 
 @router.callback_query(F.data == "admin_back")

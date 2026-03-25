@@ -5,7 +5,7 @@ from aiogram.types import CallbackQuery, Message
 from loguru import logger
 
 from config import OWNER_ID
-from keyboards.inline import main_menu_keyboard, admin_menu_keyboard, back_to_admin_menu_keyboard
+from keyboards.inline import main_menu_keyboard, admin_menu_keyboard
 from keyboards.keyboards import contact_keyboard
 from services.database import write_to_db_start_person, is_user_registered
 from services.i18n import t
@@ -116,22 +116,4 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-"""Меню администратора"""
 
-
-@router.callback_query(F.data == "admin_menu")
-async def admin_menu_handler(callback: CallbackQuery) -> None:
-    """
-    Обработчик кнопки "Меню администратора"
-    """
-    logger.info(f"Пользователь {callback.from_user.id} нажал 'Меню администратора'")
-
-    id_telegram = callback.from_user.id  # id пользователя в Telegram
-
-    if id_telegram == OWNER_ID:  # Проверяем, является ли пользователь владельцем бота
-        logger.info(f"Пользователь {id_telegram} является владельцем бота")
-        await callback.message.answer(
-            text=t("main-menu-admin"),
-            reply_markup=back_to_admin_menu_keyboard(),
-        )
-        return

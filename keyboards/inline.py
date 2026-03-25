@@ -89,7 +89,7 @@ def back_to_admin_menu_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="В меню администратора", callback_data="back_to_admin_menu"),
+                InlineKeyboardButton(text="В меню администратора", callback_data="admin_back"),
             ],
         ]
     )
