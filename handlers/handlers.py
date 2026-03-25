@@ -5,7 +5,7 @@ from aiogram.types import CallbackQuery, Message
 from loguru import logger
 
 from config import OWNER_ID
-from keyboards.inline import main_menu_keyboard
+from keyboards.inline import main_menu_keyboard, admin_menu_keyboard
 from keyboards.keyboards import contact_keyboard
 from services.database import write_to_db_start_person, is_user_registered
 from services.i18n import t
@@ -27,6 +27,10 @@ async def command_start_handler(message: Message) -> None:
 
     if id_telegram == OWNER_ID:
         logger.info(f"Пользователь {id_telegram} является владельцем бота")
+        await message.answer(
+            text=t("main-menu-admin"),
+            reply_markup=admin_menu_keyboard(),
+        )
         return
 
     data = {
