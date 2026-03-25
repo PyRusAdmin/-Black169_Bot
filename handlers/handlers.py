@@ -5,12 +5,14 @@ from aiogram.types import CallbackQuery, Message
 from loguru import logger
 
 from config import OWNER_ID
-from keyboards.inline import main_menu_keyboard, admin_menu_keyboard
+from keyboards.inline import main_menu_keyboard, admin_menu_keyboard, back_to_admin_menu_keyboard
 from keyboards.keyboards import contact_keyboard
 from services.database import write_to_db_start_person, is_user_registered
 from services.i18n import t
 
 router = Router(name=__name__)
+
+"""Обработчик команды /start (общая команда для всех пользователей)"""
 
 
 @router.message(CommandStart())
@@ -63,6 +65,9 @@ async def command_start_handler(message: Message) -> None:
     )
 
 
+"""Кнопка возврата в главное меню для обычных пользователей"""
+
+
 @router.callback_query(F.data == "back_to_main_menu")
 async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
     """
@@ -109,3 +114,24 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
         reply_markup=contact_keyboard(),
     )
     await callback.answer()
+
+
+"""Меню администратора"""
+
+
+@router.callback_query(F.data == "admin_menu")
+async def admin_menu_handler(callback: CallbackQuery) -> None:
+    """
+    Обработчик кнопки "Меню администратора"
+    """
+    logger.info(f"Пользователь {callback.from_user.id} нажал 'Меню администратора'")
+
+    id_telegram = callback.from_user.id  # id пользователя в Telegram
+
+    if id_telegram == OWNER_ID:  # Проверяем, является ли пользователь владельцем бота
+        logger.info(f"Пользователь {id_telegram} является владельцем бота")
+        await callback.message.answer(
+            text=t("main-menu-admin"),
+            reply_markup=back_to_admin_menu_keyboard(),
+        )
+        return

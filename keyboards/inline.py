@@ -82,3 +82,14 @@ def admin_menu_keyboard():
             ],
         ]
     )
+
+
+def back_to_admin_menu_keyboard():
+    """Клавиатура для возврата в меню администратора"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="В меню администратора", callback_data="back_to_admin_menu"),
+            ],
+        ]
+    )
