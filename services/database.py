@@ -170,7 +170,7 @@ def get_user_info(id_telegram: int) -> dict | None:
             db.close()
 
 
-def get_user_bonus(id_telegram: int) -> str | None:
+def get_user_bonus(id_telegram: int):
     """
     Получение баланса бонусов пользователя
 
@@ -182,7 +182,7 @@ def get_user_bonus(id_telegram: int) -> str | None:
             db.connect()
         user = RegisteredPersons.get_or_none(RegisteredPersons.id_telegram == id_telegram)
         if user:
-            return user.user_bonus
+            return user.id_quickresto, user.phone_telegram
         return None
     except Exception as e:
         logger.exception(f"Ошибка при получении бонусов пользователя {id_telegram}: {e}")

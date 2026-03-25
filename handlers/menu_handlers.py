@@ -5,8 +5,10 @@ from loguru import logger
 
 from keyboards.inline import back_to_main_menu_keyboard, twist_keyboard
 from services.bonus import random_bonus
-from services.database import get_user_bonus, get_user_info, has_user_spun_today, write_spin_result
+from services.database import get_user_bonus, get_user_info, has_user_spun_today, write_spin_result, \
+    write_to_db_registered_person
 from services.i18n import t
+from services.quickresto_api import print_full_client_info
 
 router = Router(name=__name__)
 
@@ -17,18 +19,30 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Мои бонусы'")
 
     # Получаем баланс бонусов пользователя
-    bonus = get_user_bonus(callback.from_user.id)
+    id_quickresto, phone_telegram = get_user_bonus(callback.from_user.id)
+    data = print_full_client_info(client_id=id_quickresto)
 
-    if bonus:
-        await callback.message.answer(
-            text=f"💰 Ваши бонусы: <b>{bonus}</b>\n\nИспользуйте их при следующем посещении!",
-            reply_markup=back_to_main_menu_keyboard()
-        )
-    else:
-        await callback.message.answer(
-            text="❌ Информация о бонусах не найдена. Пожалуйста, зарегистрируйтесь.",
-            reply_markup=back_to_main_menu_keyboard()
-        )
+    data = {
+        "id_telegram": callback.from_user.id,
+        "id_quickresto": data.get("id"),
+        "last_name": data.get("last_name"),
+        "first_name": data.get("first_name"),
+        "patronymic_name": data.get("middle_name"),
+        "birthday_user": data.get("date_of_birth"),
+        "user_bonus": data.get("bonus_ledger"),
+        "phone_telegram": phone_telegram
+    }
+
+    write_to_db_registered_person(data)
+
+    # Получаем бонусы из БД
+    user_info = get_user_info(callback.from_user.id)
+    user_bonus = user_info.get("user_bonus") if user_info else None
+
+    await callback.message.answer(
+        text=f"💰 Ваши бонусы: <b>{user_bonus}</b>\n\nИспользуйте их при следующем посещении!",
+        reply_markup=back_to_main_menu_keyboard()
+    )
 
     await callback.answer()
 
