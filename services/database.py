@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 from peewee import *  # https://docs.peewee-orm.com/en/latest/index.html
+from peewee import fn
 from loguru import logger
 
 db = SqliteDatabase("database.db")
@@ -508,6 +509,91 @@ def get_all_user_ids() -> list:
     except Exception as e:
         logger.exception(f"Ошибка при получении списка пользователей: {e}")
         return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_start_persons_count() -> int:
+    """
+    Получение количества пользователей, которые запускали бота
+
+    :return: Количество пользователей
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        count = StartPersons.select().count()
+        return count
+    except Exception as e:
+        logger.exception(f"Ошибка при получении количества пользователей: {e}")
+        return 0
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_registered_persons_count() -> int:
+    """
+    Получение количества пользователей, которые привязали номер телефона
+
+    :return: Количество пользователей
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        count = RegisteredPersons.select().count()
+        return count
+    except Exception as e:
+        logger.exception(f"Ошибка при получении количества зарегистрированных пользователей: {e}")
+        return 0
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_broadcast_stats() -> dict:
+    """
+    Получение статистики по рассылкам
+
+    :return: Словарь со статистикой
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        # Общее количество сообщений
+        total_messages = MarketingMessages.select().count()
+
+        # Количество по типам
+        text_count = MarketingMessages.select().where(MarketingMessages.message_type == "text").count()
+        photo_count = MarketingMessages.select().where(MarketingMessages.message_type == "photo").count()
+        video_count = MarketingMessages.select().where(MarketingMessages.message_type == "video").count()
+        blocked_count = MarketingMessages.select().where(MarketingMessages.is_blocked == True).count()
+
+        # Уникальные пользователи, получившие рассылки
+        unique_users = MarketingMessages.select(fn.COUNT(fn.DISTINCT(MarketingMessages.id_telegram))).scalar()
+
+        return {
+            "total_messages": total_messages,
+            "text_count": text_count,
+            "photo_count": photo_count,
+            "video_count": video_count,
+            "blocked_count": blocked_count,
+            "unique_users": unique_users
+        }
+    except Exception as e:
+        logger.exception(f"Ошибка при получении статистики рассылок: {e}")
+        return {
+            "total_messages": 0,
+            "text_count": 0,
+            "photo_count": 0,
+            "video_count": 0,
+            "blocked_count": 0,
+            "unique_users": 0
+        }
     finally:
         if not db.is_closed():
             db.close()

@@ -19,6 +19,9 @@ from services.database import (
     get_all_winners,
     get_all_user_ids,
     log_marketing_message,
+    get_start_persons_count,
+    get_registered_persons_count,
+    get_broadcast_stats,
 )
 from services.excel_service import write_users_to_excel, write_winners_to_excel
 from states.user_states import BroadcastState
@@ -383,7 +386,7 @@ async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMCont
 @router.callback_query(F.data == "stats")
 async def stats_handler(callback: CallbackQuery) -> None:
     """
-    Обработчик кнопки 'Статистика пользователей'
+    Обработчик кнопки '📊 Статистика пользователей'
     """
     logger.info(f"Администратор {callback.from_user.id} запросил статистику")
 
@@ -391,16 +394,25 @@ async def stats_handler(callback: CallbackQuery) -> None:
         await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
         return
 
+    # Получаем статистику
+    total_users = get_start_persons_count()  # Пользователи, запустившие бота
+    registered_users = get_registered_persons_count()  # Привязавшие номер телефона
+    broadcast_stats = get_broadcast_stats()  # Статистика по рассылкам
+
     await callback.message.answer(
         text=(
             "📊 <b>Статистика пользователей</b>\n\n"
-            "🚧 Раздел в разработке...\n\n"
-            "Здесь будет отображаться статистика:\n"
-            "• Количество пользователей бота\n"
-            "• Количество привязанных номеров\n"
-            "• Начислено/списано/сгорело бонусов\n"
-            "• Эффективность рассылок\n"
-            "• Возврат клиентов"
+            f"👥 <b>Пользователи:</b>\n"
+            f"• Запустили бота: <b>{total_users}</b>\n"
+            f"• Привязали номер телефона: <b>{registered_users}</b>\n\n"
+            f"📨 <b>Рассылки:</b>\n"
+            f"• Всего отправлено сообщений: <b>{broadcast_stats['total_messages']}</b>\n"
+            f"  └ Текстовых: {broadcast_stats['text_count']}\n"
+            f"  └ С фото: {broadcast_stats['photo_count']}\n"
+            f"  └ С видео: {broadcast_stats['video_count']}\n"
+            f"• Уникальных получателей: <b>{broadcast_stats['unique_users']}</b>\n"
+            f"• Заблокировали бота: <b>{broadcast_stats['blocked_count']}</b>\n\n"
+            f"ℹ️ <i>Данные актуальны на текущий момент</i>"
         ),
         reply_markup=back_to_admin_menu_keyboard()
     )
