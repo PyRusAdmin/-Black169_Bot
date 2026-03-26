@@ -25,7 +25,7 @@ def is_admin(user_id: int) -> bool:
 @router.callback_query(F.data == "winners")
 async def winners_handler(callback: CallbackQuery) -> None:
     """
-    Обработчик кнопки 'Список победителей «Колеса подарков»'
+    Обработчик кнопки '🏆 Список победителей «Колеса подарков»'
     """
     logger.info(f"Администратор {callback.from_user.id} запросил список победителей")
 
