@@ -93,3 +93,35 @@ def back_to_admin_menu_keyboard():
             ],
         ]
     )
+
+
+def broadcast_type_keyboard():
+    """Клавиатура выбора типа сообщения для рассылки"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="📝 Текст", callback_data="broadcast_text"),
+            ],
+            [
+                InlineKeyboardButton(text="🖼️ Фото", callback_data="broadcast_photo"),
+            ],
+            [
+                InlineKeyboardButton(text="🎥 Видео", callback_data="broadcast_video"),
+            ],
+            [
+                InlineKeyboardButton(text="❌ Отмена", callback_data="broadcast_cancel"),
+            ],
+        ]
+    )
+
+
+def broadcast_confirm_keyboard():
+    """Клавиатура подтверждения отправки рассылки"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅ Отправить", callback_data="broadcast_confirm_send"),
+                InlineKeyboardButton(text="❌ Отмена", callback_data="broadcast_cancel"),
+            ],
+        ]
+    )

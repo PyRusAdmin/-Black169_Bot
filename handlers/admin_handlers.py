@@ -1,11 +1,25 @@
 # -*- coding: utf-8 -*-
-from aiogram import F, Router
-from aiogram.types import CallbackQuery, BufferedInputFile
+import asyncio
+from aiogram import F, Router, Bot
+from aiogram.filters import Command
+from aiogram.types import CallbackQuery, BufferedInputFile, Message
+from aiogram.fsm.context import FSMContext
 from loguru import logger
-from config import OWNER_ID
-from keyboards.inline import admin_menu_keyboard, back_to_admin_menu_keyboard
-from services.database import get_start_persons, get_all_winners
+from config import OWNER_ID, bot
+from keyboards.inline import (
+    admin_menu_keyboard,
+    back_to_admin_menu_keyboard,
+    broadcast_type_keyboard,
+    broadcast_confirm_keyboard,
+)
+from services.database import (
+    get_start_persons,
+    get_all_winners,
+    get_all_user_ids,
+    log_marketing_message,
+)
 from services.excel_service import write_users_to_excel, write_winners_to_excel
+from states.user_states import BroadcastState
 
 router = Router(name=__name__)
 
@@ -84,13 +98,277 @@ async def broadcast_handler(callback: CallbackQuery) -> None:
     await callback.message.answer(
         text=(
             "📨 <b>Рассылка сообщений</b>\n\n"
-            "🚧 Раздел в разработке...\n\n"
-            "Функционал рассылки будет включать:\n"
-            "• Отправка текста\n"
-            "• Отправка фото\n"
-            "• Отправка видео\n"
-            "• Добавление кнопок\n"
-            "• Сегментация аудитории"
+            "Выберите тип сообщения для рассылки:\n\n"
+            "📝 <b>Текст</b> — отправка текстового сообщения\n"
+            "🖼️ <b>Фото</b> — отправка фото с подписью\n"
+            "🎥 <b>Видео</b> — отправка видео с подписью\n\n"
+            "Сообщение будет отправлено всем пользователям, которые запускали бота."
+        ),
+        reply_markup=broadcast_type_keyboard()
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "broadcast_text")
+async def broadcast_text_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    Обработчик выбора типа рассылки — текст
+    """
+    logger.info(f"Администратор {callback.from_user.id} выбрал рассылку текстом")
+
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        return
+
+    await state.set_state(BroadcastState.waiting_for_message_text)
+    await callback.message.answer(
+        text=(
+            "📝 <b>Отправка текстового сообщения</b>\n\n"
+            "Отправьте текст сообщения для рассылки.\n\n"
+            "❌ Для отмены отправьте /cancel"
+        )
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "broadcast_photo")
+async def broadcast_photo_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    Обработчик выбора типа рассылки — фото
+    """
+    logger.info(f"Администратор {callback.from_user.id} выбрал рассылку фото")
+
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        return
+
+    await state.set_state(BroadcastState.waiting_for_photo)
+    await callback.message.answer(
+        text=(
+            "🖼️ <b>Отправка фото</b>\n\n"
+            "Отправьте фото для рассылки.\n\n"
+            "❌ Для отмены отправьте /cancel"
+        )
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "broadcast_video")
+async def broadcast_video_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    Обработчик выбора типа рассылки — видео
+    """
+    logger.info(f"Администратор {callback.from_user.id} выбрал рассылку видео")
+
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        return
+
+    await state.set_state(BroadcastState.waiting_for_video)
+    await callback.message.answer(
+        text=(
+            "🎥 <b>Отправка видео</b>\n\n"
+            "Отправьте видео для рассылки.\n\n"
+            "❌ Для отмены отправьте /cancel"
+        )
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "broadcast_cancel")
+async def broadcast_cancel_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    Обработчик отмены рассылки
+    """
+    logger.info(f"Администратор {callback.from_user.id} отменил рассылку")
+
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        return
+
+    await state.clear()
+    await callback.message.answer(
+        text="❌ Рассылка отменена.",
+        reply_markup=back_to_admin_menu_keyboard()
+    )
+    await callback.answer()
+
+
+@router.message(Command("cancel"))
+async def broadcast_cancel_command_handler(message: Message, state: FSMContext) -> None:
+    """
+    Обработчик команды /cancel для отмены рассылки
+    """
+    logger.info(f"Пользователь {message.from_user.id} отправил /cancel")
+
+    current_state = await state.get_state()
+    if current_state is None:
+        await message.answer("Нет активной рассылки для отмены.")
+        return
+
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ У вас нет прав для доступа к этой информации")
+        return
+
+    await state.clear()
+    await message.answer(
+        text="❌ Рассылка отменена.",
+        reply_markup=back_to_admin_menu_keyboard()
+    )
+
+
+@router.message(BroadcastState.waiting_for_message_text, F.text)
+async def broadcast_receive_text(message: Message, state: FSMContext) -> None:
+    """
+    Получение текста сообщения для рассылки
+    """
+    logger.info(f"Пользователь {message.from_user.id} отправил текст для рассылки")
+
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ У вас нет прав для доступа к этой информации")
+        return
+
+    text = message.text
+    await state.update_data(message_text=text, message_type="text")
+
+    await message.answer(
+        text=(
+            "📨 <b>Подтверждение рассылки</b>\n\n"
+            f"Текст сообщения:\n{text}\n\n"
+            f"Количество получателей: {len(get_all_user_ids())}\n\n"
+            "Вы уверены, что хотите отправить рассылку?"
+        ),
+        reply_markup=broadcast_confirm_keyboard()
+    )
+
+
+@router.message(BroadcastState.waiting_for_photo, F.photo)
+async def broadcast_receive_photo(message: Message, state: FSMContext) -> None:
+    """
+    Получение фото для рассылки
+    """
+    logger.info(f"Пользователь {message.from_user.id} отправил фото для рассылки")
+
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ У вас нет прав для доступа к этой информации")
+        return
+
+    photo_id = message.photo[-1].file_id
+    caption = message.caption or ""
+    await state.update_data(photo_id=photo_id, caption=caption, message_type="photo")
+
+    await message.answer(
+        text=(
+            "📨 <b>Подтверждение рассылки</b>\n\n"
+            f"Фото отправлено.\n"
+            f"Подпись: {caption if caption else 'без подписи'}\n\n"
+            f"Количество получателей: {len(get_all_user_ids())}\n\n"
+            "Вы уверены, что хотите отправить рассылку?"
+        ),
+        reply_markup=broadcast_confirm_keyboard()
+    )
+
+
+@router.message(BroadcastState.waiting_for_video, F.video)
+async def broadcast_receive_video(message: Message, state: FSMContext) -> None:
+    """
+    Получение видео для рассылки
+    """
+    logger.info(f"Пользователь {message.from_user.id} отправил видео для рассылки")
+
+    if not is_admin(message.from_user.id):
+        await message.answer("❌ У вас нет прав для доступа к этой информации")
+        return
+
+    video_id = message.video.file_id
+    caption = message.caption or ""
+    await state.update_data(video_id=video_id, caption=caption, message_type="video")
+
+    await message.answer(
+        text=(
+            "📨 <b>Подтверждение рассылки</b>\n\n"
+            f"Видео отправлено.\n"
+            f"Подпись: {caption if caption else 'без подписи'}\n\n"
+            f"Количество получателей: {len(get_all_user_ids())}\n\n"
+            "Вы уверены, что хотите отправить рассылку?"
+        ),
+        reply_markup=broadcast_confirm_keyboard()
+    )
+
+
+@router.callback_query(F.data == "broadcast_confirm_send")
+async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    Подтверждение и отправка рассылки
+    """
+    logger.info(f"Администратор {callback.from_user.id} подтвердил отправку рассылки")
+
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        return
+
+    data = await state.get_data()
+    message_type = data.get("message_type")
+    user_ids = get_all_user_ids()
+
+    total_sent = 0
+    total_blocked = 0
+
+    await callback.message.answer(
+        text=f"📨 <b>Начало рассылки...</b>\n\n"
+             f"Всего получателей: {len(user_ids)}"
+    )
+
+    for user_id in user_ids:
+        try:
+            if message_type == "text":
+                await bot.send_message(
+                    chat_id=user_id,
+                    text=data.get("message_text")
+                )
+            elif message_type == "photo":
+                await bot.send_photo(
+                    chat_id=user_id,
+                    photo=data.get("photo_id"),
+                    caption=data.get("caption")
+                )
+            elif message_type == "video":
+                await bot.send_video(
+                    chat_id=user_id,
+                    video=data.get("video_id"),
+                    caption=data.get("caption")
+                )
+
+            log_marketing_message(
+                id_telegram=user_id,
+                message_text=data.get("message_text", data.get("caption", "")),
+                message_type=message_type
+            )
+            total_sent += 1
+
+        except Exception as e:
+            if "bot was blocked" in str(e).lower():
+                total_blocked += 1
+                log_marketing_message(
+                    id_telegram=user_id,
+                    message_text="Blocked",
+                    message_type="blocked"
+                )
+            logger.error(f"Не удалось отправить сообщение пользователю {user_id}: {e}")
+
+        # Небольшая задержка для избежания лимитов Telegram
+        await asyncio.sleep(0.05)
+
+    await state.clear()
+
+    await callback.message.answer(
+        text=(
+            f"✅ <b>Рассылка завершена!</b>\n\n"
+            f"📊 <b>Статистика:</b>\n"
+            f"• Всего получателей: {len(user_ids)}\n"
+            f"• Успешно отправлено: {total_sent}\n"
+            f"• Заблокировали бота: {total_blocked}\n"
+            f"• Не доставлено: {len(user_ids) - total_sent - total_blocked}"
         ),
         reply_markup=back_to_admin_menu_keyboard()
     )

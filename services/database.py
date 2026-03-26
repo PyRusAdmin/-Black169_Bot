@@ -417,4 +417,97 @@ def get_start_persons() -> list:
 
 def create_tables():
     """Создание таблицы в базе данных"""
-    db.create_tables([RegisteredPersons, StartPersons, GiftWheelSpins])
+    db.create_tables([RegisteredPersons, StartPersons, GiftWheelSpins, MarketingMessages])
+
+
+"""Таблица для учёта маркетинговых рассылок"""
+
+
+class MarketingMessages(Model):
+    """Таблица для отслеживания эффективности рассылок"""
+
+    id_telegram = IntegerField()  # ID пользователя в Telegram
+    message_text = TextField()  # Текст сообщения
+    message_type = CharField()  # Тип: text, photo, video
+    sent_at = DateTimeField(default=datetime.now)  # Дата отправки
+    is_blocked = BooleanField(default=False)  # True если пользователь заблокировал бота
+    is_read = BooleanField(default=False)  # True если пользователь прочитал сообщение
+
+    class Meta:
+        database = db
+        table_name = "marketing_messages"
+        indexes = (
+            (('id_telegram', 'sent_at'), False),  # Индекс для быстрого поиска
+        )
+
+
+def log_marketing_message(id_telegram: int, message_text: str, message_type: str = "text") -> None:
+    """
+    Логирование отправки маркетингового сообщения
+
+    :param id_telegram: ID пользователя в Telegram
+    :param message_text: Текст сообщения
+    :param message_type: Тип сообщения (text, photo, video)
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+        MarketingMessages.create(
+            id_telegram=id_telegram,
+            message_text=message_text[:500],  # Ограничиваем длину текста
+            message_type=message_type,
+            sent_at=datetime.now()
+        )
+    except Exception as e:
+        logger.exception(f"Ошибка при логировании рассылки: {e}")
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def update_message_status(id_telegram: int, is_blocked: bool = False, is_read: bool = False) -> None:
+    """
+    Обновление статуса сообщения (заблокировано/прочитано)
+
+    :param id_telegram: ID пользователя в Telegram
+    :param is_blocked: True если пользователь заблокировал бота
+    :param is_read: True если пользователь прочитал сообщение
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+        # Обновляем последнее сообщение для этого пользователя
+        query = (MarketingMessages
+                 .update(is_blocked=is_blocked, is_read=is_read)
+                 .where(MarketingMessages.id_telegram == id_telegram)
+                 .order_by(MarketingMessages.sent_at.desc())
+                 .limit(1))
+        query.execute()
+    except Exception as e:
+        logger.exception(f"Ошибка при обновлении статуса сообщения: {e}")
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_all_user_ids() -> list:
+    """
+    Получение всех ID пользователей, которые запускали бота
+
+    :return: Список ID пользователей
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        user_ids = (StartPersons
+                    .select(StartPersons.id_telegram)
+                    .order_by(StartPersons.updated_at.desc()))
+
+        return [user.id_telegram for user in user_ids]
+    except Exception as e:
+        logger.exception(f"Ошибка при получении списка пользователей: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
