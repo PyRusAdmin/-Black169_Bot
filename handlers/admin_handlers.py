@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import asyncio
-from aiogram import F, Router, Bot
+
+from aiogram import F, Router
 from aiogram.filters import Command
-from aiogram.types import CallbackQuery, BufferedInputFile, Message
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, BufferedInputFile, Message
 from loguru import logger
+
 from config import OWNER_ID, bot
 from keyboards.inline import (
     admin_menu_keyboard,
@@ -311,6 +313,9 @@ async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMCont
     message_type = data.get("message_type")
     user_ids = get_all_user_ids()
 
+    # Исключаем ID владельца/бота из рассылки (бот не может отправлять сообщения другим ботам)
+    user_ids = [uid for uid in user_ids if uid != OWNER_ID]
+
     total_sent = 0
     total_blocked = 0
 
@@ -406,7 +411,7 @@ async def stats_handler(callback: CallbackQuery) -> None:
 
 
 @router.callback_query(F.data == "admin_back")
-async def admin_back_handler(callback: CallbackQuery) -> None:
+async def admin_back_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """
     Обработчик кнопки 'В админ-панель'
     """
@@ -416,7 +421,10 @@ async def admin_back_handler(callback: CallbackQuery) -> None:
         await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
         return
 
-    await callback.message.edit_message_text(
+    # Очищаем состояние FSM если есть активная рассылка
+    await state.clear()
+
+    await callback.message.edit_text(
         text=(
             "🔧 <b>Админ-панель</b>\n\n"
             "Выберите раздел для управления ботом:"
