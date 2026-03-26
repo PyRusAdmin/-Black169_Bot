@@ -388,9 +388,11 @@ def get_start_persons() -> list:
         if db.is_closed():
             db.connect()
 
-        start_persons = (StartPersons
-                         .select()
-                         .order_by(StartPersons.updated_at.desc()))
+        start_persons = (
+            StartPersons.select().order_by(
+                StartPersons.updated_at.desc()
+            )
+        )
 
         result = []  # список словарей с данными пользователей
         for start_person in start_persons:
