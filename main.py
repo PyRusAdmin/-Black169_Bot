@@ -3,8 +3,6 @@ import asyncio
 import logging
 import sys
 
-from loguru import logger
-
 from config import dp, bot
 from handlers.admin_handlers import router as admin_handlers
 from handlers.handlers import router as handlers
@@ -12,10 +10,12 @@ from handlers.menu_handlers import router as menu_handlers
 from handlers.user_handlers import router as user_handlers
 from services.database import create_tables
 
-logger.add("log/log.log")
-
 
 async def main() -> None:
+    """
+    Точка входа в приложение
+    """
+
     create_tables()  # Создание таблицы в базе данных
 
     dp.include_router(handlers)  # Общие хендлеры
