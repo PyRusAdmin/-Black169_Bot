@@ -203,6 +203,7 @@ python main.py
 2. Используйте функцию `t()` в коде:
    ```python
    from services.i18n import t
+   
    await message.answer(text=t("your-key"))
    ```
 

@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from aiogram import F, Router
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, BufferedInputFile
 from loguru import logger
-
+from openpyxl import Workbook
 from config import OWNER_ID
 from keyboards.inline import admin_menu_keyboard, back_to_admin_menu_keyboard
+from services.database import get_start_persons
+import io
 
 router = Router(name=__name__)
 
@@ -47,10 +49,39 @@ async def winners_handler(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
+def write_to_excel(data: list) -> io.BytesIO:
+    """
+    Запись данных в Excel-файл в памяти
+    :param data: Список словарей с данными пользователей
+    :return: Буфер с Excel-файлом
+    """
+    wb = Workbook()
+    ws = wb.active
+
+    # Заголовок
+    ws.append(["ID Telegram", "Имя", "Фамилия", "Username", "Дата регистрации"])
+
+    # Данные
+    for person in data:
+        ws.append([
+            person.get("id_telegram", ""),
+            person.get("first_name", ""),
+            person.get("last_name", ""),
+            person.get("username", ""),
+            person.get("updated_at", "")
+        ])
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    logger.success("Excel-файл сформирован в памяти")
+    return buffer
+
+
 @router.callback_query(F.data == "users")
 async def users_handler(callback: CallbackQuery) -> None:
     """
-    Обработчик кнопки 'Список пользователей'
+    Обработчик кнопки '👥 Список пользователей'
     """
     logger.info(f"Администратор {callback.from_user.id} запросил список пользователей")
 
@@ -58,18 +89,15 @@ async def users_handler(callback: CallbackQuery) -> None:
         await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
         return
 
-    await callback.message.answer(
-        text=(
-            "👥 <b>Список пользователей</b>\n\n"
-            "🚧 Раздел в разработке...\n\n"
-            "Здесь будет отображаться список всех пользователей:\n"
-            "• Telegram ID\n"
-            "• Имя\n"
-            "• Номер телефона\n"
-            "• Дата регистрации\n"
-            "• Бонусный баланс"
+    result = get_start_persons()  # получаем список пользователей
+    buffer = write_to_excel(result)  # формируем Excel-файл
+
+    await callback.message.answer_document(
+        document=BufferedInputFile(
+            buffer.read(),
+            filename="Пользователи_запускавшие_телеграмм_бота.xlsx"
         ),
-        reply_markup=back_to_admin_menu_keyboard()
+        caption="📊 Список пользователей бота",
     )
     await callback.answer()
 
@@ -142,7 +170,7 @@ async def admin_back_handler(callback: CallbackQuery) -> None:
         await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
         return
 
-    await callback.message.edit_text(
+    await callback.message.edit_message_text(
         text=(
             "🔧 <b>Админ-панель</b>\n\n"
             "Выберите раздел для управления ботом:"

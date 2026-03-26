@@ -375,6 +375,41 @@ def get_all_winners() -> list:
             db.close()
 
 
+"""Получение пользователей которые запустили бота командой /start"""
+
+
+def get_start_persons() -> list:
+    """
+    Получение пользователей которые запустили бота командой /start
+
+    :return: Список словарей с данными пользователей
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        start_persons = (StartPersons
+                         .select()
+                         .order_by(StartPersons.updated_at.desc()))
+
+        result = []  # список словарей с данными пользователей
+        for start_person in start_persons:
+            result.append({
+                "id_telegram": start_person.id_telegram,  # id пользователя в Telegram
+                "first_name": start_person.first_name_telegram,  # имя пользователя в Telegram
+                "last_name": start_person.last_name_telegram,  # фамилия пользователя в Telegram
+                "username": start_person.username_telegram,  # username пользователя в Telegram
+                "updated_at": start_person.updated_at  # дата и время обновления
+            })
+        return result
+    except Exception as e:
+        logger.exception(f"Ошибка при получении списка пользователей: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
 """Всегда в конце, что бы создавать таблицы в базе данных"""
 
 
