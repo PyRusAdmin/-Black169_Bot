@@ -129,6 +129,9 @@ def admin_menu_keyboard():
             [
                 InlineKeyboardButton(text="📊 Статистика пользователей", callback_data="stats"),
             ],
+            [
+                InlineKeyboardButton(text="🗑️ Удалить пользователя", callback_data="delete_user"),
+            ],
         ]
     )
 
