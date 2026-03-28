@@ -57,7 +57,7 @@ async def winners_handler(callback: CallbackQuery) -> None:
     logger.info(f"Администратор {callback.from_user.id} запросил список победителей")
 
     if not is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     result = get_all_winners()  # получаем список победителей
@@ -81,7 +81,7 @@ async def users_handler(callback: CallbackQuery) -> None:
     logger.info(f"Администратор {callback.from_user.id} запросил список пользователей")
 
     if not is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     result = get_start_persons()  # получаем список пользователей
@@ -105,15 +105,14 @@ async def registered_users_handler(callback: CallbackQuery) -> None:
     logger.info(f"Администратор {callback.from_user.id} запросил список зарегистрированных пользователей")
 
     if not is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     result = get_registered_persons()  # получаем список зарегистрированных пользователей
 
     if not result:
         await callback.message.answer(
-            text="❌ Нет зарегистрированных пользователей\n\n"
-                 "Никто ещё не отправил номер телефона.",
+            text=t("delete-no-registered-users"),
             reply_markup=back_to_admin_menu_keyboard()
         )
         await callback.answer()
@@ -140,18 +139,11 @@ async def broadcast_handler(callback: CallbackQuery) -> None:
     logger.info(f"Администратор {callback.from_user.id} запросил рассылку")
 
     if not is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     await callback.message.answer(
-        text=(
-            "📨 <b>Рассылка сообщений</b>\n\n"
-            "Выберите тип сообщения для рассылки:\n\n"
-            "📝 <b>Текст</b> — отправка текстового сообщения\n"
-            "🖼️ <b>Фото</b> — отправка фото с подписью\n"
-            "🎥 <b>Видео</b> — отправка видео с подписью\n\n"
-            "Сообщение будет отправлено всем пользователям, которые запускали бота."
-        ),
+        text=t("broadcast-title"),
         reply_markup=broadcast_type_keyboard()
     )
     await callback.answer()
@@ -165,16 +157,12 @@ async def broadcast_text_handler(callback: CallbackQuery, state: FSMContext) -> 
     logger.info(f"Администратор {callback.from_user.id} выбрал рассылку текстом")
 
     if not is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     await state.set_state(BroadcastState.waiting_for_message_text)
     await callback.message.answer(
-        text=(
-            "📝 <b>Отправка текстового сообщения</b>\n\n"
-            "Отправьте текст сообщения для рассылки.\n\n"
-            "❌ Для отмены отправьте /cancel"
-        )
+        text=t("broadcast-text-title")
     )
     await callback.answer()
 
@@ -187,16 +175,12 @@ async def broadcast_photo_handler(callback: CallbackQuery, state: FSMContext) ->
     logger.info(f"Администратор {callback.from_user.id} выбрал рассылку фото")
 
     if not is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     await state.set_state(BroadcastState.waiting_for_photo)
     await callback.message.answer(
-        text=(
-            "🖼️ <b>Отправка фото</b>\n\n"
-            "Отправьте фото для рассылки.\n\n"
-            "❌ Для отмены отправьте /cancel"
-        )
+        text=t("broadcast-photo-title")
     )
     await callback.answer()
 
@@ -209,16 +193,12 @@ async def broadcast_video_handler(callback: CallbackQuery, state: FSMContext) ->
     logger.info(f"Администратор {callback.from_user.id} выбрал рассылку видео")
 
     if not is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     await state.set_state(BroadcastState.waiting_for_video)
     await callback.message.answer(
-        text=(
-            "🎥 <b>Отправка видео</b>\n\n"
-            "Отправьте видео для рассылки.\n\n"
-            "❌ Для отмены отправьте /cancel"
-        )
+        text=t("broadcast-video-title")
     )
     await callback.answer()
 
@@ -231,12 +211,12 @@ async def broadcast_cancel_handler(callback: CallbackQuery, state: FSMContext) -
     logger.info(f"Администратор {callback.from_user.id} отменил рассылку")
 
     if not is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     await state.clear()
     await callback.message.answer(
-        text="❌ Рассылка отменена.",
+        text=t("broadcast-cancelled"),
         reply_markup=back_to_admin_menu_keyboard()
     )
     await callback.answer()
@@ -251,16 +231,12 @@ async def broadcast_cancel_command_handler(message: Message, state: FSMContext) 
 
     current_state = await state.get_state()
     if current_state is None:
-        await message.answer("Нет активной рассылки для отмены.")
-        return
-
-    if not is_admin(message.from_user.id):
-        await message.answer("❌ У вас нет прав для доступа к этой информации")
+        await message.answer(t("broadcast-no-active"))
         return
 
     await state.clear()
     await message.answer(
-        text="❌ Рассылка отменена.",
+        text=t("broadcast-cancelled"),
         reply_markup=back_to_admin_menu_keyboard()
     )
 
@@ -272,20 +248,11 @@ async def broadcast_receive_text(message: Message, state: FSMContext) -> None:
     """
     logger.info(f"Пользователь {message.from_user.id} отправил текст для рассылки")
 
-    if not is_admin(message.from_user.id):
-        await message.answer("❌ У вас нет прав для доступа к этой информации")
-        return
-
     text = message.text
     await state.update_data(message_text=text, message_type="text")
 
     await message.answer(
-        text=(
-            "📨 <b>Подтверждение рассылки</b>\n\n"
-            f"Текст сообщения:\n{text}\n\n"
-            f"Количество получателей: {len(get_all_user_ids())}\n\n"
-            "Вы уверены, что хотите отправить рассылку?"
-        ),
+        text=t("broadcast-confirm-title", text=text, count=len(get_all_user_ids())),
         reply_markup=broadcast_confirm_keyboard()
     )
 
@@ -297,22 +264,13 @@ async def broadcast_receive_photo(message: Message, state: FSMContext) -> None:
     """
     logger.info(f"Пользователь {message.from_user.id} отправил фото для рассылки")
 
-    if not is_admin(message.from_user.id):
-        await message.answer("❌ У вас нет прав для доступа к этой информации")
-        return
-
     photo_id = message.photo[-1].file_id
     caption = message.caption or ""
     await state.update_data(photo_id=photo_id, caption=caption, message_type="photo")
 
     await message.answer(
-        text=(
-            "📨 <b>Подтверждение рассылки</b>\n\n"
-            f"Фото отправлено.\n"
-            f"Подпись: {caption if caption else 'без подписи'}\n\n"
-            f"Количество получателей: {len(get_all_user_ids())}\n\n"
-            "Вы уверены, что хотите отправить рассылку?"
-        ),
+        text=t("broadcast-photo-confirm-title", caption=caption if caption else "без подписи",
+               count=len(get_all_user_ids())),
         reply_markup=broadcast_confirm_keyboard()
     )
 
@@ -324,22 +282,13 @@ async def broadcast_receive_video(message: Message, state: FSMContext) -> None:
     """
     logger.info(f"Пользователь {message.from_user.id} отправил видео для рассылки")
 
-    if not is_admin(message.from_user.id):
-        await message.answer("❌ У вас нет прав для доступа к этой информации")
-        return
-
     video_id = message.video.file_id
     caption = message.caption or ""
     await state.update_data(video_id=video_id, caption=caption, message_type="video")
 
     await message.answer(
-        text=(
-            "📨 <b>Подтверждение рассылки</b>\n\n"
-            f"Видео отправлено.\n"
-            f"Подпись: {caption if caption else 'без подписи'}\n\n"
-            f"Количество получателей: {len(get_all_user_ids())}\n\n"
-            "Вы уверены, что хотите отправить рассылку?"
-        ),
+        text=t("broadcast-video-confirm-title", caption=caption if caption else "без подписи",
+               count=len(get_all_user_ids())),
         reply_markup=broadcast_confirm_keyboard()
     )
 
@@ -352,7 +301,7 @@ async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMCont
     logger.info(f"Администратор {callback.from_user.id} подтвердил отправку рассылки")
 
     if not is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     data = await state.get_data()
@@ -366,8 +315,7 @@ async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMCont
     total_blocked = 0
 
     await callback.message.answer(
-        text=f"📨 <b>Начало рассылки...</b>\n\n"
-             f"Всего получателей: {len(user_ids)}"
+        text=t("broadcast-start", count=len(user_ids))
     )
 
     for user_id in user_ids:
@@ -413,14 +361,8 @@ async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMCont
     await state.clear()
 
     await callback.message.answer(
-        text=(
-            f"✅ <b>Рассылка завершена!</b>\n\n"
-            f"📊 <b>Статистика:</b>\n"
-            f"• Всего получателей: {len(user_ids)}\n"
-            f"• Успешно отправлено: {total_sent}\n"
-            f"• Заблокировали бота: {total_blocked}\n"
-            f"• Не доставлено: {len(user_ids) - total_sent - total_blocked}"
-        ),
+        text=t("broadcast-completed", total=len(user_ids), sent=total_sent, blocked=total_blocked,
+               failed=len(user_ids) - total_sent - total_blocked),
         reply_markup=back_to_admin_menu_keyboard()
     )
     await callback.answer()
@@ -434,7 +376,7 @@ async def stats_handler(callback: CallbackQuery) -> None:
     logger.info(f"Администратор {callback.from_user.id} запросил статистику")
 
     if not is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     # Получаем статистику
@@ -443,20 +385,10 @@ async def stats_handler(callback: CallbackQuery) -> None:
     broadcast_stats = get_broadcast_stats()  # Статистика по рассылкам
 
     await callback.message.answer(
-        text=(
-            "📊 <b>Статистика пользователей</b>\n\n"
-            f"👥 <b>Пользователи:</b>\n"
-            f"• Запустили бота: <b>{total_users}</b>\n"
-            f"• Привязали номер телефона: <b>{registered_users}</b>\n\n"
-            f"📨 <b>Рассылки:</b>\n"
-            f"• Всего отправлено сообщений: <b>{broadcast_stats['total_messages']}</b>\n"
-            f"  └ Текстовых: {broadcast_stats['text_count']}\n"
-            f"  └ С фото: {broadcast_stats['photo_count']}\n"
-            f"  └ С видео: {broadcast_stats['video_count']}\n"
-            f"• Уникальных получателей: <b>{broadcast_stats['unique_users']}</b>\n"
-            f"• Заблокировали бота: <b>{broadcast_stats['blocked_count']}</b>\n\n"
-            f"ℹ️ <i>Данные актуальны на текущий момент</i>"
-        ),
+        text=t("stats-title", total_users=total_users, registered_users=registered_users,
+               total_messages=broadcast_stats['total_messages'], text_count=broadcast_stats['text_count'],
+               photo_count=broadcast_stats['photo_count'], video_count=broadcast_stats['video_count'],
+               unique_users=broadcast_stats['unique_users'], blocked_count=broadcast_stats['blocked_count']),
         reply_markup=back_to_admin_menu_keyboard()
     )
     await callback.answer()
@@ -472,13 +404,13 @@ async def delete_user_handler(callback: CallbackQuery, state: FSMContext) -> Non
     """
     logger.info(f"Администратор {callback.from_user.id} запросил удаление клиента")
     if not is_admin(callback.from_user.id):
-        await callback.answer("У вас нет прав для доступа к данной информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     await state.set_state(DeleteUserState.waiting_for_user_id)
 
     await callback.message.answer(
-        text="Введите ID клиента QuickResto:",
+        text=t("delete-user-enter-id"),
         reply_markup=back_to_admin_menu_keyboard()
     )
     await callback.answer()
@@ -512,11 +444,11 @@ async def delete_user_id_handler(message: Message, state: FSMContext) -> None:
         delete_start_person(id_telegram)
 
     await message.answer(
-        text=f"✅ Клиент QuickResto с ID <b>{id_user}</b> успешно удален\n\n"
-             f"Из базы данных бота: {'удалён' if id_telegram else 'не найден'}",
+        text=t("delete-user-success", user_id=id_user, status="удалён" if id_telegram else "не найден"),
         reply_markup=back_to_admin_menu_keyboard()
     )
     await state.clear()
+
 
 """Меню администратора"""
 
@@ -529,17 +461,14 @@ async def admin_back_handler(callback: CallbackQuery, state: FSMContext) -> None
     logger.info(f"Администратор {callback.from_user.id} вернулся в админ-панель")
 
     if not is_admin(callback.from_user.id):
-        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
     # Очищаем состояние FSM если есть активная рассылка
     await state.clear()
 
     await callback.message.edit_text(
-        text=(
-            "🔧 <b>Админ-панель</b>\n\n"
-            "Выберите раздел для управления ботом:"
-        ),
+        text=t("admin-panel"),
         reply_markup=admin_menu_keyboard()
     )
     await callback.answer()
