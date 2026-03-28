@@ -122,6 +122,7 @@ def admin_menu_keyboard():
             ],
             [
                 InlineKeyboardButton(text="👥 Список пользователей", callback_data="users"),
+                InlineKeyboardButton(text="✅ Зарегистрированные", callback_data="registered_users"),
             ],
             [
                 InlineKeyboardButton(text="📨 Рассылка сообщений", callback_data="broadcast"),

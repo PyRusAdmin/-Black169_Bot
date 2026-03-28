@@ -14,9 +14,9 @@ from keyboards.inline import (
 from services.database import (
     get_start_persons, get_all_winners, get_all_user_ids, log_marketing_message, get_start_persons_count,
     get_registered_persons_count, get_broadcast_stats, delete_registered_person, delete_start_person,
-    RegisteredPersons,
+    RegisteredPersons, get_registered_persons,
 )
-from services.excel_service import write_users_to_excel, write_winners_to_excel
+from services.excel_service import write_users_to_excel, write_winners_to_excel, write_registered_users_to_excel
 from services.i18n import t
 from services.quickresto_api import delete_customer, base_url, auth, headers
 from states.user_states import BroadcastState, DeleteUserState
@@ -93,6 +93,41 @@ async def users_handler(callback: CallbackQuery) -> None:
             filename="Пользователи_запускавшие_телеграмм_бота.xlsx"
         ),
         caption="📊 Список пользователей бота",
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "registered_users")
+async def registered_users_handler(callback: CallbackQuery) -> None:
+    """
+    Обработчик кнопки 'Зарегистрированные пользователи' (кто отправил номер телефона)
+    """
+    logger.info(f"Администратор {callback.from_user.id} запросил список зарегистрированных пользователей")
+
+    if not is_admin(callback.from_user.id):
+        await callback.answer("❌ У вас нет прав для доступа к этой информации", show_alert=True)
+        return
+
+    result = get_registered_persons()  # получаем список зарегистрированных пользователей
+
+    if not result:
+        await callback.message.answer(
+            text="❌ Нет зарегистрированных пользователей\n\n"
+                 "Никто ещё не отправил номер телефона.",
+            reply_markup=back_to_admin_menu_keyboard()
+        )
+        await callback.answer()
+        return
+
+    buffer = write_registered_users_to_excel(result)  # формируем Excel-файл
+
+    await callback.message.answer_document(
+        document=BufferedInputFile(
+            buffer.read(),
+            filename="Зарегистрированные_пользователи.xlsx"
+        ),
+        caption=f"✅ Зарегистрированные пользователи ({len(result)} чел.)\n\n"
+                f"Полная информация из QuickResto",
     )
     await callback.answer()
 

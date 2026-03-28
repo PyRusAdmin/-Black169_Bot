@@ -469,6 +469,45 @@ def get_start_persons() -> list:
             db.close()
 
 
+def get_registered_persons() -> list:
+    """
+    Получение зарегистрированных пользователей (кто отправил номер телефона)
+
+    :return: Список словарей с данными зарегистрированных пользователей
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        registered_persons = (
+            RegisteredPersons.select().order_by(
+                RegisteredPersons.updated_at.desc()
+            )
+        )
+
+        result = []  # список словарей с данными пользователей
+        for person in registered_persons:
+            result.append({
+                "id_telegram": person.id_telegram,  # ID пользователя в Telegram
+                "id_quickresto": person.id_quickresto,  # ID пользователя в QuickResto
+                "phone_telegram": person.phone_telegram,  # Номер телефона
+                "last_name": person.last_name,  # Фамилия (QuickResto)
+                "first_name": person.first_name,  # Имя (QuickResto)
+                "patronymic_name": person.patronymic_name,  # Отчество (QuickResto)
+                "birthday_user": person.birthday_user,  # Дата рождения
+                "user_bonus": person.user_bonus,  # Бонусы
+                "date_of_visit": person.date_of_visit,  # Дата последнего визита
+                "updated_at": person.updated_at  # Дата обновления
+            })
+        return result
+    except Exception as e:
+        logger.exception(f"Ошибка при получении списка зарегистрированных пользователей: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
 """Всегда в конце, что бы создавать таблицы в базе данных"""
 
 
