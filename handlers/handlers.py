@@ -12,7 +12,10 @@ from services.i18n import t
 
 router = Router(name=__name__)
 
-"""Обработчик команды /start (общая команда для всех пользователей)"""
+"""
+Обработчик команды /start (общая команда для всех пользователей). В зависимости от того, является ли пользователь 
+владельцем бота, он получает разные клавиатуры.
+"""
 
 
 @router.message(CommandStart())
@@ -27,6 +30,7 @@ async def command_start_handler(message: Message) -> None:
     last_name_telegram = message.from_user.last_name
     username_telegram = message.from_user.username
 
+    # Проверяем, является ли пользователь владельцем бота. ID пользователя должен быть в списке OWNER_IDS в файле .env
     if id_telegram in OWNER_IDS:
         logger.info(f"Пользователь {id_telegram} является владельцем бота")
         await message.answer(

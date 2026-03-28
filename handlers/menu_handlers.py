@@ -40,7 +40,6 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
     # Получаем бонусы из БД
     user_info = get_user_info(callback.from_user.id)
     user_bonus = user_info.get("user_bonus") if user_info else None
-    phone_telegram = user_info.get("phone_telegram") if user_info else None
 
     await callback.message.answer(
         text=f"💰 Ваши бонусы: <b>{user_bonus}</b>\n\nИспользуйте их при следующем посещении!",

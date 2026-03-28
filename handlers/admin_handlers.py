@@ -2,7 +2,7 @@
 import asyncio
 
 from aiogram import F, Router
-from aiogram.filters import Command
+from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, BufferedInputFile, Message
 from loguru import logger
@@ -13,11 +13,13 @@ from keyboards.inline import (
 )
 from services.database import (
     get_start_persons, get_all_winners, get_all_user_ids, log_marketing_message, get_start_persons_count,
-    get_registered_persons_count, get_broadcast_stats,
+    get_registered_persons_count, get_broadcast_stats, delete_registered_person, delete_start_person,
+    RegisteredPersons,
 )
 from services.excel_service import write_users_to_excel, write_winners_to_excel
 from services.i18n import t
-from states.user_states import BroadcastState
+from services.quickresto_api import delete_customer, base_url, auth, headers
+from states.user_states import BroadcastState, DeleteUserState
 
 router = Router(name=__name__)
 
@@ -424,6 +426,62 @@ async def stats_handler(callback: CallbackQuery) -> None:
     )
     await callback.answer()
 
+
+"""Удаление клиента из QuickResto"""
+
+
+@router.callback_query(F.data == "delete_user")
+async def delete_user_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    Обработчик кнопки 'Удалить клиента'
+    """
+    logger.info(f"Администратор {callback.from_user.id} запросил удаление клиента")
+    if not is_admin(callback.from_user.id):
+        await callback.answer("У вас нет прав для доступа к данной информации", show_alert=True)
+        return
+
+    await state.set_state(DeleteUserState.waiting_for_user_id)
+
+    await callback.message.answer(
+        text="Введите ID клиента QuickResto:",
+        reply_markup=back_to_admin_menu_keyboard()
+    )
+    await callback.answer()
+
+
+@router.message(F.text, StateFilter(DeleteUserState.waiting_for_user_id))
+async def delete_user_id_handler(message: Message, state: FSMContext) -> None:
+    """
+    Обработчик ввода ID клиента QuickResto
+    """
+    id_user = message.text
+
+    logger.info(f"Администратор {message.from_user.id} ввел ID клиента QuickResto: {id_user}")
+
+    # Получаем ID пользователя в Telegram по ID QuickResto
+    user = RegisteredPersons.get_or_none(RegisteredPersons.id_quickresto == int(id_user))
+    id_telegram = user.id_telegram if user else None
+
+    # Удаляем клиента QuickResto
+    delete_customer(
+        customer_id=int(id_user),
+        base_url=base_url,
+        auth=auth,
+        headers=headers
+    )
+
+    # Удаляем из базы данных registered_persons
+    if id_telegram:
+        delete_registered_person(id_telegram)
+        # Удаляем из базы данных start_persons
+        delete_start_person(id_telegram)
+
+    await message.answer(
+        text=f"✅ Клиент QuickResto с ID <b>{id_user}</b> успешно удален\n\n"
+             f"Из базы данных бота: {'удалён' if id_telegram else 'не найден'}",
+        reply_markup=back_to_admin_menu_keyboard()
+    )
+    await state.clear()
 
 """Меню администратора"""
 

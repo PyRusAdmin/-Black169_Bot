@@ -7,7 +7,9 @@ from config import layer_name_quickresto
 from keyboards.inline import main_menu_keyboard
 from services.database import write_to_db_registered_person
 from services.i18n import t
-from services.quickresto_api import print_client_info, create_client, auth, headers, base_url, print_full_client_info
+from services.quickresto_api import (
+    print_client_info, create_client, auth, headers, base_url, print_full_client_info, update_customer_bonus
+)
 
 router = Router(name=__name__)
 
@@ -15,7 +17,7 @@ router = Router(name=__name__)
 @router.message(F.contact)
 async def message_handler(message: Message) -> None:
     """
-    Обработчик сообщений
+    Принимает контакт пользователя (отправленный номер телефона) и проверяет его в базе QuickResto
     """
     try:
         id_telegram = message.from_user.id  # получаем id пользователя
@@ -35,16 +37,16 @@ async def message_handler(message: Message) -> None:
             headers=headers
         )
 
-        # Если клиент не найден — создаём нового
+        # Если клиент не найден — создаём нового и присваиваем ему 1000 бонусных балов
         if data_customer is None:
             logger.info(f"Клиент не найден, создаём нового: {phone_telegram}")
 
             created_client = create_client(
-                name_customer=name_telegram,
-                phone_customer=phone_telegram,
-                base_url=base_url,
-                auth=auth,
-                headers=headers
+                name_customer=name_telegram,  # имя клиента
+                phone_customer=phone_telegram,  # номер телефона клиента
+                base_url=base_url,  # базовый url для api quickresto
+                auth=auth,  # авторизация для api quickresto
+                headers=headers  # заголовки для api quickresto
             )
 
             if created_client:
@@ -61,6 +63,16 @@ async def message_handler(message: Message) -> None:
 
                 write_to_db_registered_person(data)
 
+                # Добавляем бонус клиенту, если пользователя нет в базе QuickResto
+                update_customer_bonus(
+                    layer_name_quickresto=layer_name_quickresto,  # Название слоя QuickResto
+                    customer_id=client_id,  # ID клиента в QuickResto
+                    amount=1000.00,  # Сумма бонуса в рублях
+                    customer_phone=phone_telegram,  # Телефон клиента в QuickResto
+                    auth=auth,
+                    headers=headers
+                )
+
                 # Сначала удаляем реплай-клавиатуру
                 await message.answer(
                     text=t("registration-completed"),
@@ -76,7 +88,7 @@ async def message_handler(message: Message) -> None:
                 await message.answer(text=t("user-not-found"))
             return
 
-        # Клиент найден
+        # Клиент найден в базе QuickResto
         phone_quickresto = data_customer.get("phone")
         if phone_telegram == phone_quickresto:
             logger.success(f"Пользователь найден в базе QuickResto: {phone_telegram}")

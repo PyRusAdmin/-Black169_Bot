@@ -31,6 +31,62 @@ class RegisteredPersons(Model):
         table_name = "registered_persons"  # название таблицы
 
 
+def delete_registered_person(id_telegram: int) -> bool:
+    """
+    Удаление пользователя из базы данных registered_persons
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если удалён, False если не найден
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        query = RegisteredPersons.delete().where(RegisteredPersons.id_telegram == id_telegram)
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Пользователь {id_telegram} удалён из registered_persons")
+            return True
+        else:
+            logger.warning(f"Пользователь {id_telegram} не найден в registered_persons")
+            return False
+    except Exception as e:
+        logger.exception(f"Ошибка при удалении пользователя {id_telegram}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def delete_start_person(id_telegram: int) -> bool:
+    """
+    Удаление пользователя из базы данных start_persons
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если удалён, False если не найден
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        query = StartPersons.delete().where(StartPersons.id_telegram == id_telegram)
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Пользователь {id_telegram} удалён из start_persons")
+            return True
+        else:
+            logger.warning(f"Пользователь {id_telegram} не найден в start_persons")
+            return False
+    except Exception as e:
+        logger.exception(f"Ошибка при удалении пользователя {id_telegram}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
 def write_to_db_registered_person(data):
     """Запись данных о пользователе Telegram в базу данных, а так же из QuickResto"""
     id_telegram = data.get("id_telegram")  # идентификатор пользователя в Telegram

@@ -10,3 +10,9 @@ class BroadcastState(StatesGroup):
     waiting_for_photo = State()  # Ожидание фото
     waiting_for_video = State()  # Ожидание видео
     waiting_for_confirmation = State()  # Ожидание подтверждения отправки
+
+
+class DeleteUserState(StatesGroup):
+    """Состояния для удаления пользователя"""
+
+    waiting_for_user_id = State()  # Ожидание ID пользователя
