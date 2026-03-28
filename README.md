@@ -103,7 +103,8 @@ cp .env.example .env
 # Токен бота (получить у @BotFather)
 BOT_TOKEN=your_bot_token_here
 
-# ID владельца бота (ваш Telegram ID, узнать у @userinfobot)
+# ID владельцев бота (можно несколько через запятую)
+# Пример: OWNER_ID=535185511,698251317
 OWNER_ID=123456789
 
 # QuickResto API

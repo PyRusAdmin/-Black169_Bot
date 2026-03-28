@@ -82,6 +82,11 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
 
     if id_telegram in OWNER_IDS:
         logger.info(f"Пользователь {id_telegram} является владельцем бота")
+        await callback.message.edit_text(
+            text=t("main-menu"),
+            reply_markup=admin_menu_keyboard(),
+        )
+        await callback.answer()
         return
 
     data = {
@@ -99,7 +104,6 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
     if is_user_registered(id_telegram):
         # Пользователь уже зарегистрирован — показываем главное меню
         logger.info(f"Пользователь {id_telegram} уже зарегистрирован, показываем главное меню")
-        # Сначала скрываем reply-клавиатуру
         await callback.message.edit_text(
             text=t("main-menu"),
             reply_markup=main_menu_keyboard(),
