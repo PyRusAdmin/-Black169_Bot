@@ -4,7 +4,6 @@ from peewee import *  # https://docs.peewee-orm.com/en/latest/index.html
 from peewee import fn
 from utils.logger import logger
 
-
 db = SqliteDatabase("database.db")
 """
 Запись в базу данных о пользователях, которые зарегистрировались в боте, передав свой номер телефона. Часть данных 
@@ -689,6 +688,91 @@ def get_broadcast_stats() -> dict:
             "blocked_count": 0,
             "unique_users": 0
         }
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_birthday_users_today() -> list:
+    """
+    Получение пользователей, у которых сегодня день рождения
+
+    :return: Список словарей с данными именинников
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        today = datetime.now().strftime("%d.%m")  # Сегодняшняя дата в формате DD.MM
+
+        # Получаем всех зарегистрированных пользователей
+        registered_persons = RegisteredPersons.select()
+
+        result = []  # список словарей с данными именинников
+        for person in registered_persons:
+            if person.birthday_user:
+                # Формат даты в QuickResto: YYYY-MM-DD или DD.MM.YYYY
+                birthday = person.birthday_user
+                if len(birthday) == 10:
+                    # Преобразуем в DD.MM
+                    if '-' in birthday:
+                        birthday_formatted = f"{birthday[8:10]}.{birthday[5:7]}"
+                    elif '.' in birthday:
+                        birthday_formatted = birthday[:5]
+                    else:
+                        continue
+
+                    if birthday_formatted == today:
+                        result.append({
+                            "id_telegram": person.id_telegram,
+                            "id_quickresto": person.id_quickresto,
+                            "phone_telegram": person.phone_telegram,
+                            "first_name": person.first_name,
+                            "last_name": person.last_name,
+                            "birthday_user": person.birthday_user
+                        })
+
+        return result
+    except Exception as e:
+        logger.exception(f"Ошибка при получении именинников: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_birthday_users_count() -> int:
+    """
+    Получение количества пользователей, у которых сегодня день рождения
+
+    :return: Количество именинников
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        today = datetime.now().strftime("%d.%m")
+        registered_persons = RegisteredPersons.select()
+
+        count = 0
+        for person in registered_persons:
+            if person.birthday_user:
+                birthday = person.birthday_user
+                if len(birthday) == 10:
+                    if '-' in birthday:
+                        birthday_formatted = f"{birthday[8:10]}.{birthday[5:7]}"
+                    elif '.' in birthday:
+                        birthday_formatted = birthday[:5]
+                    else:
+                        continue
+
+                    if birthday_formatted == today:
+                        count += 1
+
+        return count
+    except Exception as e:
+        logger.exception(f"Ошибка при подсчёте именинников: {e}")
+        return 0
     finally:
         if not db.is_closed():
             db.close()
