@@ -5,7 +5,7 @@ from utils.logger import logger
 
 from config import layer_name_quickresto
 from keyboards.inline import main_menu_keyboard
-from services.database import write_to_db_registered_person
+from services.database import write_to_db_registered_person, update_bonus_accrual_date
 from services.i18n import t
 from services.quickresto_api import (
     print_client_info, create_client, auth, headers, base_url, print_full_client_info, update_customer_bonus
@@ -72,6 +72,9 @@ async def message_handler(message: Message) -> None:
                     auth=auth,
                     headers=headers
                 )
+
+                # Обновляем дату начисления бонусов (для отслеживания сгорания)
+                update_bonus_accrual_date(id_telegram)
 
                 # Сначала удаляем реплай-клавиатуру
                 await message.answer(

@@ -10,6 +10,7 @@ from handlers.menu_handlers import router as menu_handlers
 from handlers.user_handlers import router as user_handlers
 from services.database import create_tables
 from services.birthday_service import send_birthday_bonus
+from services.bonus_burn_service import check_all_burningBonuses
 from utils.logger import logger
 
 
@@ -37,6 +38,30 @@ async def birthday_scheduler():
             await asyncio.sleep(3600)  # Ждём час при ошибке
 
 
+async def bonus_burn_scheduler():
+    """
+    Планировщик для ежедневной проверки сгорания бонусов
+    Запускается каждый день в 00:00 (после проверки дней рождения)
+    """
+    logger.info("Планировщик сгорания бонусов запущен")
+
+    while True:
+        try:
+            # Ждём до 00:00 следующего дня
+            now = asyncio.get_event_loop().time()
+            next_midnight = 86400 - (now % 86400)  # Секунд до полуночи
+
+            logger.info(f"Следующая проверка сгорания бонусов через {next_midnight:.0f} секунд")
+            await asyncio.sleep(next_midnight)
+
+            # Запускаем проверку сгорания бонусов (7, 3, 1 день)
+            await check_all_burningBonuses()
+
+        except Exception as e:
+            logger.exception(f"Ошибка в планировщике сгорания бонусов: {e}")
+            await asyncio.sleep(3600)  # Ждём час при ошибке
+
+
 async def main() -> None:
     """
     Точка входа в приложение
@@ -50,8 +75,9 @@ async def main() -> None:
     dp.include_router(menu_handlers)  # Хендлеры главного меню
     dp.include_router(admin_handlers)  # Хендлеры для администраторов
 
-    # Запускаем планировщик дней рождения в фоновом режиме
+    # Запускаем планировщики в фоновом режиме
     asyncio.create_task(birthday_scheduler())
+    asyncio.create_task(bonus_burn_scheduler())
 
     # И распределение событий на забегах
     await dp.start_polling(bot)

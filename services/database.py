@@ -23,7 +23,9 @@ class RegisteredPersons(Model):
     birthday_user = CharField(null=True)  # ✅ День рождения пользователя QuickResto
     user_bonus = CharField(null=True)  # ✅ Бонус пользователя QuickResto
     date_of_visit = DateTimeField(default=datetime.now)  # Дата и время последнего посещения QuickResto
-    updated_at = DateTimeField(default=datetime.now)  # Дата начисления бонусов QuickResto
+    updated_at = DateTimeField(default=datetime.now)  # Дата обновления данных
+    bonus_accrued_at = DateTimeField(null=True)  # ✅ Дата начисления бонусов ботом (для отслеживания сгорания)
+    bot_bonus_amount = DecimalField(null=True, max_digits=10, decimal_places=2)  # ✅ Сумма бонусов, начисленных ботом
 
     class Meta:
         database = db  # база данных
@@ -773,6 +775,87 @@ def get_birthday_users_count() -> int:
     except Exception as e:
         logger.exception(f"Ошибка при подсчёте именинников: {e}")
         return 0
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_bonus_burning_users(days_until_burn: int = 7) -> list:
+    """
+    Получение пользователей, у которых бонусы сгорят через указанное количество дней
+
+    :param days_until_burn: через сколько дней сгорят бонусы (7, 3, 1)
+    :return: Список словарей с данными пользователей
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        # Бонусы действуют 3 месяца (90 дней)
+        # Находим пользователей, у которых дата начисления + (90 - days_until_burn) дней = сегодня
+        from datetime import timedelta
+
+        # Дата начисления должна быть: сегодня - (90 - days_until_burn) дней
+        target_accrual_date = (datetime.now() - timedelta(days=90 - days_until_burn)).date()
+
+        registered_persons = RegisteredPersons.select().where(
+            RegisteredPersons.bonus_accrued_at.is_null(False)
+        )
+
+        result = []
+        for person in registered_persons:
+            if person.bonus_accrued_at:
+                accrual_date = person.bonus_accrued_at.date()
+                if accrual_date == target_accrual_date:
+                    # Бонусы сгорят через days_until_burn дней
+                    burn_date = person.bonus_accrued_at + timedelta(days=90)
+                    result.append({
+                        "id_telegram": person.id_telegram,
+                        "id_quickresto": person.id_quickresto,
+                        "phone_telegram": person.phone_telegram,
+                        "first_name": person.first_name,
+                        "last_name": person.last_name,
+                        "user_bonus": person.user_bonus,
+                        "bonus_accrued_at": person.bonus_accrued_at,
+                        "burn_date": burn_date
+                    })
+
+        return result
+    except Exception as e:
+        logger.exception(f"Ошибка при получении пользователей с горящими бонусами: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def update_bonus_accrual_date(id_telegram: int, accrued_at: datetime = None) -> bool:
+    """
+    Обновление даты начисления бонусов для пользователя
+
+    :param id_telegram: ID пользователя в Telegram
+    :param accrued_at: Дата начисления (по умолчанию - сейчас)
+    :return: True если обновлено, False если нет
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        if accrued_at is None:
+            accrued_at = datetime.now()
+
+        query = (RegisteredPersons
+                 .update(bonus_accrued_at=accrued_at)
+                 .where(RegisteredPersons.id_telegram == id_telegram))
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Дата начисления бонусов обновлена для пользователя {id_telegram}")
+            return True
+        return False
+    except Exception as e:
+        logger.exception(f"Ошибка при обновлении даты начисления бонусов: {e}")
+        return False
     finally:
         if not db.is_closed():
             db.close()

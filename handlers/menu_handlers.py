@@ -7,7 +7,8 @@ from config import layer_name_quickresto
 from keyboards.inline import back_to_main_menu_keyboard, twist_keyboard
 from services.bonus import random_bonus
 from services.database import (
-    get_user_bonus, get_user_info, has_user_spun_today, write_spin_result, write_to_db_registered_person
+    get_user_bonus, get_user_info, has_user_spun_today, write_spin_result, write_to_db_registered_person,
+    update_bonus_accrual_date
 )
 from services.i18n import t
 from services.quickresto_api import print_full_client_info, update_customer_bonus, auth, headers
@@ -149,6 +150,9 @@ async def twist_handler(callback: CallbackQuery) -> None:
             auth=auth,
             headers=headers
         )
+
+        # Обновляем дату начисления бонусов (для отслеживания сгорания)
+        update_bonus_accrual_date(id_telegram)
 
         return
     elif bonus == 'Попробуйте завтра':
