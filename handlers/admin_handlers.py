@@ -7,23 +7,16 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, BufferedInputFile, Message
 from loguru import logger
 
-from config import OWNER_ID, bot
+from config import OWNER_IDS, bot
 from keyboards.inline import (
-    admin_menu_keyboard,
-    back_to_admin_menu_keyboard,
-    broadcast_type_keyboard,
-    broadcast_confirm_keyboard,
+    admin_menu_keyboard, back_to_admin_menu_keyboard, broadcast_type_keyboard, broadcast_confirm_keyboard,
 )
 from services.database import (
-    get_start_persons,
-    get_all_winners,
-    get_all_user_ids,
-    log_marketing_message,
-    get_start_persons_count,
-    get_registered_persons_count,
-    get_broadcast_stats,
+    get_start_persons, get_all_winners, get_all_user_ids, log_marketing_message, get_start_persons_count,
+    get_registered_persons_count, get_broadcast_stats,
 )
 from services.excel_service import write_users_to_excel, write_winners_to_excel
+from services.i18n import t
 from states.user_states import BroadcastState
 
 router = Router(name=__name__)
@@ -38,7 +31,20 @@ def is_admin(user_id: int) -> bool:
     :param user_id: ID пользователя в Telegram
     :return: True если администратор, False если нет
     """
-    return user_id == OWNER_ID
+    return user_id in OWNER_IDS
+
+
+@router.callback_query(F.data == "admin_menu")
+async def admin_menu_handler(callback: CallbackQuery) -> None:
+    """
+    Обработчик кнопки 'В меню администратора'
+    """
+    logger.info(f"Администратор {callback.from_user.id} запросил меню администратора")
+    await callback.message.answer(
+        text=t("main-menu-admin"),
+        reply_markup=admin_menu_keyboard()
+    )
+    await callback.answer()
 
 
 @router.callback_query(F.data == "winners")
@@ -316,8 +322,8 @@ async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMCont
     message_type = data.get("message_type")
     user_ids = get_all_user_ids()
 
-    # Исключаем ID владельца/бота из рассылки (бот не может отправлять сообщения другим ботам)
-    user_ids = [uid for uid in user_ids if uid != OWNER_ID]
+    # Исключаем администраторов из рассылки (бот не может отправлять сообщения другим ботам)
+    user_ids = [uid for uid in user_ids if uid not in OWNER_IDS]
 
     total_sent = 0
     total_blocked = 0

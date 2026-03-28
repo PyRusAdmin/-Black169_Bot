@@ -3,13 +3,14 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from loguru import logger
 
+from config import layer_name_quickresto
 from keyboards.inline import back_to_main_menu_keyboard, twist_keyboard
 from services.bonus import random_bonus
 from services.database import (
     get_user_bonus, get_user_info, has_user_spun_today, write_spin_result, write_to_db_registered_person
 )
 from services.i18n import t
-from services.quickresto_api import print_full_client_info
+from services.quickresto_api import print_full_client_info, update_customer_bonus, auth, headers
 
 router = Router(name=__name__)
 
@@ -39,6 +40,7 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
     # Получаем бонусы из БД
     user_info = get_user_info(callback.from_user.id)
     user_bonus = user_info.get("user_bonus") if user_info else None
+    phone_telegram = user_info.get("phone_telegram") if user_info else None
 
     await callback.message.answer(
         text=f"💰 Ваши бонусы: <b>{user_bonus}</b>\n\nИспользуйте их при следующем посещении!",
@@ -106,6 +108,7 @@ async def twist_handler(callback: CallbackQuery) -> None:
     # Получаем ID пользователя в QuickResto
     user_info = get_user_info(id_telegram)
     id_quickresto = user_info.get("id_quickresto") if user_info else None
+    phone_telegram = user_info.get("phone_telegram") if user_info else None
 
     bonus = random_bonus()  # получаем случайный бонус из списка бонусов
     logger.info(f"Пользователь {id_telegram} выиграл бонус {bonus}")
@@ -138,6 +141,16 @@ async def twist_handler(callback: CallbackQuery) -> None:
             text=t("bonus-winning-message"),
             reply_markup=back_to_main_menu_keyboard()
         )
+        # Добавляем бонус клиенту, если выпал денежный бонус
+        update_customer_bonus(
+            layer_name_quickresto=layer_name_quickresto,  # Название слоя QuickResto
+            customer_id=id_quickresto,  # ID клиента в QuickResto
+            amount=1000.00,  # Сумма бонуса в рублях
+            customer_phone=phone_telegram,  # Телефон клиента в QuickResto
+            auth=auth,
+            headers=headers
+        )
+
         return
     elif bonus == 'Попробуйте завтра':
         await callback.message.answer(
@@ -145,6 +158,9 @@ async def twist_handler(callback: CallbackQuery) -> None:
             reply_markup=back_to_main_menu_keyboard()
         )
         return
+
+
+"""Акции и мероприятия"""
 
 
 @router.callback_query(F.data == "promotions")

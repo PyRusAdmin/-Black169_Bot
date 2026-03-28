@@ -15,7 +15,10 @@ load_dotenv()
 """Считываем данные из файла .env для получения токена бота и ID владельца бота"""
 
 TOKEN: str = os.getenv("BOT_TOKEN")  # Токен бота можно получить с помощью https://t.me/BotFather
-OWNER_ID: int = int(os.getenv("OWNER_ID"))  # ID владельца бота Telegram аккаунта
+
+# ID владельцев бота (поддерживается несколько администраторов через запятую)
+# Пример: OWNER_ID=535185511,698251317
+OWNER_IDS: list[int] = [int(x.strip()) for x in os.getenv("OWNER_ID", "").split(",") if x.strip()]
 
 """QuickResto API"""
 
