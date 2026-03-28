@@ -84,13 +84,13 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
     last_name_telegram = callback.from_user.last_name
     username_telegram = callback.from_user.username
 
+    # Проверяем, является ли пользователь владельцем бота. ID пользователя должен быть в списке OWNER_IDS в файле .env
     if id_telegram in OWNER_IDS:
         logger.info(f"Пользователь {id_telegram} является владельцем бота")
-        await callback.message.edit_text(
+        await callback.message.answer(
             text=t("main-menu"),
-            reply_markup=admin_menu_keyboard(),
+            reply_markup=main_menu_keyboard_admin(),
         )
-        await callback.answer()
         return
 
     data = {
@@ -108,10 +108,17 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
     if is_user_registered(id_telegram):
         # Пользователь уже зарегистрирован — показываем главное меню
         logger.info(f"Пользователь {id_telegram} уже зарегистрирован, показываем главное меню")
-        await callback.message.edit_text(
-            text=t("main-menu"),
-            reply_markup=main_menu_keyboard(),
-        )
+        # Пробуем отредактировать сообщение, а если не получится (документ) — отправляем новое
+        try:
+            await callback.message.edit_text(
+                text=t("main-menu"),
+                reply_markup=main_menu_keyboard(),
+            )
+        except Exception:
+            await callback.message.answer(
+                text=t("main-menu"),
+                reply_markup=main_menu_keyboard(),
+            )
         await callback.answer()
         return
 

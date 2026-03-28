@@ -782,7 +782,7 @@ def get_birthday_users_count() -> int:
 
 def get_bonus_burning_users(days_until_burn: int = 7) -> list:
     """
-    Получение пользователей, у которых бонусы сгорят через указанное количество дней
+    Получение пользователей, у которых бонусы, начисленные ботом, сгорят через указанное количество дней
 
     :param days_until_burn: через сколько дней сгорят бонусы (7, 3, 1)
     :return: Список словарей с данными пользователей
@@ -791,13 +791,14 @@ def get_bonus_burning_users(days_until_burn: int = 7) -> list:
         if db.is_closed():
             db.connect()
 
-        # Бонусы действуют 3 месяца (90 дней)
+        # Бонусы, начисленные ботом, действуют 3 месяца (90 дней)
         # Находим пользователей, у которых дата начисления + (90 - days_until_burn) дней = сегодня
         from datetime import timedelta
 
         # Дата начисления должна быть: сегодня - (90 - days_until_burn) дней
         target_accrual_date = (datetime.now() - timedelta(days=90 - days_until_burn)).date()
 
+        # Получаем только тех пользователей, у которых есть дата начисления бонусов ботом
         registered_persons = RegisteredPersons.select().where(
             RegisteredPersons.bonus_accrued_at.is_null(False)
         )
@@ -816,25 +817,27 @@ def get_bonus_burning_users(days_until_burn: int = 7) -> list:
                         "first_name": person.first_name,
                         "last_name": person.last_name,
                         "user_bonus": person.user_bonus,
+                        "bot_bonus_amount": person.bot_bonus_amount,  # Сумма бонусов, начисленных ботом
                         "bonus_accrued_at": person.bonus_accrued_at,
                         "burn_date": burn_date
                     })
 
         return result
     except Exception as e:
-        logger.exception(f"Ошибка при получении пользователей с горящими бонусами: {e}")
+        logger.exception(f"Ошибка при получении пользователей с горящими бонусами бота: {e}")
         return []
     finally:
         if not db.is_closed():
             db.close()
 
 
-def update_bonus_accrual_date(id_telegram: int, accrued_at: datetime = None) -> bool:
+def update_bonus_accrual_date(id_telegram: int, accrued_at: datetime = None, bonus_amount: float = None) -> bool:
     """
-    Обновление даты начисления бонусов для пользователя
+    Обновление даты начисления бонусов ботом для пользователя
 
     :param id_telegram: ID пользователя в Telegram
     :param accrued_at: Дата начисления (по умолчанию - сейчас)
+    :param bonus_amount: Сумма начисленных бонусов (для отслеживания)
     :return: True если обновлено, False если нет
     """
     try:
@@ -844,17 +847,24 @@ def update_bonus_accrual_date(id_telegram: int, accrued_at: datetime = None) -> 
         if accrued_at is None:
             accrued_at = datetime.now()
 
-        query = (RegisteredPersons
-                 .update(bonus_accrued_at=accrued_at)
-                 .where(RegisteredPersons.id_telegram == id_telegram))
+        # Если передана сумма бонуса, обновляем и её
+        if bonus_amount is not None:
+            query = (RegisteredPersons
+                     .update(bonus_accrued_at=accrued_at, bot_bonus_amount=bonus_amount)
+                     .where(RegisteredPersons.id_telegram == id_telegram))
+        else:
+            query = (RegisteredPersons
+                     .update(bonus_accrued_at=accrued_at)
+                     .where(RegisteredPersons.id_telegram == id_telegram))
+
         result = query.execute()
 
         if result > 0:
-            logger.info(f"Дата начисления бонусов обновлена для пользователя {id_telegram}")
+            logger.info(f"Дата начисления бонусов ботом обновлена для пользователя {id_telegram}")
             return True
         return False
     except Exception as e:
-        logger.exception(f"Ошибка при обновлении даты начисления бонусов: {e}")
+        logger.exception(f"Ошибка при обновлении даты начисления бонусов ботом: {e}")
         return False
     finally:
         if not db.is_closed():

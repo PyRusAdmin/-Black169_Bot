@@ -152,7 +152,7 @@ async def twist_handler(callback: CallbackQuery) -> None:
         )
 
         # Обновляем дату начисления бонусов (для отслеживания сгорания)
-        update_bonus_accrual_date(id_telegram)
+        update_bonus_accrual_date(id_telegram, bonus_amount=1000.00)
 
         return
     elif bonus == 'Попробуйте завтра':

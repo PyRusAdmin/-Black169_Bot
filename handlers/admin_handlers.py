@@ -467,8 +467,15 @@ async def admin_back_handler(callback: CallbackQuery, state: FSMContext) -> None
     # Очищаем состояние FSM если есть активная рассылка
     await state.clear()
 
-    await callback.message.edit_text(
-        text=t("admin-panel"),
-        reply_markup=admin_menu_keyboard()
-    )
+    # Пробуем отредактировать сообщение, а если не получится (документ) — отправляем новое
+    try:
+        await callback.message.edit_text(
+            text=t("admin-panel"),
+            reply_markup=admin_menu_keyboard()
+        )
+    except Exception:
+        await callback.message.answer(
+            text=t("admin-panel"),
+            reply_markup=admin_menu_keyboard()
+        )
     await callback.answer()

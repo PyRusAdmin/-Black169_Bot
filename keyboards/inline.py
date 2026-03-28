@@ -40,7 +40,11 @@ def back_to_main_menu_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="🏠 В главное меню", callback_data="back_to_main_menu"),
+                InlineKeyboardButton(
+                    text="🏠 В главное меню",
+                    callback_data="back_to_main_menu",
+                    style="danger",
+                ),
             ],
         ]
     )
@@ -54,7 +58,11 @@ def twist_keyboard():
                 InlineKeyboardButton(text="🎰 Крутить 🎰", callback_data="twist"),
             ],
             [
-                InlineKeyboardButton(text="🏠 В главное меню", callback_data="back_to_main_menu"),
+                InlineKeyboardButton(
+                    text="🏠 В главное меню",
+                    callback_data="back_to_main_menu",
+                    style="danger",
+                ),
             ],
 
         ]
@@ -132,6 +140,13 @@ def admin_menu_keyboard():
             ],
             [
                 InlineKeyboardButton(text="🗑️ Удалить пользователя", callback_data="delete_user"),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🏠 В главное меню",
+                    callback_data="back_to_main_menu",
+                    style="danger",
+                ),
             ],
         ]
     )
