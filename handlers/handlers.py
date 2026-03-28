@@ -2,7 +2,7 @@
 from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
-from loguru import logger
+from utils.logger import logger
 
 from config import OWNER_IDS
 from keyboards.inline import main_menu_keyboard, admin_menu_keyboard, main_menu_keyboard_admin

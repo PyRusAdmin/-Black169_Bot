@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from aiogram import F, Router
 from aiogram.types import Message, ReplyKeyboardRemove
-from loguru import logger
+from utils.logger import logger
 
 from config import layer_name_quickresto
 from keyboards.inline import main_menu_keyboard

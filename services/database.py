@@ -2,10 +2,10 @@
 from datetime import datetime
 from peewee import *  # https://docs.peewee-orm.com/en/latest/index.html
 from peewee import fn
-from loguru import logger
+from utils.logger import logger
+
 
 db = SqliteDatabase("database.db")
-
 """
 Запись в базу данных о пользователях, которые зарегистрировались в боте, передав свой номер телефона. Часть данных 
 о пользователях будет браться из QuickResto https://quickresto.ru/api/ и записываться в базу данных database.db

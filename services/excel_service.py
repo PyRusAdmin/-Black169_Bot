@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import io
 from openpyxl import Workbook
-from loguru import logger
+from utils.logger import logger
 
 
 def write_users_to_excel(data: list) -> io.BytesIO:

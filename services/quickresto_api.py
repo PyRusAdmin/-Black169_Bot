@@ -4,7 +4,7 @@ import json
 import requests
 
 from requests.auth import HTTPBasicAuth
-from loguru import logger
+from utils.logger import logger
 from config import username_quickresto, password_quickresto, console, layer_name_quickresto
 
 base_url = f"https://{layer_name_quickresto}.quickresto.ru/platform/online/api"
