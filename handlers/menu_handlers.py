@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
@@ -113,16 +112,16 @@ async def twist_handler(callback: CallbackQuery) -> None:
 
     # Записываем результат в базу данных
     write_spin_result(
-        {"id_telegram": id_telegram, "id_quickresto": id_quickresto, "bonus_name": bonus, "is_winner": is_winner}
+        {"id_telegram": id_telegram, "id_quickresto": id_quickresto, "bonus_name": bonus, "is_winner": is_winner},
     )
 
     if bonus == "Коктейль на выбор":
         await callback.message.answer(text=t("cocktail-winning-message"), reply_markup=back_to_main_menu_keyboard())
         return
-    elif bonus == "Кальян на выбор":
+    if bonus == "Кальян на выбор":
         await callback.message.answer(text=t("hookah-winning-message"), reply_markup=back_to_main_menu_keyboard())
         return
-    elif bonus == "Бонус в рублях (1000)":
+    if bonus == "Бонус в рублях (1000)":
         await callback.message.answer(text=t("bonus-winning-message"), reply_markup=back_to_main_menu_keyboard())
         # Добавляем бонус клиенту, если выпал денежный бонус
         update_customer_bonus(
@@ -138,7 +137,7 @@ async def twist_handler(callback: CallbackQuery) -> None:
         update_bonus_accrual_date(id_telegram, bonus_amount=1000.00)
 
         return
-    elif bonus == "Попробуйте завтра":
+    if bonus == "Попробуйте завтра":
         await callback.message.answer(text=t("try-tomorrow-winning-message"), reply_markup=back_to_main_menu_keyboard())
         return
 

@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 from datetime import datetime
 
-# from peewee import *  # https://docs.peewee-orm.com/en/latest/index.html  # noqa: F403
+# https://docs.peewee-orm.com/en/latest/index.html
 from peewee import (
     BooleanField,
     CharField,
