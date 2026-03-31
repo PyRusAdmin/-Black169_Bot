@@ -64,7 +64,6 @@ def twist_keyboard():
                     style="danger",
                 ),
             ],
-
         ]
     )
 
@@ -234,7 +233,9 @@ def consent_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Даю согласие на обработку персональных данных", callback_data="consent_given"),
+                InlineKeyboardButton(
+                    text="✅ Даю согласие на обработку персональных данных", callback_data="consent_given"
+                ),
             ],
             [
                 InlineKeyboardButton(text="❌ Не даю согласие", callback_data="consent_declined"),

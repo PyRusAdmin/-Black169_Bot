@@ -19,7 +19,7 @@ def get_l10n() -> FluentLocalization:
 def t(key: str, **kwargs) -> str:
     """
     Получить перевод по ключу.
-    
+
     :param key: Ключ сообщения (например, 'registered-message')
     :param kwargs: Переменные для подстановки (например, name='Иван')
     :return: Переведённая строка

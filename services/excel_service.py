@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 import io
+
 from openpyxl import Workbook
+
 from utils.logger import logger
 
 
 def write_users_to_excel(data: list) -> io.BytesIO:
     """
     Запись данных пользователей в Excel-файл в памяти
-    
+
     :param data: Список словарей с данными пользователей
     :return: Буфер с Excel-файлом в формате BytesIO
     """
@@ -19,13 +21,15 @@ def write_users_to_excel(data: list) -> io.BytesIO:
 
     # Данные
     for person in data:
-        ws.append([
-            person.get("id_telegram", ""),  # ID Telegram
-            person.get("first_name", ""),  # Имя
-            person.get("last_name", ""),  # Фамилия
-            person.get("username", ""),  # Username
-            person.get("updated_at", "")  # Дата регистрации
-        ])
+        ws.append(
+            [
+                person.get("id_telegram", ""),  # ID Telegram
+                person.get("first_name", ""),  # Имя
+                person.get("last_name", ""),  # Фамилия
+                person.get("username", ""),  # Username
+                person.get("updated_at", ""),  # Дата регистрации
+            ]
+        )
 
     """ 
     io.BytesIO — класс из стандартного модуля io в Python, который создаёт бинарный поток в памяти. Он ведёт себя 
@@ -42,7 +46,7 @@ def write_users_to_excel(data: list) -> io.BytesIO:
 def write_winners_to_excel(data: list) -> io.BytesIO:
     """
     Запись данных победителей «Колеса подарков» в Excel-файл в памяти
-    
+
     :param data: Список словарей с данными победителей
     :return: Буфер с Excel-файлом в формате BytesIO
     """
@@ -54,12 +58,14 @@ def write_winners_to_excel(data: list) -> io.BytesIO:
 
     # Данные
     for winner in data:
-        ws.append([
-            winner.get("id_telegram", ""),  # ID Telegram
-            winner.get("id_quickresto", ""),  # ID QuickResto
-            winner.get("bonus_name", ""),  # Приз
-            winner.get("spun_at", "")  # Дата выигрыша
-        ])
+        ws.append(
+            [
+                winner.get("id_telegram", ""),  # ID Telegram
+                winner.get("id_quickresto", ""),  # ID QuickResto
+                winner.get("bonus_name", ""),  # Приз
+                winner.get("spun_at", ""),  # Дата выигрыша
+            ]
+        )
 
     """ 
     io.BytesIO — класс из стандартного модуля io в Python, который создаёт бинарный поток в памяти. Он ведёт себя 
@@ -76,7 +82,7 @@ def write_winners_to_excel(data: list) -> io.BytesIO:
 def write_registered_users_to_excel(data: list) -> io.BytesIO:
     """
     Запись данных зарегистрированных пользователей (кто отправил номер телефона) в Excel-файл в памяти
-    
+
     :param data: Список словарей с данными зарегистрированных пользователей
     :return: Буфер с Excel-файлом в формате BytesIO
     """
@@ -84,25 +90,37 @@ def write_registered_users_to_excel(data: list) -> io.BytesIO:
     ws = wb.active  # активный лист в Excel-файле
 
     # Заголовок
-    ws.append([
-        "ID Telegram", "ID QuickResto", "Телефон", "Фамилия", "Имя", "Отчество",
-        "Дата рождения", "Бонусы", "Дата последнего визита", "Дата обновления"
-    ])
+    ws.append(
+        [
+            "ID Telegram",
+            "ID QuickResto",
+            "Телефон",
+            "Фамилия",
+            "Имя",
+            "Отчество",
+            "Дата рождения",
+            "Бонусы",
+            "Дата последнего визита",
+            "Дата обновления",
+        ]
+    )
 
     # Данные
     for user in data:
-        ws.append([
-            user.get("id_telegram", ""),  # ID Telegram
-            user.get("id_quickresto", ""),  # ID QuickResto
-            user.get("phone_telegram", ""),  # Телефон
-            user.get("last_name", ""),  # Фамилия
-            user.get("first_name", ""),  # Имя
-            user.get("patronymic_name", ""),  # Отчество
-            user.get("birthday_user", ""),  # Дата рождения
-            user.get("user_bonus", ""),  # Бонусы
-            user.get("date_of_visit", ""),  # Дата последнего визита
-            user.get("updated_at", "")  # Дата обновления
-        ])
+        ws.append(
+            [
+                user.get("id_telegram", ""),  # ID Telegram
+                user.get("id_quickresto", ""),  # ID QuickResto
+                user.get("phone_telegram", ""),  # Телефон
+                user.get("last_name", ""),  # Фамилия
+                user.get("first_name", ""),  # Имя
+                user.get("patronymic_name", ""),  # Отчество
+                user.get("birthday_user", ""),  # Дата рождения
+                user.get("user_bonus", ""),  # Бонусы
+                user.get("date_of_visit", ""),  # Дата последнего визита
+                user.get("updated_at", ""),  # Дата обновления
+            ]
+        )
 
     """ 
     io.BytesIO — класс из стандартного модуля io в Python, который создаёт бинарный поток в памяти. Он ведёт себя 

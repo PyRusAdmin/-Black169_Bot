@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from loguru import logger
-from services.database import get_bonus_burning_users
+
 from config import bot
+from services.database import get_bonus_burning_users
 
 
 async def send_bonus_burn_warning(days_until_burn: int = 7) -> dict:
@@ -17,11 +18,7 @@ async def send_bonus_burn_warning(days_until_burn: int = 7) -> dict:
 
     if not burning_users:
         logger.info(f"Нет пользователей с бонусами, сгорающими через {days_until_burn} дн.")
-        return {
-            "total": 0,
-            "success": 0,
-            "failed": 0
-        }
+        return {"total": 0, "success": 0, "failed": 0}
 
     logger.info(f"Найдено пользователей с горящими бонусами: {len(burning_users)}")
 
@@ -68,9 +65,11 @@ async def send_bonus_burn_warning(days_until_burn: int = 7) -> dict:
                         f"📅 Дата сгорания: <b>{burn_date_str}</b>\n\n"
                         f"Успейте использовать бонусы до этой даты!\n\n"
                         f"Ждём Вас в The Black 169! 🖤"
-                    )
+                    ),
                 )
-                logger.success(f"Уведомление отправлено пользователю {id_telegram} (сгорание через {days_until_burn} дн.)")
+                logger.success(
+                    f"Уведомление отправлено пользователю {id_telegram} (сгорание через {days_until_burn} дн.)"
+                )
                 success += 1
             except Exception as e:
                 if "bot was blocked" in str(e).lower():
@@ -88,11 +87,7 @@ async def send_bonus_burn_warning(days_until_burn: int = 7) -> dict:
         f"Всего: {total}, Успешно: {success}, Ошибок: {failed}"
     )
 
-    return {
-        "total": total,
-        "success": success,
-        "failed": failed
-    }
+    return {"total": total, "success": success, "failed": failed}
 
 
 async def check_all_burningBonuses() -> dict:

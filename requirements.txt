@@ -1,5 +1,7 @@
 # Telegram Bot API
 aiogram~=3.26.0
+# Proxy support
+aiohttp-socks
 # Logging
 loguru~=0.7.3
 # Database
@@ -14,3 +16,6 @@ openpyxl~=3.1.5
 rich~=14.3.3
 # Localization
 fluent-runtime~=0.3.1
+# Code formatting (linting)
+black~=24.0
+ruff~=0.12.0

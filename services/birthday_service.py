@@ -3,7 +3,7 @@ from loguru import logger
 
 from config import bot
 from services.database import get_birthday_users_today, update_bonus_accrual_date
-from services.quickresto_api import update_customer_bonus, auth, headers, layer_name_quickresto
+from services.quickresto_api import auth, headers, layer_name_quickresto, update_customer_bonus
 
 
 async def send_birthday_bonus() -> dict:
@@ -18,11 +18,7 @@ async def send_birthday_bonus() -> dict:
 
     if not birthday_users:
         logger.info("Сегодня именинников нет")
-        return {
-            "total": 0,
-            "success": 0,
-            "failed": 0
-        }
+        return {"total": 0, "success": 0, "failed": 0}
 
     logger.info(f"Найдено именинников: {len(birthday_users)}")
 
@@ -45,13 +41,11 @@ async def send_birthday_bonus() -> dict:
                 amount=1500.00,  # 1500 бонусов
                 customer_phone=phone,
                 auth=auth,
-                headers=headers
+                headers=headers,
             )
 
             if result:
-                logger.success(
-                    f"Начислено 1500 бонусов имениннику {first_name} {last_name} (ID: {id_telegram})"
-                )
+                logger.success(f"Начислено 1500 бонусов имениннику {first_name} {last_name} (ID: {id_telegram})")
                 success += 1
 
                 # Обновляем дату начисления бонусов (для отслеживания сгорания)
@@ -67,7 +61,7 @@ async def send_birthday_bonus() -> dict:
                             f"🎁 Мы начислили Вам <b>1500 бонусов</b> на счёт.\n"
                             f"Используйте их при следующем визите!\n\n"
                             f"Ждём Вас в гости! 🖤"
-                        )
+                        ),
                     )
                     logger.info(f"Поздравление отправлено пользователю {id_telegram}")
                 except Exception as e:
@@ -80,13 +74,6 @@ async def send_birthday_bonus() -> dict:
             logger.exception(f"Ошибка обработки именинника {user.get('id_telegram')}: {e}")
             failed += 1
 
-    logger.info(
-        f"Проверка дней рождения завершена. "
-        f"Всего: {total}, Успешно: {success}, Ошибок: {failed}"
-    )
+    logger.info(f"Проверка дней рождения завершена. " f"Всего: {total}, Успешно: {success}, Ошибок: {failed}")
 
-    return {
-        "total": total,
-        "success": success,
-        "failed": failed
-    }
+    return {"total": total, "success": success, "failed": failed}

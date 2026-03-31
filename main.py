@@ -3,14 +3,14 @@ import asyncio
 import logging
 import sys
 
-from config import dp, bot
+from config import bot, dp
 from handlers.admin_handlers import router as admin_handlers
 from handlers.handlers import router as handlers
 from handlers.menu_handlers import router as menu_handlers
 from handlers.user_handlers import router as user_handlers
-from services.database import create_tables
 from services.birthday_service import send_birthday_bonus
 from services.bonus_burn_service import check_all_burningBonuses
+from services.database import create_tables
 from utils.logger import logger
 
 

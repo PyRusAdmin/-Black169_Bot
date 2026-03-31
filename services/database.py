@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-from peewee import *  # https://docs.peewee-orm.com/en/latest/index.html
-from peewee import fn
+
+# from peewee import *  # https://docs.peewee-orm.com/en/latest/index.html  # noqa: F403
+from peewee import CharField, DateTimeField, DecimalField, IntegerField, Model, SqliteDatabase, fn
+
 from utils.logger import logger
 
 db = SqliteDatabase("database.db")
@@ -101,15 +103,18 @@ def write_to_db_registered_person(data):
     try:
         if db.is_closed():
             db.connect()
-        person, created = RegisteredPersons.get_or_create(id_telegram=id_telegram, defaults={
-            "id_quickresto": id_quickresto,  # идентификатор пользователя в QuickResto
-            "last_name": last_name,  # фамилия пользователя QuickResto
-            "first_name": first_name,  # имя пользователя QuickResto
-            "patronymic_name": patronymic_name,  # отчество пользователя QuickResto
-            "user_bonus": user_bonus,  # бонус пользователя QuickResto
-            "birthday_user": birthday_user,  # день рождения пользователя QuickResto
-            "phone_telegram": phone_telegram,  # номер телефона пользователя в Telegram
-        })
+        person, created = RegisteredPersons.get_or_create(
+            id_telegram=id_telegram,
+            defaults={
+                "id_quickresto": id_quickresto,  # идентификатор пользователя в QuickResto
+                "last_name": last_name,  # фамилия пользователя QuickResto
+                "first_name": first_name,  # имя пользователя QuickResto
+                "patronymic_name": patronymic_name,  # отчество пользователя QuickResto
+                "user_bonus": user_bonus,  # бонус пользователя QuickResto
+                "birthday_user": birthday_user,  # день рождения пользователя QuickResto
+                "phone_telegram": phone_telegram,  # номер телефона пользователя в Telegram
+            },
+        )
         if not created:
             person.id_quickresto = id_quickresto  # идентификатор пользователя в QuickResto
             person.last_name = last_name  # фамилия пользователя QuickResto
@@ -157,11 +162,14 @@ def write_to_db_start_person(data):
     try:
         if db.is_closed():
             db.connect()
-        person, created = StartPersons.get_or_create(id_telegram=id_telegram, defaults={
-            "last_name_telegram": last_name_telegram,
-            "first_name_telegram": first_name_telegram,
-            "username_telegram": username_telegram,
-        })
+        person, created = StartPersons.get_or_create(
+            id_telegram=id_telegram,
+            defaults={
+                "last_name_telegram": last_name_telegram,
+                "first_name_telegram": first_name_telegram,
+                "username_telegram": username_telegram,
+            },
+        )
         if not created:
             person.last_name_telegram = last_name_telegram
             person.first_name_telegram = first_name_telegram
@@ -217,7 +225,7 @@ def get_user_info(id_telegram: int) -> dict | None:
                 "birthday_user": user.birthday_user,
                 "user_bonus": user.user_bonus,
                 "date_of_visit": user.date_of_visit,
-                "updated_at": user.updated_at
+                "updated_at": user.updated_at,
             }
         return None
     except Exception as e:
@@ -272,7 +280,7 @@ def get_user_by_phone(phone_telegram: str) -> dict | None:
                 "birthday_user": user.birthday_user,
                 "user_bonus": user.user_bonus,
                 "date_of_visit": user.date_of_visit,
-                "updated_at": user.updated_at
+                "updated_at": user.updated_at,
             }
         return None
     except Exception as e:
@@ -301,9 +309,7 @@ class GiftWheelSpins(Model):
     class Meta:
         database = db
         table_name = "gift_wheel_spins"
-        indexes = (
-            (('id_telegram', 'spun_at'), False),  # Индекс для быстрого поиска по дате
-        )
+        indexes = ((("id_telegram", "spun_at"), False),)  # Индекс для быстрого поиска по дате
 
 
 def write_spin_result(data):
@@ -325,10 +331,11 @@ def write_spin_result(data):
             id_quickresto=id_quickresto,
             bonus_name=bonus_name,
             is_winner=is_winner,
-            spun_at=datetime.now()
+            spun_at=datetime.now(),
         )
         logger.info(
-            f"Записан результат розыгрыша: пользователь {id_telegram}, бонус '{bonus_name}', победитель: {is_winner}")
+            f"Записан результат розыгрыша: пользователь {id_telegram}, бонус '{bonus_name}', победитель: {is_winner}"
+        )
         return spin
     except Exception as e:
         logger.exception(f"Ошибка при записи результата розыгрыша: {e}")
@@ -354,8 +361,7 @@ def has_user_spun_today(id_telegram: int) -> bool:
 
         # Ищем записи за сегодня
         spin = GiftWheelSpins.get_or_none(
-            (GiftWheelSpins.id_telegram == id_telegram) &
-            (GiftWheelSpins.spun_at >= today_start)
+            (GiftWheelSpins.id_telegram == id_telegram) & (GiftWheelSpins.spun_at >= today_start)
         )
         return spin is not None
     except Exception as e:
@@ -378,20 +384,23 @@ def get_user_spin_history(id_telegram: int, limit: int = 10) -> list:
         if db.is_closed():
             db.connect()
 
-        spins = (GiftWheelSpins
-                 .select()
-                 .where(GiftWheelSpins.id_telegram == id_telegram)
-                 .order_by(GiftWheelSpins.spun_at.desc())
-                 .limit(limit))
+        spins = (
+            GiftWheelSpins.select()
+            .where(GiftWheelSpins.id_telegram == id_telegram)
+            .order_by(GiftWheelSpins.spun_at.desc())
+            .limit(limit)
+        )
 
         history = []
         for spin in spins:
-            history.append({
-                "id_telegram": spin.id_telegram,
-                "bonus_name": spin.bonus_name,
-                "is_winner": spin.is_winner,
-                "spun_at": spin.spun_at
-            })
+            history.append(
+                {
+                    "id_telegram": spin.id_telegram,
+                    "bonus_name": spin.bonus_name,
+                    "is_winner": spin.is_winner,
+                    "spun_at": spin.spun_at,
+                }
+            )
         return history
     except Exception as e:
         logger.exception(f"Ошибка при получении истории розыгрышей пользователя {id_telegram}: {e}")
@@ -411,19 +420,20 @@ def get_all_winners() -> list:
         if db.is_closed():
             db.connect()
 
-        winners = (GiftWheelSpins
-                   .select()
-                   .where(GiftWheelSpins.is_winner == True)
-                   .order_by(GiftWheelSpins.spun_at.desc()))
+        winners = (
+            GiftWheelSpins.select().where(GiftWheelSpins.is_winner == True).order_by(GiftWheelSpins.spun_at.desc())
+        )
 
         result = []
         for winner in winners:
-            result.append({
-                "id_telegram": winner.id_telegram,
-                "id_quickresto": winner.id_quickresto,
-                "bonus_name": winner.bonus_name,
-                "spun_at": winner.spun_at
-            })
+            result.append(
+                {
+                    "id_telegram": winner.id_telegram,
+                    "id_quickresto": winner.id_quickresto,
+                    "bonus_name": winner.bonus_name,
+                    "spun_at": winner.spun_at,
+                }
+            )
         return result
     except Exception as e:
         logger.exception(f"Ошибка при получении списка победителей: {e}")
@@ -446,21 +456,19 @@ def get_start_persons() -> list:
         if db.is_closed():
             db.connect()
 
-        start_persons = (
-            StartPersons.select().order_by(
-                StartPersons.updated_at.desc()
-            )
-        )
+        start_persons = StartPersons.select().order_by(StartPersons.updated_at.desc())
 
         result = []  # список словарей с данными пользователей
         for start_person in start_persons:
-            result.append({
-                "id_telegram": start_person.id_telegram,  # id пользователя в Telegram
-                "first_name": start_person.first_name_telegram,  # имя пользователя в Telegram
-                "last_name": start_person.last_name_telegram,  # фамилия пользователя в Telegram
-                "username": start_person.username_telegram,  # username пользователя в Telegram
-                "updated_at": start_person.updated_at  # дата и время обновления
-            })
+            result.append(
+                {
+                    "id_telegram": start_person.id_telegram,  # id пользователя в Telegram
+                    "first_name": start_person.first_name_telegram,  # имя пользователя в Telegram
+                    "last_name": start_person.last_name_telegram,  # фамилия пользователя в Telegram
+                    "username": start_person.username_telegram,  # username пользователя в Telegram
+                    "updated_at": start_person.updated_at,  # дата и время обновления
+                }
+            )
         return result
     except Exception as e:
         logger.exception(f"Ошибка при получении списка пользователей: {e}")
@@ -480,26 +488,24 @@ def get_registered_persons() -> list:
         if db.is_closed():
             db.connect()
 
-        registered_persons = (
-            RegisteredPersons.select().order_by(
-                RegisteredPersons.updated_at.desc()
-            )
-        )
+        registered_persons = RegisteredPersons.select().order_by(RegisteredPersons.updated_at.desc())
 
         result = []  # список словарей с данными пользователей
         for person in registered_persons:
-            result.append({
-                "id_telegram": person.id_telegram,  # ID пользователя в Telegram
-                "id_quickresto": person.id_quickresto,  # ID пользователя в QuickResto
-                "phone_telegram": person.phone_telegram,  # Номер телефона
-                "last_name": person.last_name,  # Фамилия (QuickResto)
-                "first_name": person.first_name,  # Имя (QuickResto)
-                "patronymic_name": person.patronymic_name,  # Отчество (QuickResto)
-                "birthday_user": person.birthday_user,  # Дата рождения
-                "user_bonus": person.user_bonus,  # Бонусы
-                "date_of_visit": person.date_of_visit,  # Дата последнего визита
-                "updated_at": person.updated_at  # Дата обновления
-            })
+            result.append(
+                {
+                    "id_telegram": person.id_telegram,  # ID пользователя в Telegram
+                    "id_quickresto": person.id_quickresto,  # ID пользователя в QuickResto
+                    "phone_telegram": person.phone_telegram,  # Номер телефона
+                    "last_name": person.last_name,  # Фамилия (QuickResto)
+                    "first_name": person.first_name,  # Имя (QuickResto)
+                    "patronymic_name": person.patronymic_name,  # Отчество (QuickResto)
+                    "birthday_user": person.birthday_user,  # Дата рождения
+                    "user_bonus": person.user_bonus,  # Бонусы
+                    "date_of_visit": person.date_of_visit,  # Дата последнего визита
+                    "updated_at": person.updated_at,  # Дата обновления
+                }
+            )
         return result
     except Exception as e:
         logger.exception(f"Ошибка при получении списка зарегистрированных пользователей: {e}")
@@ -533,9 +539,7 @@ class MarketingMessages(Model):
     class Meta:
         database = db
         table_name = "marketing_messages"
-        indexes = (
-            (('id_telegram', 'sent_at'), False),  # Индекс для быстрого поиска
-        )
+        indexes = ((("id_telegram", "sent_at"), False),)  # Индекс для быстрого поиска
 
 
 def log_marketing_message(id_telegram: int, message_text: str, message_type: str = "text") -> None:
@@ -553,7 +557,7 @@ def log_marketing_message(id_telegram: int, message_text: str, message_type: str
             id_telegram=id_telegram,
             message_text=message_text[:500],  # Ограничиваем длину текста
             message_type=message_type,
-            sent_at=datetime.now()
+            sent_at=datetime.now(),
         )
     except Exception as e:
         logger.exception(f"Ошибка при логировании рассылки: {e}")
@@ -574,11 +578,12 @@ def update_message_status(id_telegram: int, is_blocked: bool = False, is_read: b
         if db.is_closed():
             db.connect()
         # Обновляем последнее сообщение для этого пользователя
-        query = (MarketingMessages
-                 .update(is_blocked=is_blocked, is_read=is_read)
-                 .where(MarketingMessages.id_telegram == id_telegram)
-                 .order_by(MarketingMessages.sent_at.desc())
-                 .limit(1))
+        query = (
+            MarketingMessages.update(is_blocked=is_blocked, is_read=is_read)
+            .where(MarketingMessages.id_telegram == id_telegram)
+            .order_by(MarketingMessages.sent_at.desc())
+            .limit(1)
+        )
         query.execute()
     except Exception as e:
         logger.exception(f"Ошибка при обновлении статуса сообщения: {e}")
@@ -597,9 +602,7 @@ def get_all_user_ids() -> list:
         if db.is_closed():
             db.connect()
 
-        user_ids = (StartPersons
-                    .select(StartPersons.id_telegram)
-                    .order_by(StartPersons.updated_at.desc()))
+        user_ids = StartPersons.select(StartPersons.id_telegram).order_by(StartPersons.updated_at.desc())
 
         return [user.id_telegram for user in user_ids]
     except Exception as e:
@@ -678,7 +681,7 @@ def get_broadcast_stats() -> dict:
             "photo_count": photo_count,
             "video_count": video_count,
             "blocked_count": blocked_count,
-            "unique_users": unique_users
+            "unique_users": unique_users,
         }
     except Exception as e:
         logger.exception(f"Ошибка при получении статистики рассылок: {e}")
@@ -688,7 +691,7 @@ def get_broadcast_stats() -> dict:
             "photo_count": 0,
             "video_count": 0,
             "blocked_count": 0,
-            "unique_users": 0
+            "unique_users": 0,
         }
     finally:
         if not db.is_closed():
@@ -717,22 +720,24 @@ def get_birthday_users_today() -> list:
                 birthday = person.birthday_user
                 if len(birthday) == 10:
                     # Преобразуем в DD.MM
-                    if '-' in birthday:
+                    if "-" in birthday:
                         birthday_formatted = f"{birthday[8:10]}.{birthday[5:7]}"
-                    elif '.' in birthday:
+                    elif "." in birthday:
                         birthday_formatted = birthday[:5]
                     else:
                         continue
 
                     if birthday_formatted == today:
-                        result.append({
-                            "id_telegram": person.id_telegram,
-                            "id_quickresto": person.id_quickresto,
-                            "phone_telegram": person.phone_telegram,
-                            "first_name": person.first_name,
-                            "last_name": person.last_name,
-                            "birthday_user": person.birthday_user
-                        })
+                        result.append(
+                            {
+                                "id_telegram": person.id_telegram,
+                                "id_quickresto": person.id_quickresto,
+                                "phone_telegram": person.phone_telegram,
+                                "first_name": person.first_name,
+                                "last_name": person.last_name,
+                                "birthday_user": person.birthday_user,
+                            }
+                        )
 
         return result
     except Exception as e:
@@ -761,9 +766,9 @@ def get_birthday_users_count() -> int:
             if person.birthday_user:
                 birthday = person.birthday_user
                 if len(birthday) == 10:
-                    if '-' in birthday:
+                    if "-" in birthday:
                         birthday_formatted = f"{birthday[8:10]}.{birthday[5:7]}"
-                    elif '.' in birthday:
+                    elif "." in birthday:
                         birthday_formatted = birthday[:5]
                     else:
                         continue
@@ -799,9 +804,7 @@ def get_bonus_burning_users(days_until_burn: int = 7) -> list:
         target_accrual_date = (datetime.now() - timedelta(days=90 - days_until_burn)).date()
 
         # Получаем только тех пользователей, у которых есть дата начисления бонусов ботом
-        registered_persons = RegisteredPersons.select().where(
-            RegisteredPersons.bonus_accrued_at.is_null(False)
-        )
+        registered_persons = RegisteredPersons.select().where(RegisteredPersons.bonus_accrued_at.is_null(False))
 
         result = []
         for person in registered_persons:
@@ -810,17 +813,19 @@ def get_bonus_burning_users(days_until_burn: int = 7) -> list:
                 if accrual_date == target_accrual_date:
                     # Бонусы сгорят через days_until_burn дней
                     burn_date = person.bonus_accrued_at + timedelta(days=90)
-                    result.append({
-                        "id_telegram": person.id_telegram,
-                        "id_quickresto": person.id_quickresto,
-                        "phone_telegram": person.phone_telegram,
-                        "first_name": person.first_name,
-                        "last_name": person.last_name,
-                        "user_bonus": person.user_bonus,
-                        "bot_bonus_amount": person.bot_bonus_amount,  # Сумма бонусов, начисленных ботом
-                        "bonus_accrued_at": person.bonus_accrued_at,
-                        "burn_date": burn_date
-                    })
+                    result.append(
+                        {
+                            "id_telegram": person.id_telegram,
+                            "id_quickresto": person.id_quickresto,
+                            "phone_telegram": person.phone_telegram,
+                            "first_name": person.first_name,
+                            "last_name": person.last_name,
+                            "user_bonus": person.user_bonus,
+                            "bot_bonus_amount": person.bot_bonus_amount,  # Сумма бонусов, начисленных ботом
+                            "bonus_accrued_at": person.bonus_accrued_at,
+                            "burn_date": burn_date,
+                        }
+                    )
 
         return result
     except Exception as e:
@@ -849,13 +854,13 @@ def update_bonus_accrual_date(id_telegram: int, accrued_at: datetime = None, bon
 
         # Если передана сумма бонуса, обновляем и её
         if bonus_amount is not None:
-            query = (RegisteredPersons
-                     .update(bonus_accrued_at=accrued_at, bot_bonus_amount=bonus_amount)
-                     .where(RegisteredPersons.id_telegram == id_telegram))
+            query = RegisteredPersons.update(bonus_accrued_at=accrued_at, bot_bonus_amount=bonus_amount).where(
+                RegisteredPersons.id_telegram == id_telegram
+            )
         else:
-            query = (RegisteredPersons
-                     .update(bonus_accrued_at=accrued_at)
-                     .where(RegisteredPersons.id_telegram == id_telegram))
+            query = RegisteredPersons.update(bonus_accrued_at=accrued_at).where(
+                RegisteredPersons.id_telegram == id_telegram
+            )
 
         result = query.execute()
 
@@ -888,9 +893,7 @@ class PromoCodes(Model):
     class Meta:
         database = db
         table_name = "promo_codes"
-        indexes = (
-            (('code',), True),  # Уникальный индекс на код
-        )
+        indexes = ((("code",), True),)  # Уникальный индекс на код
 
 
 def create_promo_code(code: str, bonus_amount: float, description: str = None) -> bool:
@@ -906,12 +909,7 @@ def create_promo_code(code: str, bonus_amount: float, description: str = None) -
         if db.is_closed():
             db.connect()
 
-        PromoCodes.create(
-            code=code,
-            bonus_amount=bonus_amount,
-            description=description,
-            is_active=True
-        )
+        PromoCodes.create(code=code, bonus_amount=bonus_amount, description=description, is_active=True)
         logger.info(f"Создан промокод: {code} на сумму {bonus_amount}")
         return True
     except Exception as e:
@@ -942,7 +940,7 @@ def get_promo_code(code: str) -> dict | None:
                 "is_active": promo.is_active,
                 "created_at": promo.created_at,
                 "used_by": promo.used_by,
-                "used_at": promo.used_at
+                "used_at": promo.used_at,
             }
         return None
     except Exception as e:
@@ -967,22 +965,16 @@ def activate_promo_code(code: str, id_telegram: int) -> bool:
 
         # Проверяем, существует ли промокод и активен ли он
         promo = PromoCodes.get_or_none(
-            (PromoCodes.code == code) &
-            (PromoCodes.is_active == True) &
-            (PromoCodes.used_by.is_null())
+            (PromoCodes.code == code) & (PromoCodes.is_active == True) & (PromoCodes.used_by.is_null())
         )
 
         if not promo:
             return False
 
         # Помечаем как использованный
-        query = (PromoCodes
-                 .update(
-                     used_by=id_telegram,
-                     used_at=datetime.now(),
-                     is_active=False
-                 )
-                 .where(PromoCodes.code == code))
+        query = PromoCodes.update(used_by=id_telegram, used_at=datetime.now(), is_active=False).where(
+            PromoCodes.code == code
+        )
 
         result = query.execute()
 
@@ -1012,15 +1004,17 @@ def get_all_promo_codes() -> list:
 
         result = []
         for promo in promo_codes:
-            result.append({
-                "code": promo.code,
-                "bonus_amount": promo.bonus_amount,
-                "description": promo.description,
-                "is_active": promo.is_active,
-                "created_at": promo.created_at,
-                "used_by": promo.used_by,
-                "used_at": promo.used_at
-            })
+            result.append(
+                {
+                    "code": promo.code,
+                    "bonus_amount": promo.bonus_amount,
+                    "description": promo.description,
+                    "is_active": promo.is_active,
+                    "created_at": promo.created_at,
+                    "used_by": promo.used_by,
+                    "used_at": promo.used_at,
+                }
+            )
         return result
     except Exception as e:
         logger.exception(f"Ошибка при получении списка промокодов: {e}")
@@ -1109,9 +1103,7 @@ class Consents(Model):
     class Meta:
         database = db
         table_name = "consents"
-        indexes = (
-            (('id_telegram',), True),  # Уникальный индекс на ID пользователя
-        )
+        indexes = ((("id_telegram",), True),)  # Уникальный индекс на ID пользователя
 
 
 def add_consent(id_telegram: int, ip_address: str = None, user_agent: str = None) -> bool:
@@ -1132,7 +1124,7 @@ def add_consent(id_telegram: int, ip_address: str = None, user_agent: str = None
             is_consent=True,
             consented_at=datetime.now(),
             ip_address=ip_address,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
         logger.info(f"Пользователь {id_telegram} дал согласие на обработку персональных данных")
         return True
@@ -1155,10 +1147,7 @@ def has_consent(id_telegram: int) -> bool:
         if db.is_closed():
             db.connect()
 
-        consent = Consents.get_or_none(
-            (Consents.id_telegram == id_telegram) &
-            (Consents.is_consent == True)
-        )
+        consent = Consents.get_or_none((Consents.id_telegram == id_telegram) & (Consents.is_consent == True))
         return consent is not None
     except Exception as e:
         logger.exception(f"Ошибка при проверке согласия пользователя {id_telegram}: {e}")
@@ -1186,7 +1175,7 @@ def get_consent_info(id_telegram: int) -> dict | None:
                 "is_consent": consent.is_consent,
                 "consented_at": consent.consented_at,
                 "ip_address": consent.ip_address,
-                "user_agent": consent.user_agent
+                "user_agent": consent.user_agent,
             }
         return None
     except Exception as e:
@@ -1208,9 +1197,7 @@ def revoke_consent(id_telegram: int) -> bool:
         if db.is_closed():
             db.connect()
 
-        query = (Consents
-                 .update(is_consent=False)
-                 .where(Consents.id_telegram == id_telegram))
+        query = Consents.update(is_consent=False).where(Consents.id_telegram == id_telegram)
 
         result = query.execute()
 

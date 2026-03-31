@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
 from aiogram import F, Router
 from aiogram.types import Message, ReplyKeyboardRemove
-from utils.logger import logger
 
 from config import layer_name_quickresto
 from keyboards.inline import main_menu_keyboard
-from services.database import write_to_db_registered_person, update_bonus_accrual_date
+from services.database import update_bonus_accrual_date, write_to_db_registered_person
 from services.i18n import t
 from services.quickresto_api import (
-    print_client_info, create_client, auth, headers, base_url, print_full_client_info, update_customer_bonus
+    auth,
+    base_url,
+    create_client,
+    headers,
+    print_client_info,
+    print_full_client_info,
+    update_customer_bonus,
 )
+from utils.logger import logger
 
 router = Router(name=__name__)
 
@@ -31,10 +37,7 @@ async def message_handler(message: Message) -> None:
 
         # Проверяем контакт в базе QuickResto
         data_customer = print_client_info(
-            layer_name_quickresto=layer_name_quickresto,
-            phone_number=phone_telegram,
-            auth=auth,
-            headers=headers
+            layer_name_quickresto=layer_name_quickresto, phone_number=phone_telegram, auth=auth, headers=headers
         )
 
         # Если клиент не найден — создаём нового и присваиваем ему 1000 бонусных балов
@@ -46,11 +49,11 @@ async def message_handler(message: Message) -> None:
                 phone_customer=phone_telegram,  # номер телефона клиента
                 base_url=base_url,  # базовый url для api quickresto
                 auth=auth,  # авторизация для api quickresto
-                headers=headers  # заголовки для api quickresto
+                headers=headers,  # заголовки для api quickresto
             )
 
             if created_client:
-                client_id = created_client.get('id')
+                client_id = created_client.get("id")
                 logger.success(f"Клиент создан в QuickResto: id={client_id}")
 
                 data = {
@@ -58,7 +61,7 @@ async def message_handler(message: Message) -> None:
                     "id_quickresto": client_id,
                     "last_name": first_name_telegram,
                     "first_name": name_telegram,
-                    "phone_telegram": phone_telegram
+                    "phone_telegram": phone_telegram,
                 }
 
                 write_to_db_registered_person(data)
@@ -70,7 +73,7 @@ async def message_handler(message: Message) -> None:
                     amount=1000.00,  # Сумма бонуса в рублях
                     customer_phone=phone_telegram,  # Телефон клиента в QuickResto
                     auth=auth,
-                    headers=headers
+                    headers=headers,
                 )
 
                 # Обновляем дату начисления бонусов (для отслеживания сгорания)
@@ -113,7 +116,7 @@ async def message_handler(message: Message) -> None:
                 "patronymic_name": full_data.get("middle_name"),
                 "birthday_user": full_data.get("date_of_birth"),
                 "user_bonus": full_data.get("bonus_ledger"),
-                "phone_telegram": phone_telegram
+                "phone_telegram": phone_telegram,
             }
 
             write_to_db_registered_person(data)
