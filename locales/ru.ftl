@@ -336,7 +336,10 @@ promo-list-title =
     Все промокоды выгружены в Excel-файл.
 
 promo-list-empty = ❌ Промокоды ещё не созданы.
-promo-delete-title = 🗑️ <b>Удаление промокода</b>\n\nВведите код промокода для удаления:
+promo-delete-title =
+    🗑️ <b>Удаление промокода</b>
+
+    Введите код промокода для удаления:
 promo-delete-success = ✅ Промокод <b>{$code}</b> успешно удалён.
 promo-delete-not-found = ❌ Промокод <b>{$code}</b> не найден.
 promo-delete-cancelled = ❌ Удаление промокода отменено.
