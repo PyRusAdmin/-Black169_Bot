@@ -76,11 +76,19 @@ async def main() -> None:
     dp.include_router(admin_handlers)  # Хендлеры для администраторов
 
     # Запускаем планировщики в фоновом режиме
-    asyncio.create_task(birthday_scheduler())
-    asyncio.create_task(bonus_burn_scheduler())
+    scheduler_tasks = [asyncio.create_task(birthday_scheduler()), asyncio.create_task(bonus_burn_scheduler())]
 
-    # И распределение событий на забегах
-    await dp.start_polling(bot)
+    try:
+        # Запуск polling
+        await dp.start_polling(bot)
+    except KeyboardInterrupt:
+        logger.info("Получен сигнал остановки (Ctrl+C)")
+    finally:
+        # Корректное завершение планировщиков
+        for task in scheduler_tasks:
+            task.cancel()
+        await asyncio.gather(*scheduler_tasks, return_exceptions=True)
+        logger.info("Приложение корректно завершено")
 
 
 if __name__ == "__main__":

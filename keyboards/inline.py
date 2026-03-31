@@ -71,11 +71,11 @@ def twist_keyboard():
 """Клавиатура для администратора бота"""
 
 """
-По желанию. Стиль кнопки. 
-Должно быть: 
-«опасность» (красный) - danger,  
+По желанию. Стиль кнопки.
+Должно быть:
+«опасность» (красный) - danger,
 «успех» (зелёный) - success,
-«первичный» (синий) - primary. 
+«первичный» (синий) - primary.
 
 Если его опускают, то используется специфический для приложения стиль.
 """
@@ -234,11 +234,17 @@ def consent_keyboard():
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="✅ Даю согласие на обработку персональных данных", callback_data="consent_given"
+                    text="✅ Даю согласие на обработку персональных данных",
+                    callback_data="consent_given",
+                    style="success",
                 ),
             ],
             [
-                InlineKeyboardButton(text="❌ Не даю согласие", callback_data="consent_declined"),
+                InlineKeyboardButton(
+                    text="❌ Не даю согласие",
+                    callback_data="consent_declined",
+                    style="danger",
+                ),
             ],
         ]
     )

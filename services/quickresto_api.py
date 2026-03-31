@@ -191,7 +191,6 @@ def print_full_client_info(client_id):
         "bonus_available": bonus_available,
         "accum_ledger": accum_ledger,
     }
-
     return data
 
 

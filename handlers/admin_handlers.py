@@ -4,40 +4,33 @@ import asyncio
 from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, BufferedInputFile, Message
-from utils.logger import logger
+from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from config import OWNER_IDS, bot
 from keyboards.inline import (
     admin_menu_keyboard,
     back_to_admin_menu_keyboard,
-    broadcast_type_keyboard,
     broadcast_confirm_keyboard,
-    promo_codes_menu_keyboard,
-    back_to_promo_menu_keyboard,
+    broadcast_type_keyboard,
 )
 from services.database import (
-    get_start_persons,
-    get_all_winners,
-    get_all_user_ids,
-    log_marketing_message,
-    get_start_persons_count,
-    get_registered_persons_count,
-    get_broadcast_stats,
+    RegisteredPersons,
     delete_registered_person,
     delete_start_person,
-    RegisteredPersons,
+    get_all_user_ids,
+    get_all_winners,
+    get_broadcast_stats,
     get_registered_persons,
-    create_promo_code,
-    get_all_promo_codes,
-    delete_promo_code,
-    get_active_promo_codes_count,
-    get_used_promo_codes_count,
+    get_registered_persons_count,
+    get_start_persons,
+    get_start_persons_count,
+    log_marketing_message,
 )
-from services.excel_service import write_users_to_excel, write_winners_to_excel, write_registered_users_to_excel
+from services.excel_service import write_registered_users_to_excel, write_users_to_excel, write_winners_to_excel
 from services.i18n import t
-from services.quickresto_api import delete_customer, base_url, auth, headers
-from states.user_states import BroadcastState, DeleteUserState, PromoCodeState
+from services.quickresto_api import auth, base_url, delete_customer, headers
+from states.user_states import BroadcastState, DeleteUserState
+from utils.logger import logger
 
 router = Router(name=__name__)
 

@@ -68,7 +68,11 @@ async def command_start_handler(message: Message) -> None:
 
     # Пользователь не давал согласие — запрашиваем его
     logger.info(f"Запрос согласия на обработку персональных данных у пользователя {message.from_user.id}")
-    await message.answer(text=t("consent-title"), reply_markup=consent_keyboard())
+    await message.answer(
+        text=t("consent-title"),
+        reply_markup=consent_keyboard(),
+        parse_mode="HTML",
+    )
 
 
 @router.callback_query(F.data == "consent_given")
@@ -83,7 +87,7 @@ async def consent_given_handler(callback: CallbackQuery) -> None:
     # Добавляем согласие в базу данных
     add_consent(id_telegram)
 
-    await callback.message.answer(text=t("consent-given"), reply_markup=contact_keyboard())
+    await callback.message.answer(text=t("consent-given"), reply_markup=contact_keyboard(), parse_mode="HTML")
     await callback.answer()
 
 
@@ -94,7 +98,7 @@ async def consent_declined_handler(callback: CallbackQuery) -> None:
     """
     logger.info(f"Пользователь {callback.from_user.id} отказался от обработки персональных данных")
 
-    await callback.message.answer(text=t("consent-declined"))
+    await callback.message.answer(text=t("consent-declined"), parse_mode="HTML")
     await callback.answer()
 
 
@@ -171,10 +175,12 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
         await callback.message.edit_text(
             text=t("consent-title"),
             reply_markup=consent_keyboard(),
+            parse_mode="HTML",
         )
     except Exception:
         await callback.message.answer(
             text=t("consent-title"),
             reply_markup=consent_keyboard(),
+            parse_mode="HTML",
         )
     await callback.answer()

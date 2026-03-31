@@ -2,7 +2,17 @@
 from datetime import datetime
 
 # from peewee import *  # https://docs.peewee-orm.com/en/latest/index.html  # noqa: F403
-from peewee import CharField, DateTimeField, DecimalField, IntegerField, Model, SqliteDatabase, fn
+from peewee import (
+    BooleanField,
+    CharField,
+    DateTimeField,
+    DecimalField,
+    IntegerField,
+    Model,
+    SqliteDatabase,
+    TextField,
+    fn,
+)
 
 from utils.logger import logger
 
@@ -1231,3 +1241,13 @@ def get_consents_count() -> int:
     finally:
         if not db.is_closed():
             db.close()
+            db.connect()
+
+        count = Consents.select().where(Consents.is_consent == True).count()
+        return count
+    # except Exception as e:
+    # logger.exception(f"Ошибка при подсчёте согласий: {e}")
+    # return 0
+    # finally:
+    # if not db.is_closed():
+    # db.close()
