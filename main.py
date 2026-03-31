@@ -11,6 +11,7 @@ from handlers.user_handlers import router as user_handlers
 from services.birthday_service import send_birthday_bonus
 from services.bonus_burn_service import check_all_burningBonuses
 from services.database import create_tables
+from services.event_reminder_service import check_and_send_reminders
 from utils.logger import logger
 
 
@@ -62,6 +63,30 @@ async def bonus_burn_scheduler():
             await asyncio.sleep(3600)  # Ждём час при ошибке
 
 
+async def event_reminder_scheduler():
+    """
+    Планировщик для ежедневной проверки напоминаний о мероприятиях
+    Запускается каждый день в 00:00 (после проверки дней рождения и сгорания бонусов)
+    """
+    logger.info("Планировщик напоминаний о мероприятиях запущен")
+
+    while True:
+        try:
+            # Ждём до 00:00 следующего дня
+            now = asyncio.get_event_loop().time()
+            next_midnight = 86400 - (now % 86400)  # Секунд до полуночи
+
+            logger.info(f"Следующая проверка напоминаний о мероприятиях через {next_midnight:.0f} секунд")
+            await asyncio.sleep(next_midnight)
+
+            # Запускаем проверку и отправку напоминаний
+            await check_and_send_reminders()
+
+        except Exception as e:
+            logger.exception(f"Ошибка в планировщике напоминаний о мероприятиях: {e}")
+            await asyncio.sleep(3600)  # Ждём час при ошибке
+
+
 async def main() -> None:
     """
     Точка входа в приложение
@@ -77,7 +102,11 @@ async def main() -> None:
     dp.include_router(event_handlers)  # Хендлеры мероприятий
 
     # Запускаем планировщики в фоновом режиме
-    scheduler_tasks = [asyncio.create_task(birthday_scheduler()), asyncio.create_task(bonus_burn_scheduler())]
+    scheduler_tasks = [
+        asyncio.create_task(birthday_scheduler()),
+        asyncio.create_task(bonus_burn_scheduler()),
+        asyncio.create_task(event_reminder_scheduler()),
+    ]
 
     try:
         # Запуск polling

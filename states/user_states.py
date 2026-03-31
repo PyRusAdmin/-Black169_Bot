@@ -38,4 +38,7 @@ class EventState(StatesGroup):
     waiting_for_description = State()  # Ожидание описания мероприятия
     waiting_for_date = State()  # Ожидание даты и времени мероприятия
     waiting_for_photo = State()  # Ожидание фото мероприятия (необязательно)
+    waiting_for_reminder_3days = State()  # Ожидание текста напоминания за 3 дня
+    waiting_for_reminder_1day = State()  # Ожидание текста напоминания за 1 день
+    waiting_for_reminder_event_day = State()  # Ожидание текста напоминания в день мероприятия
     waiting_for_confirmation = State()  # Ожидание подтверждения создания

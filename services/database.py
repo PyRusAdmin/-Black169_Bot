@@ -1252,6 +1252,14 @@ class Events(Model):
     created_at = DateTimeField(default=datetime.now)  # Дата создания
     created_by = IntegerField()  # ID администратора, создавшего мероприятие
 
+    # Поля для автоматических напоминаний
+    reminder_text_3days = TextField(null=True)  # Текст напоминания за 3 дня
+    reminder_text_1day = TextField(null=True)  # Текст напоминания за 1 день
+    reminder_text_event_day = TextField(null=True)  # Текст напоминания в день мероприятия
+    reminder_3days_sent = BooleanField(default=False)  # Отправлено ли напоминание за 3 дня
+    reminder_1day_sent = BooleanField(default=False)  # Отправлено ли напоминание за 1 день
+    reminder_event_day_sent = BooleanField(default=False)  # Отправлено ли напоминание в день мероприятия
+
     class Meta:
         database = db
         table_name = "events"
@@ -1261,7 +1269,16 @@ class Events(Model):
         )
 
 
-def create_event(title: str, description: str, event_date: datetime, created_by: int, photo_id: str = None) -> bool:
+def create_event(
+    title: str,
+    description: str,
+    event_date: datetime,
+    created_by: int,
+    photo_id: str = None,
+    reminder_text_3days: str = None,
+    reminder_text_1day: str = None,
+    reminder_text_event_day: str = None,
+) -> bool:
     """
     Создание нового мероприятия
 
@@ -1270,6 +1287,9 @@ def create_event(title: str, description: str, event_date: datetime, created_by:
     :param event_date: Дата и время мероприятия
     :param created_by: ID администратора, создавшего мероприятие
     :param photo_id: ID фото мероприятия (если есть)
+    :param reminder_text_3days: Текст напоминания за 3 дня
+    :param reminder_text_1day: Текст напоминания за 1 день
+    :param reminder_text_event_day: Текст напоминания в день мероприятия
     :return: True если создано, False если ошибка
     """
     try:
@@ -1283,6 +1303,9 @@ def create_event(title: str, description: str, event_date: datetime, created_by:
             created_by=created_by,
             photo_id=photo_id,
             is_active=True,
+            reminder_text_3days=reminder_text_3days,
+            reminder_text_1day=reminder_text_1day,
+            reminder_text_event_day=reminder_text_event_day,
         )
         logger.info(f"Создано мероприятие: {title} на {event_date}")
         return True
@@ -1389,6 +1412,100 @@ def delete_event(event_id: int) -> bool:
     except Exception as e:
         logger.exception(f"Ошибка при удалении мероприятия {event_id}: {e}")
         return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def update_reminder_sent(event_id: int, reminder_type: str) -> bool:
+    """
+    Обновление статуса отправленного напоминания
+
+    :param event_id: ID мероприятия
+    :param reminder_type: Тип напоминания (3days, 1day, event_day)
+    :return: True если обновлено, False если ошибка
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        field_name = f"reminder_{reminder_type}_sent"
+        query = Events.update(**{field_name: True}).where(Events.id == event_id)
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Обновлён статус напоминания {reminder_type} для мероприятия {event_id}")
+            return True
+        return False
+    except Exception as e:
+        logger.exception(f"Ошибка при обновлении статуса напоминания: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_events_for_reminder(days_until: int) -> list:
+    """
+    Получение мероприятий, для которых нужно отправить напоминание
+
+    :param days_until: За сколько дней до мероприятия (3, 1, 0)
+    :return: Список мероприятий
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        from datetime import date, timedelta
+
+        today = date.now()
+        target_date = today + timedelta(days=days_until)
+
+        # Определяем поле для проверки отправки
+        if days_until == 3:
+            sent_field = Events.reminder_3days_sent
+            text_field = Events.reminder_text_3days
+        elif days_until == 1:
+            sent_field = Events.reminder_1day_sent
+            text_field = Events.reminder_text_1day
+        else:  # days_until == 0
+            sent_field = Events.reminder_event_day_sent
+            text_field = Events.reminder_text_event_day
+
+        # Получаем мероприятия, где:
+        # - мероприятие активное
+        # - напоминание ещё не отправлено
+        # - есть текст напоминания
+        # - дата мероприятия через days_until дней
+        events = (
+            Events.select()
+            .where(
+                Events.is_active
+                & (not sent_field)
+                & (text_field.is_null(False))
+                & (fn.DATE(Events.event_date) == target_date)
+            )
+            .order_by(Events.event_date.asc())
+        )
+
+        result = []
+        for event in events:
+            result.append(
+                {
+                    "id": event.id,
+                    "title": event.title,
+                    "description": event.description,
+                    "event_date": event.event_date,
+                    "photo_id": event.photo_id,
+                    "reminder_text": getattr(
+                        event, f"reminder_text_{days_until}days" if days_until > 0 else "reminder_text_event_day"
+                    ),
+                }
+            )
+        return result
+    except Exception as e:
+        logger.exception(f"Ошибка при получении мероприятий для напоминания: {e}")
+        return []
     finally:
         if not db.is_closed():
             db.close()
