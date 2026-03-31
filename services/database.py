@@ -514,7 +514,7 @@ def get_registered_persons() -> list:
 
 def create_tables():
     """Создание таблицы в базе данных"""
-    db.create_tables([RegisteredPersons, StartPersons, GiftWheelSpins, MarketingMessages])
+    db.create_tables([RegisteredPersons, StartPersons, GiftWheelSpins, MarketingMessages, PromoCodes])
 
 
 """Таблица для учёта маркетинговых рассылок"""
@@ -866,6 +866,229 @@ def update_bonus_accrual_date(id_telegram: int, accrued_at: datetime = None, bon
     except Exception as e:
         logger.exception(f"Ошибка при обновлении даты начисления бонусов ботом: {e}")
         return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+"""Таблица для учёта промокодов"""
+
+
+class PromoCodes(Model):
+    """Таблица для хранения промокодов"""
+
+    code = CharField(unique=True)  # Уникальный код промокода
+    bonus_amount = DecimalField(max_digits=10, decimal_places=2)  # Сумма бонусов
+    description = TextField(null=True)  # Описание промокода
+    is_active = BooleanField(default=True)  # Активен ли промокод
+    created_at = DateTimeField(default=datetime.now)  # Дата создания
+    used_by = IntegerField(null=True)  # ID пользователя в Telegram, который использовал
+    used_at = DateTimeField(null=True)  # Дата использования
+
+    class Meta:
+        database = db
+        table_name = "promo_codes"
+        indexes = (
+            (('code',), True),  # Уникальный индекс на код
+        )
+
+
+def create_promo_code(code: str, bonus_amount: float, description: str = None) -> bool:
+    """
+    Создание нового промокода
+
+    :param code: Уникальный код промокода
+    :param bonus_amount: Сумма бонусов
+    :param description: Описание промокода
+    :return: True если создан, False если ошибка
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        PromoCodes.create(
+            code=code,
+            bonus_amount=bonus_amount,
+            description=description,
+            is_active=True
+        )
+        logger.info(f"Создан промокод: {code} на сумму {bonus_amount}")
+        return True
+    except Exception as e:
+        logger.exception(f"Ошибка при создании промокода {code}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_promo_code(code: str) -> dict | None:
+    """
+    Получение информации о промокоде по коду
+
+    :param code: Код промокода
+    :return: Словарь с данными промокода или None если не найден
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        promo = PromoCodes.get_or_none(PromoCodes.code == code)
+        if promo:
+            return {
+                "code": promo.code,
+                "bonus_amount": promo.bonus_amount,
+                "description": promo.description,
+                "is_active": promo.is_active,
+                "created_at": promo.created_at,
+                "used_by": promo.used_by,
+                "used_at": promo.used_at
+            }
+        return None
+    except Exception as e:
+        logger.exception(f"Ошибка при получении промокода {code}: {e}")
+        return None
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def activate_promo_code(code: str, id_telegram: int) -> bool:
+    """
+    Активация промокода пользователем
+
+    :param code: Код промокода
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если активирован, False если ошибка или уже использован
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        # Проверяем, существует ли промокод и активен ли он
+        promo = PromoCodes.get_or_none(
+            (PromoCodes.code == code) &
+            (PromoCodes.is_active == True) &
+            (PromoCodes.used_by.is_null())
+        )
+
+        if not promo:
+            return False
+
+        # Помечаем как использованный
+        query = (PromoCodes
+                 .update(
+                     used_by=id_telegram,
+                     used_at=datetime.now(),
+                     is_active=False
+                 )
+                 .where(PromoCodes.code == code))
+
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Промокод {code} активирован пользователем {id_telegram}")
+            return True
+        return False
+    except Exception as e:
+        logger.exception(f"Ошибка при активации промокода {code}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_all_promo_codes() -> list:
+    """
+    Получение всех промокодов
+
+    :return: Список словарей с данными промокодов
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        promo_codes = PromoCodes.select().order_by(PromoCodes.created_at.desc())
+
+        result = []
+        for promo in promo_codes:
+            result.append({
+                "code": promo.code,
+                "bonus_amount": promo.bonus_amount,
+                "description": promo.description,
+                "is_active": promo.is_active,
+                "created_at": promo.created_at,
+                "used_by": promo.used_by,
+                "used_at": promo.used_at
+            })
+        return result
+    except Exception as e:
+        logger.exception(f"Ошибка при получении списка промокодов: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def delete_promo_code(code: str) -> bool:
+    """
+    Удаление промокода
+
+    :param code: Код промокода
+    :return: True если удалён, False если не найден
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        query = PromoCodes.delete().where(PromoCodes.code == code)
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Промокод {code} удалён")
+            return True
+        logger.warning(f"Промокод {code} не найден")
+        return False
+    except Exception as e:
+        logger.exception(f"Ошибка при удалении промокода {code}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_active_promo_codes_count() -> int:
+    """
+    Получение количества активных промокодов
+
+    :return: Количество активных промокодов
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        count = PromoCodes.select().where(PromoCodes.is_active == True).count()
+        return count
+    except Exception as e:
+        logger.exception(f"Ошибка при подсчёте активных промокодов: {e}")
+        return 0
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_used_promo_codes_count() -> int:
+    """
+    Получение количества использованных промокодов
+
+    :return: Количество использованных промокодов
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        count = PromoCodes.select().where(PromoCodes.used_by.is_null(False)).count()
+        return count
     finally:
         if not db.is_closed():
             db.close()

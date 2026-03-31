@@ -142,6 +142,9 @@ def admin_menu_keyboard():
                 InlineKeyboardButton(text="🗑️ Удалить пользователя", callback_data="delete_user"),
             ],
             [
+                InlineKeyboardButton(text="🎁 Промокоды", callback_data="promo_menu"),
+            ],
+            [
                 InlineKeyboardButton(
                     text="🏠 В главное меню",
                     callback_data="back_to_main_menu",
@@ -190,6 +193,37 @@ def broadcast_confirm_keyboard():
             [
                 InlineKeyboardButton(text="✅ Отправить", callback_data="broadcast_confirm_send"),
                 InlineKeyboardButton(text="❌ Отмена", callback_data="broadcast_cancel"),
+            ],
+        ]
+    )
+
+
+def promo_codes_menu_keyboard():
+    """Клавиатура управления промокодами для админ-панели"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="➕ Создать промокод", callback_data="promo_create"),
+            ],
+            [
+                InlineKeyboardButton(text="📋 Список промокодов", callback_data="promo_list"),
+            ],
+            [
+                InlineKeyboardButton(text="🗑️ Удалить промокод", callback_data="promo_delete"),
+            ],
+            [
+                InlineKeyboardButton(text="🔧 В меню администратора", callback_data="admin_back"),
+            ],
+        ]
+    )
+
+
+def back_to_promo_menu_keyboard():
+    """Клавиатура возврата в меню промокодов"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🔙 В меню промокодов", callback_data="promo_menu"),
             ],
         ]
     )

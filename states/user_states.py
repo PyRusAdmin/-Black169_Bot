@@ -16,3 +16,11 @@ class DeleteUserState(StatesGroup):
     """Состояния для удаления пользователя"""
 
     waiting_for_user_id = State()  # Ожидание ID пользователя
+
+
+class PromoCodeState(StatesGroup):
+    """Состояния для создания промокодов"""
+
+    waiting_for_bonus_amount = State()  # Ожидание суммы бонуса
+    waiting_for_description = State()  # Ожидание описания промокода
+    waiting_for_quantity = State()  # Ожидание количества промокодов

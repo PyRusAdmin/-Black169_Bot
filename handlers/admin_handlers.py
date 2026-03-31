@@ -10,16 +10,18 @@ from utils.logger import logger
 from config import OWNER_IDS, bot
 from keyboards.inline import (
     admin_menu_keyboard, back_to_admin_menu_keyboard, broadcast_type_keyboard, broadcast_confirm_keyboard,
+    promo_codes_menu_keyboard, back_to_promo_menu_keyboard,
 )
 from services.database import (
     get_start_persons, get_all_winners, get_all_user_ids, log_marketing_message, get_start_persons_count,
     get_registered_persons_count, get_broadcast_stats, delete_registered_person, delete_start_person,
-    RegisteredPersons, get_registered_persons,
+    RegisteredPersons, get_registered_persons, create_promo_code, get_all_promo_codes, delete_promo_code,
+    get_active_promo_codes_count, get_used_promo_codes_count,
 )
 from services.excel_service import write_users_to_excel, write_winners_to_excel, write_registered_users_to_excel
 from services.i18n import t
 from services.quickresto_api import delete_customer, base_url, auth, headers
-from states.user_states import BroadcastState, DeleteUserState
+from states.user_states import BroadcastState, DeleteUserState, PromoCodeState
 
 router = Router(name=__name__)
 
