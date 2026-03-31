@@ -514,7 +514,7 @@ def get_registered_persons() -> list:
 
 def create_tables():
     """Создание таблицы в базе данных"""
-    db.create_tables([RegisteredPersons, StartPersons, GiftWheelSpins, MarketingMessages, PromoCodes])
+    db.create_tables([RegisteredPersons, StartPersons, GiftWheelSpins, MarketingMessages, PromoCodes, Consents])
 
 
 """Таблица для учёта маркетинговых рассылок"""
@@ -1089,6 +1089,158 @@ def get_used_promo_codes_count() -> int:
 
         count = PromoCodes.select().where(PromoCodes.used_by.is_null(False)).count()
         return count
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+"""Таблица для учёта согласий на обработку персональных данных"""
+
+
+class Consents(Model):
+    """Таблица для хранения согласий пользователей на обработку персональных данных"""
+
+    id_telegram = IntegerField(unique=True)  # ID пользователя в Telegram
+    is_consent = BooleanField(default=True)  # Флаг согласия
+    consented_at = DateTimeField(default=datetime.now)  # Дата получения согласия
+    ip_address = CharField(null=True)  # IP-адрес (если доступен)
+    user_agent = TextField(null=True)  # User agent (если доступен)
+
+    class Meta:
+        database = db
+        table_name = "consents"
+        indexes = (
+            (('id_telegram',), True),  # Уникальный индекс на ID пользователя
+        )
+
+
+def add_consent(id_telegram: int, ip_address: str = None, user_agent: str = None) -> bool:
+    """
+    Добавление согласия на обработку персональных данных
+
+    :param id_telegram: ID пользователя в Telegram
+    :param ip_address: IP-адрес пользователя (если доступен)
+    :param user_agent: User agent (если доступен)
+    :return: True если добавлено, False если ошибка
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        Consents.create(
+            id_telegram=id_telegram,
+            is_consent=True,
+            consented_at=datetime.now(),
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+        logger.info(f"Пользователь {id_telegram} дал согласие на обработку персональных данных")
+        return True
+    except Exception as e:
+        logger.exception(f"Ошибка при добавлении согласия пользователя {id_telegram}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def has_consent(id_telegram: int) -> bool:
+    """
+    Проверка наличия согласия на обработку персональных данных
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если согласие есть, False если нет
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        consent = Consents.get_or_none(
+            (Consents.id_telegram == id_telegram) &
+            (Consents.is_consent == True)
+        )
+        return consent is not None
+    except Exception as e:
+        logger.exception(f"Ошибка при проверке согласия пользователя {id_telegram}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_consent_info(id_telegram: int) -> dict | None:
+    """
+    Получение информации о согласии пользователя
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: Словарь с данными согласия или None если не найдено
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        consent = Consents.get_or_none(Consents.id_telegram == id_telegram)
+        if consent:
+            return {
+                "id_telegram": consent.id_telegram,
+                "is_consent": consent.is_consent,
+                "consented_at": consent.consented_at,
+                "ip_address": consent.ip_address,
+                "user_agent": consent.user_agent
+            }
+        return None
+    except Exception as e:
+        logger.exception(f"Ошибка при получении информации о согласии {id_telegram}: {e}")
+        return None
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def revoke_consent(id_telegram: int) -> bool:
+    """
+    Отзыв согласия на обработку персональных данных
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если отозвано, False если ошибка
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        query = (Consents
+                 .update(is_consent=False)
+                 .where(Consents.id_telegram == id_telegram))
+
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Пользователь {id_telegram} отозвал согласие на обработку персональных данных")
+            return True
+        return False
+    except Exception as e:
+        logger.exception(f"Ошибка при отзыве согласия пользователя {id_telegram}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_consents_count() -> int:
+    """
+    Получение количества пользователей, давших согласие
+
+    :return: Количество пользователей с согласием
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        count = Consents.select().where(Consents.is_consent == True).count()
+        return count
+    except Exception as e:
+        logger.exception(f"Ошибка при подсчёте согласий: {e}")
+        return 0
     finally:
         if not db.is_closed():
             db.close()

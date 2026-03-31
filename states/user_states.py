@@ -24,3 +24,9 @@ class PromoCodeState(StatesGroup):
     waiting_for_bonus_amount = State()  # Ожидание суммы бонуса
     waiting_for_description = State()  # Ожидание описания промокода
     waiting_for_quantity = State()  # Ожидание количества промокодов
+
+
+class ConsentState(StatesGroup):
+    """Состояния для получения согласия на обработку персональных данных"""
+
+    waiting_for_consent = State()  # Ожидание согласия пользователя

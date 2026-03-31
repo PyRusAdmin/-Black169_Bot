@@ -227,3 +227,17 @@ def back_to_promo_menu_keyboard():
             ],
         ]
     )
+
+
+def consent_keyboard():
+    """Клавиатура для получения согласия на обработку персональных данных"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅ Даю согласие на обработку персональных данных", callback_data="consent_given"),
+            ],
+            [
+                InlineKeyboardButton(text="❌ Не даю согласие", callback_data="consent_declined"),
+            ],
+        ]
+    )
