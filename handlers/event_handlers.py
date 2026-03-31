@@ -10,6 +10,7 @@ from keyboards.inline import (
     admin_menu_keyboard,
     back_to_events_menu_keyboard,
     event_action_keyboard,
+    event_confirm_keyboard,
     events_menu_keyboard,
 )
 from services.database import create_event, delete_event, get_all_events, get_events_count, update_event_status
@@ -210,16 +211,16 @@ async def send_confirmation(message: Message, state: FSMContext) -> None:
     await state.set_state(EventState.waiting_for_confirmation)
     await message.answer(
         text=t("event-create-confirm", title=title, description=description, date=date),
-        reply_markup=back_to_events_menu_keyboard(),
+        reply_markup=event_confirm_keyboard(),
     )
 
 
-@router.message(EventState.waiting_for_confirmation, F.text)
-async def event_confirm_handler(message: Message, state: FSMContext) -> None:
+@router.callback_query(F.data == "event_confirm_yes")
+async def event_confirm_yes_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """
     Подтверждение создания мероприятия
     """
-    logger.info(f"Администратор {message.from_user.id} подтвердил создание мероприятия")
+    logger.info(f"Администратор {callback.from_user.id} подтвердил создание мероприятия")
 
     data = await state.get_data()
     title = data.get("title")
@@ -235,7 +236,7 @@ async def event_confirm_handler(message: Message, state: FSMContext) -> None:
         title=title,
         description=description,
         event_date=event_date,
-        created_by=message.from_user.id,
+        created_by=callback.from_user.id,
         photo_id=photo_id,
         reminder_text_3days=reminder_text_3days,
         reminder_text_1day=reminder_text_1day,
@@ -254,17 +255,34 @@ async def event_confirm_handler(message: Message, state: FSMContext) -> None:
 
         reminders_text = "\n".join(reminders_info) if reminders_info else "❌ Напоминания не настроены"
 
-        await message.answer(
+        await callback.message.answer(
             text=f"{t('event-create-success', title=title, date=data.get('event_date_str'))}\n\n🔔 <b>Напоминания:</b>\n{reminders_text}",
             reply_markup=admin_menu_keyboard(),
             parse_mode="HTML",
         )
     else:
-        await message.answer(
-            text="❌ Ошибка при создании мероприятия. Попробуйте ещё раз.", reply_markup=admin_menu_keyboard()
+        await callback.message.answer(
+            text="❌ Ошибка при создании мероприятия. Попробуйте ещё раз.",
+            reply_markup=admin_menu_keyboard(),
         )
 
     await state.clear()
+    await callback.answer()
+
+
+@router.callback_query(F.data == "event_confirm_no")
+async def event_confirm_no_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    Отмена создания мероприятия
+    """
+    logger.info(f"Администратор {callback.from_user.id} отменил создание мероприятия")
+
+    await state.clear()
+    await callback.message.answer(
+        text="❌ Создание мероприятия отменено.",
+        reply_markup=admin_menu_keyboard(),
+    )
+    await callback.answer()
 
 
 @router.callback_query(F.data == "event_list")

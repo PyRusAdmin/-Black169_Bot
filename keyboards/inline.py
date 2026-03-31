@@ -299,3 +299,15 @@ def event_action_keyboard(event_id: int):
             ],
         ]
     )
+
+
+def event_confirm_keyboard():
+    """Клавиатура подтверждения создания мероприятия"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅ Да, создать", callback_data="event_confirm_yes"),
+                InlineKeyboardButton(text="❌ Нет, отмена", callback_data="event_confirm_no"),
+            ],
+        ]
+    )
