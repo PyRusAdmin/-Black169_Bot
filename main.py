@@ -4,6 +4,7 @@ import sys
 
 from config import bot, dp
 from handlers.admin_handlers import router as admin_handlers
+from handlers.event_handlers import router as event_handlers
 from handlers.handlers import router as handlers
 from handlers.menu_handlers import router as menu_handlers
 from handlers.user_handlers import router as user_handlers
@@ -73,6 +74,7 @@ async def main() -> None:
     dp.include_router(user_handlers)  # Хендлеры для пользователей
     dp.include_router(menu_handlers)  # Хендлеры главного меню
     dp.include_router(admin_handlers)  # Хендлеры для администраторов
+    dp.include_router(event_handlers)  # Хендлеры мероприятий
 
     # Запускаем планировщики в фоновом режиме
     scheduler_tasks = [asyncio.create_task(birthday_scheduler()), asyncio.create_task(bonus_burn_scheduler())]

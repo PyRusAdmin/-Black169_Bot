@@ -29,3 +29,13 @@ class ConsentState(StatesGroup):
     """Состояния для получения согласия на обработку персональных данных"""
 
     waiting_for_consent = State()  # Ожидание согласия пользователя
+
+
+class EventState(StatesGroup):
+    """Состояния для создания мероприятий"""
+
+    waiting_for_title = State()  # Ожидание названия мероприятия
+    waiting_for_description = State()  # Ожидание описания мероприятия
+    waiting_for_date = State()  # Ожидание даты и времени мероприятия
+    waiting_for_photo = State()  # Ожидание фото мероприятия (необязательно)
+    waiting_for_confirmation = State()  # Ожидание подтверждения создания

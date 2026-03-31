@@ -143,6 +143,9 @@ def admin_menu_keyboard():
                 InlineKeyboardButton(text="🎁 Промокоды", callback_data="promo_menu"),
             ],
             [
+                InlineKeyboardButton(text="📅 Мероприятия", callback_data="events_menu"),
+            ],
+            [
                 InlineKeyboardButton(
                     text="🏠 В главное меню",
                     callback_data="back_to_main_menu",
@@ -244,6 +247,55 @@ def consent_keyboard():
                     callback_data="consent_declined",
                     style="danger",
                 ),
+            ],
+        ]
+    )
+
+
+def events_menu_keyboard():
+    """Клавиатура управления мероприятиями для админ-панели"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="➕ Создать мероприятие", callback_data="event_create"),
+            ],
+            [
+                InlineKeyboardButton(text="📋 Список мероприятий", callback_data="event_list"),
+            ],
+            [
+                InlineKeyboardButton(text="🗑️ Удалить мероприятие", callback_data="event_delete"),
+            ],
+            [
+                InlineKeyboardButton(text="🔧 В меню администратора", callback_data="admin_back"),
+            ],
+        ]
+    )
+
+
+def back_to_events_menu_keyboard():
+    """Клавиатура возврата в меню мероприятий"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🔙 В меню мероприятий", callback_data="events_menu"),
+            ],
+        ]
+    )
+
+
+def event_action_keyboard(event_id: int):
+    """Клавиатура действий с мероприятием"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅ Активировать", callback_data=f"event_activate_{event_id}"),
+                InlineKeyboardButton(text="⏸️ Деактивировать", callback_data=f"event_deactivate_{event_id}"),
+            ],
+            [
+                InlineKeyboardButton(text="🗑️ Удалить", callback_data=f"event_delete_{event_id}"),
+            ],
+            [
+                InlineKeyboardButton(text="🔙 В список мероприятий", callback_data="event_list"),
             ],
         ]
     )

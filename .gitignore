@@ -167,3 +167,5 @@ cython_debug/
 /database.db
 /doc/Тз.md
 /ToDo.md
+.vscode
+.ruff_cache

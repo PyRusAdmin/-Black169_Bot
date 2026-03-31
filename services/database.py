@@ -429,9 +429,7 @@ def get_all_winners() -> list:
         if db.is_closed():
             db.connect()
 
-        winners = (
-            GiftWheelSpins.select().where(GiftWheelSpins.is_winner == True).order_by(GiftWheelSpins.spun_at.desc())
-        )
+        winners = GiftWheelSpins.select().where(GiftWheelSpins.is_winner).order_by(GiftWheelSpins.spun_at.desc())
 
         result = []
         for winner in winners:
@@ -529,7 +527,7 @@ def get_registered_persons() -> list:
 
 def create_tables():
     """Создание таблицы в базе данных"""
-    db.create_tables([RegisteredPersons, StartPersons, GiftWheelSpins, MarketingMessages, PromoCodes, Consents])
+    db.create_tables([RegisteredPersons, StartPersons, GiftWheelSpins, MarketingMessages, PromoCodes, Consents, Events])
 
 
 """Таблица для учёта маркетинговых рассылок"""
@@ -679,7 +677,7 @@ def get_broadcast_stats() -> dict:
         text_count = MarketingMessages.select().where(MarketingMessages.message_type == "text").count()
         photo_count = MarketingMessages.select().where(MarketingMessages.message_type == "photo").count()
         video_count = MarketingMessages.select().where(MarketingMessages.message_type == "video").count()
-        blocked_count = MarketingMessages.select().where(MarketingMessages.is_blocked == True).count()
+        blocked_count = MarketingMessages.select().where(MarketingMessages.is_blocked).count()
 
         # Уникальные пользователи, получившие рассылки
         unique_users = MarketingMessages.select(fn.COUNT(fn.DISTINCT(MarketingMessages.id_telegram))).scalar()
@@ -973,9 +971,7 @@ def activate_promo_code(code: str, id_telegram: int) -> bool:
             db.connect()
 
         # Проверяем, существует ли промокод и активен ли он
-        promo = PromoCodes.get_or_none(
-            (PromoCodes.code == code) & (PromoCodes.is_active == True) & (PromoCodes.used_by.is_null())
-        )
+        promo = PromoCodes.get_or_none((PromoCodes.code == code) & PromoCodes.is_active & PromoCodes.used_by.is_null())
 
         if not promo:
             return False
@@ -1070,7 +1066,7 @@ def get_active_promo_codes_count() -> int:
         if db.is_closed():
             db.connect()
 
-        count = PromoCodes.select().where(PromoCodes.is_active == True).count()
+        count = PromoCodes.select().where(PromoCodes.is_active).count()
         return count
     except Exception as e:
         logger.exception(f"Ошибка при подсчёте активных промокодов: {e}")
@@ -1156,7 +1152,7 @@ def has_consent(id_telegram: int) -> bool:
         if db.is_closed():
             db.connect()
 
-        consent = Consents.get_or_none((Consents.id_telegram == id_telegram) & (Consents.is_consent == True))
+        consent = Consents.get_or_none((Consents.id_telegram == id_telegram) & Consents.is_consent)
         return consent is not None
     except Exception as e:
         logger.exception(f"Ошибка при проверке согласия пользователя {id_telegram}: {e}")
@@ -1232,7 +1228,7 @@ def get_consents_count() -> int:
         if db.is_closed():
             db.connect()
 
-        count = Consents.select().where(Consents.is_consent == True).count()
+        count = Consents.select().where(Consents.is_consent).count()
         return count
     except Exception as e:
         logger.exception(f"Ошибка при подсчёте согласий: {e}")
@@ -1240,13 +1236,254 @@ def get_consents_count() -> int:
     finally:
         if not db.is_closed():
             db.close()
+
+
+"""Таблица для учёта мероприятий"""
+
+
+class Events(Model):
+    """Таблица для хранения мероприятий"""
+
+    title = CharField()  # Название мероприятия
+    description = TextField()  # Описание мероприятия
+    event_date = DateTimeField()  # Дата и время мероприятия
+    photo_id = CharField(null=True)  # ID фото мероприятия (если есть)
+    is_active = BooleanField(default=True)  # Активно ли мероприятие
+    created_at = DateTimeField(default=datetime.now)  # Дата создания
+    created_by = IntegerField()  # ID администратора, создавшего мероприятие
+
+    class Meta:
+        database = db
+        table_name = "events"
+        indexes = (
+            (("event_date",), False),  # Индекс для быстрого поиска по дате
+            (("is_active",), False),  # Индекс для фильтрации активных
+        )
+
+
+def create_event(title: str, description: str, event_date: datetime, created_by: int, photo_id: str = None) -> bool:
+    """
+    Создание нового мероприятия
+
+    :param title: Название мероприятия
+    :param description: Описание мероприятия
+    :param event_date: Дата и время мероприятия
+    :param created_by: ID администратора, создавшего мероприятие
+    :param photo_id: ID фото мероприятия (если есть)
+    :return: True если создано, False если ошибка
+    """
+    try:
+        if db.is_closed():
             db.connect()
 
-        count = Consents.select().where(Consents.is_consent == True).count()
-        return count
-    # except Exception as e:
-    # logger.exception(f"Ошибка при подсчёте согласий: {e}")
-    # return 0
-    # finally:
-    # if not db.is_closed():
-    # db.close()
+        Events.create(
+            title=title,
+            description=description,
+            event_date=event_date,
+            created_by=created_by,
+            photo_id=photo_id,
+            is_active=True,
+        )
+        logger.info(f"Создано мероприятие: {title} на {event_date}")
+        return True
+    except Exception as e:
+        logger.exception(f"Ошибка при создании мероприятия {title}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_event(event_id: int) -> dict | None:
+    """
+    Получение информации о мероприятии по ID
+
+    :param event_id: ID мероприятия
+    :return: Словарь с данными мероприятия или None если не найдено
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        event = Events.get_or_none(Events.id == event_id)
+        if event:
+            return {
+                "id": event.id,
+                "title": event.title,
+                "description": event.description,
+                "event_date": event.event_date,
+                "photo_id": event.photo_id,
+                "is_active": event.is_active,
+                "created_at": event.created_at,
+                "created_by": event.created_by,
+            }
+        return None
+    except Exception as e:
+        logger.exception(f"Ошибка при получении мероприятия {event_id}: {e}")
+        return None
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_all_events(active_only: bool = False) -> list:
+    """
+    Получение всех мероприятий
+
+    :param active_only: True если только активные
+    :return: Список словарей с данными мероприятий
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        query = Events.select()
+        if active_only:
+            query = query.where(Events.is_active)
+        query = query.order_by(Events.event_date.desc())
+
+        events = query.execute()
+
+        result = []
+        for event in events:
+            result.append(
+                {
+                    "id": event.id,
+                    "title": event.title,
+                    "description": event.description,
+                    "event_date": event.event_date,
+                    "photo_id": event.photo_id,
+                    "is_active": event.is_active,
+                    "created_at": event.created_at,
+                    "created_by": event.created_by,
+                }
+            )
+        return result
+    except Exception as e:
+        logger.exception(f"Ошибка при получении списка мероприятий: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def delete_event(event_id: int) -> bool:
+    """
+    Удаление мероприятия
+
+    :param event_id: ID мероприятия
+    :return: True если удалено, False если не найдено
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        query = Events.delete().where(Events.id == event_id)
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Мероприятие {event_id} удалено")
+            return True
+        logger.warning(f"Мероприятие {event_id} не найдено")
+        return False
+    except Exception as e:
+        logger.exception(f"Ошибка при удалении мероприятия {event_id}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def update_event_status(event_id: int, is_active: bool) -> bool:
+    """
+    Обновление статуса мероприятия
+
+    :param event_id: ID мероприятия
+    :param is_active: Новый статус
+    :return: True если обновлено, False если ошибка
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        query = Events.update(is_active=is_active).where(Events.id == event_id)
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Мероприятие {event_id} обновлено, статус: {is_active}")
+            return True
+        return False
+    except Exception as e:
+        logger.exception(f"Ошибка при обновлении статуса мероприятия {event_id}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_upcoming_events(days: int = 7) -> list:
+    """
+    Получение предстоящих мероприятий (в течение указанного количества дней)
+
+    :param days: Количество дней
+    :return: Список словарей с данными мероприятий
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        from datetime import timedelta
+
+        now = datetime.now()
+        future_date = now + timedelta(days=days)
+
+        events = (
+            Events.select()
+            .where(Events.is_active & (Events.event_date >= now) & (Events.event_date <= future_date))
+            .order_by(Events.event_date.asc())
+        )
+
+        result = []
+        for event in events:
+            result.append(
+                {
+                    "id": event.id,
+                    "title": event.title,
+                    "description": event.description,
+                    "event_date": event.event_date,
+                    "photo_id": event.photo_id,
+                    "is_active": event.is_active,
+                    "created_at": event.created_at,
+                    "created_by": event.created_by,
+                }
+            )
+        return result
+    except Exception as e:
+        logger.exception(f"Ошибка при получении предстоящих мероприятий: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_events_count() -> dict:
+    """
+    Получение статистики по мероприятиям
+
+    :return: Словарь со статистикой
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        total = Events.select().count()
+        active = Events.select().where(Events.is_active).count()
+        inactive = Events.select().where(not Events.is_active).count()
+
+        return {"total": total, "active": active, "inactive": inactive}
+    except Exception as e:
+        logger.exception(f"Ошибка при получении статистики мероприятий: {e}")
+        return {"total": 0, "active": 0, "inactive": 0}
+    finally:
+        if not db.is_closed():
+            db.close()

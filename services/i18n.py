@@ -1,10 +1,10 @@
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 
 from fluent.runtime import FluentLocalization, FluentResourceLoader
 
 
-@lru_cache(maxsize=None)
+@cache
 def get_l10n() -> FluentLocalization:
     """
     Получить объект локализации.
