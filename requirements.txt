@@ -19,3 +19,8 @@ fluent-runtime~=0.3.1
 # Code formatting (linting)
 black~=24.0
 ruff~=0.12.0
+# Testing
+pytest~=8.0
+pytest-asyncio~=0.23
+pytest-cov~=5.0
+pytest-mock~=3.14

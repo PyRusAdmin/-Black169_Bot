@@ -19,9 +19,9 @@ def get_customer_by_phone(layer_name_quickresto, phone_number, auth, headers):
     """
     Возвращает информацию о клиенте по номеру телефона
 
-    :param layer_name_quickresto: название слоя quickresto
+    :param layer_name_quickresto: название слоя QuickResto
     :param phone_number: номер телефона
-    :param auth: авторизация в quickresto
+    :param auth: авторизация в QuickResto
     :param headers: заголовки запроса
     :return: информация о клиенте
     """
@@ -201,7 +201,7 @@ def update_customer_bonus(
 ):
     """
     Редактирование бонусных балов для клиента. Для изменения бонусных балов, требуется ID клиента в QuickResto и номер
-    телефона клиента, котрый в базе данных QuickResto. Для получения ID клиента и номера телефона клиента,
+    телефона клиента, который в базе данных QuickResto. Для получения ID клиента и номера телефона клиента,
     требуется можно использовать метод get_customer_by_phone.
 
     :param layer_name_quickresto: название слоя QuickResto
