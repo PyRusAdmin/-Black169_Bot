@@ -348,8 +348,10 @@ promo-activate-title =
     
     Введите код промокода для активации:
 
-promo-activate-success = 
-    ✅ Промокод <b>{$code}</b> успешно активирован!\n\nВам начислено: {$bonus} ₽
+promo-activate-success =
+    ✅ Промокод <b>{$code}</b> успешно активирован!
+
+    Вам начислено: {$bonus} ₽
 
 promo-activate-already-used = ❌ Этот промокод уже был использован.
 promo-activate-not-found = ❌ Промокод <b>{$code}</b> не найден или не активен.
