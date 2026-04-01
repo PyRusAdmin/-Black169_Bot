@@ -164,8 +164,8 @@ cython_debug/
 
 /.idea/
 /.qwen/
-/database.db
+/data/database.db
 /doc/Тз.md
 /ToDo.md
 .vscode
-.ruff_cache
+/data/clients_levels.json

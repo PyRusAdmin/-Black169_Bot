@@ -19,6 +19,7 @@ from services.database import (
     get_all_user_ids,
     get_all_winners,
     get_broadcast_stats,
+    get_client_levels_stats,
     get_registered_persons,
     get_registered_persons_count,
     get_start_persons,
@@ -359,21 +360,149 @@ async def stats_handler(callback: CallbackQuery) -> None:
     total_users = get_start_persons_count()  # Пользователи, запустившие бота
     registered_users = get_registered_persons_count()  # Привязавшие номер телефона
     broadcast_stats = get_broadcast_stats()  # Статистика по рассылкам
+    client_levels_stats = get_client_levels_stats()  # Статистика по уровням в БД
+    
+    # Получаем статистику по всем клиентам QuickResto из JSON
+    quickresto_stats = get_quickresto_clients_stats()
+
+    # Формируем текст статистики по уровням в БД
+    levels_text = ""
+    for level in ["Black", "Gold", "Silver", "Bronze"]:
+        level_data = client_levels_stats["levels"].get(level, {})
+        count = level_data.get("count", 0)
+        percent = level_data.get("percent", 0)
+        emoji = {"Black": "💎", "Gold": "🥇", "Silver": "🥈", "Bronze": "🥉"}.get(level, "📊")
+        levels_text += f"{emoji} <b>{level}</b>: {count} чел. ({percent}%)\n"
+
+    # Формируем текст статистики по QuickResto
+    qr_levels_text = ""
+    qr_level_dist = quickresto_stats.get("level_distribution", {})
+    qr_total = quickresto_stats.get("total", 0)
+    for level in ["Black", "Gold", "Silver", "Bronze"]:
+        count = qr_level_dist.get(level, 0)
+        percent = round(count / qr_total * 100, 1) if qr_total > 0 else 0
+        emoji = {"Black": "💎", "Gold": "🥇", "Silver": "🥈", "Bronze": "🥉"}.get(level, "📊")
+        qr_levels_text += f"{emoji} <b>{level}</b>: {count} чел. ({percent}%)\n"
 
     await callback.message.answer(
-        text=t(
-            "stats-title",
-            total_users=total_users,
-            registered_users=registered_users,
-            total_messages=broadcast_stats["total_messages"],
-            text_count=broadcast_stats["text_count"],
-            photo_count=broadcast_stats["photo_count"],
-            video_count=broadcast_stats["video_count"],
-            unique_users=broadcast_stats["unique_users"],
-            blocked_count=broadcast_stats["blocked_count"],
+        text=(
+            f"📊 <b>Статистика пользователей</b>\n\n"
+            f"👥 Пользователей запустили бота: <b>{total_users}</b>\n"
+            f"✅ Зарегистрировали номер: <b>{registered_users}</b>\n\n"
+            f"📈 <b>Уровни клиентов (в боте):</b>\n"
+            f"{levels_text}\n"
+            f"📭 Без уровня: {client_levels_stats['no_level']} чел.\n\n"
+            f"🏪 <b>Вся база QuickResto ({qr_total} клиентов):</b>\n"
+            f"{qr_levels_text}\n"
+            f"📨 <b>Рассылки:</b>\n"
+            f"Всего сообщений: {broadcast_stats['total_messages']}\n"
+            f"• Текстом: {broadcast_stats['text_count']}\n"
+            f"• С фото: {broadcast_stats['photo_count']}\n"
+            f"• С видео: {broadcast_stats['video_count']}\n"
+            f"📖 Прочитано: {broadcast_stats['unique_users']}\n"
+            f"🚫 Заблокировано: {broadcast_stats['blocked_count']}"
         ),
         reply_markup=back_to_admin_menu_keyboard(),
     )
+    await callback.answer()
+
+
+def get_quickresto_clients_stats() -> dict:
+    """
+    Получение статистики по всем клиентам QuickResto из JSON файла.
+    
+    :return: Статистика по уровням клиентов
+    """
+    import json
+    from pathlib import Path
+    
+    json_path = Path("data/clients_levels.json")
+    
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            clients_data = json.load(f)
+        
+        total = len(clients_data)
+        level_distribution = {}
+        
+        for client in clients_data:
+            level = client.get("level", "Unknown")
+            level_distribution[level] = level_distribution.get(level, 0) + 1
+        
+        return {
+            "total": total,
+            "level_distribution": level_distribution,
+        }
+        
+    except FileNotFoundError:
+        logger.warning("Файл clients_levels.json не найден")
+        return {"total": 0, "level_distribution": {}}
+    except Exception as e:
+        logger.exception(f"Ошибка при чтении статистики QuickResto: {e}")
+        return {"total": 0, "level_distribution": {}}
+
+
+"""Анализ и синхронизация клиентов"""
+
+
+@router.callback_query(F.data == "analyze_clients")
+async def analyze_clients_handler(callback: CallbackQuery) -> None:
+    """
+    Обработчик кнопки 'Анализ и синхронизация клиентов'
+    Запускает полный цикл анализа, нормализации телефонов, сохранения в JSON и синхронизации с БД.
+    """
+    logger.info(f"Администратор {callback.from_user.id} запустил анализ и синхронизацию клиентов")
+
+    if not is_admin(callback.from_user.id):
+        await callback.answer(t("no-admin-permission"), show_alert=True)
+        return
+
+    await callback.answer("⏳ Запуск анализа клиентов...")
+
+    try:
+        from services.quickresto_api import analyze_and_sync_clients
+
+        # Запускаем анализ и синхронизацию
+        result = analyze_and_sync_clients()
+
+        # Формируем отчет
+        level_dist = result.get("level_distribution", {})
+        db_stats = result.get("db_sync_stats", {})
+
+        report = (
+            f"✅ <b>Анализ и синхронизация клиентов завершены!</b>\n\n"
+            f"📊 <b>Результаты:</b>\n"
+            f"• Всего клиентов: {result.get('total_clients', 0)}\n"
+            f"• JSON обновлен: {'✅' if result.get('json_saved') else '❌'}\n\n"
+            f"📈 <b>Распределение по уровням:</b>\n"
+        )
+
+        emojis = {"Black": "💎", "Gold": "🥇", "Silver": "🥈", "Bronze": "🥉"}
+        for level in ["Black", "Gold", "Silver", "Bronze"]:
+            count = level_dist.get(level, 0)
+            emoji = emojis.get(level, "📊")
+            report += f"{emoji} {level}: {count} чел.\n"
+
+        report += (
+            f"\n🔄 <b>Синхронизация с БД:</b>\n"
+            f"• Обновлено: {db_stats.get('updated', 0)}\n"
+            f"• Не найдено: {db_stats.get('not_found', 0)}\n"
+            f"• Ошибок: {db_stats.get('errors', 0)}\n\n"
+            f"🕒 <b>Время выполнения:</b> {result.get('timestamp', '—')}"
+        )
+
+        await callback.message.answer(
+            text=report,
+            reply_markup=back_to_admin_menu_keyboard(),
+        )
+
+    except Exception as e:
+        logger.exception(f"Ошибка при анализе клиентов: {e}")
+        await callback.message.answer(
+            text=f"❌ <b>Ошибка при анализе клиентов:</b>\n\n{str(e)}",
+            reply_markup=back_to_admin_menu_keyboard(),
+        )
+
     await callback.answer()
 
 

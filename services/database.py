@@ -15,7 +15,8 @@ from peewee import (
 
 from utils.logger import logger
 
-db = SqliteDatabase("database.db")
+db = SqliteDatabase("data/database.db")
+
 """
 Запись в базу данных о пользователях, которые зарегистрировались в боте, передав свой номер телефона. Часть данных 
 о пользователях будет браться из QuickResto https://quickresto.ru/api/ и записываться в базу данных database.db
@@ -37,6 +38,8 @@ class RegisteredPersons(Model):
     updated_at = DateTimeField(default=datetime.now)  # Дата обновления данных
     bonus_accrued_at = DateTimeField(null=True)  # ✅ Дата начисления бонусов ботом (для отслеживания сгорания)
     bot_bonus_amount = DecimalField(null=True, max_digits=10, decimal_places=2)  # ✅ Сумма бонусов, начисленных ботом
+    client_level = CharField(null=True)  # ✅ Уровень клиента (Bronze, Silver, Gold, Black)
+    accumulation_amount = DecimalField(null=True, max_digits=12, decimal_places=2)  # ✅ Накопительная сумма для уровня
 
     class Meta:
         database = db  # база данных
@@ -109,6 +112,9 @@ def write_to_db_registered_person(data):
     user_bonus = data.get("user_bonus")  # бонус пользователя QuickResto
     birthday_user = data.get("birthday_user")  # день рождения пользователя QuickResto
     phone_telegram = data.get("phone_telegram")  # номер телефона пользователя в Telegram
+    client_level = data.get("client_level")  # уровень клиента
+    accumulation_amount = data.get("accumulation_amount")  # накопительная сумма
+
     try:
         if db.is_closed():
             db.connect()
@@ -122,6 +128,8 @@ def write_to_db_registered_person(data):
                 "user_bonus": user_bonus,  # бонус пользователя QuickResto
                 "birthday_user": birthday_user,  # день рождения пользователя QuickResto
                 "phone_telegram": phone_telegram,  # номер телефона пользователя в Telegram
+                "client_level": client_level,  # уровень клиента
+                "accumulation_amount": accumulation_amount,  # накопительная сумма
             },
         )
         if not created:
@@ -132,6 +140,8 @@ def write_to_db_registered_person(data):
             person.user_bonus = user_bonus  # бонус пользователя QuickResto
             person.birthday_user = birthday_user  # день рождения пользователя QuickResto
             person.phone_telegram = phone_telegram  # номер телефона пользователя в Telegram
+            person.client_level = client_level  # уровень клиента
+            person.accumulation_amount = accumulation_amount  # накопительная сумма
             person.updated_at = datetime.now()  # дата и время обновления данных о пользователе
         person.save()
     except Exception as e:
@@ -235,6 +245,8 @@ def get_user_info(id_telegram: int) -> dict | None:
                 "user_bonus": user.user_bonus,
                 "date_of_visit": user.date_of_visit,
                 "updated_at": user.updated_at,
+                "client_level": user.client_level,
+                "accumulation_amount": user.accumulation_amount,
             }
         return None
     except Exception as e:
@@ -511,6 +523,8 @@ def get_registered_persons() -> list:
                     "user_bonus": person.user_bonus,  # Бонусы
                     "date_of_visit": person.date_of_visit,  # Дата последнего визита
                     "updated_at": person.updated_at,  # Дата обновления
+                    "client_level": person.client_level,  # Уровень клиента
+                    "accumulation_amount": person.accumulation_amount,  # Накопительная сумма
                 }
             )
         return result
@@ -522,12 +536,126 @@ def get_registered_persons() -> list:
             db.close()
 
 
+def get_client_levels_stats() -> dict:
+    """
+    Получение статистики по уровням клиентов
+
+    :return: Словарь со статистикой по уровням
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        # Общее количество зарегистрированных клиентов
+        total = RegisteredPersons.select().count()
+
+        # Количество по уровням
+        levels = {}
+        for level in ["Black", "Gold", "Silver", "Bronze"]:
+            count = RegisteredPersons.select().where(RegisteredPersons.client_level == level).count()
+            levels[level] = {
+                "count": count,
+                "percent": round(count / total * 100, 1) if total > 0 else 0
+            }
+
+        # Клиенты без определенного уровня
+        no_level = RegisteredPersons.select().where(
+            (RegisteredPersons.client_level.is_null()) | (RegisteredPersons.client_level == "")
+        ).count()
+
+        return {
+            "total": total,
+            "levels": levels,
+            "no_level": no_level,
+        }
+    except Exception as e:
+        logger.exception(f"Ошибка при получении статистики по уровням клиентов: {e}")
+        return {
+            "total": 0,
+            "levels": {
+                "Black": {"count": 0, "percent": 0},
+                "Gold": {"count": 0, "percent": 0},
+                "Silver": {"count": 0, "percent": 0},
+                "Bronze": {"count": 0, "percent": 0},
+            },
+            "no_level": 0,
+        }
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def update_client_level(id_telegram: int, client_level: str, accumulation_amount: float = None) -> bool:
+    """
+    Обновление уровня клиента в базе данных
+
+    :param id_telegram: ID пользователя в Telegram
+    :param client_level: Уровень клиента (Bronze, Silver, Gold, Black)
+    :param accumulation_amount: Накопительная сумма
+    :return: True если успешно, False если нет
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        query = (
+            RegisteredPersons
+            .update(client_level=client_level, accumulation_amount=accumulation_amount, updated_at=datetime.now())
+            .where(RegisteredPersons.id_telegram == id_telegram)
+        )
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Уровень клиента {id_telegram} обновлен на {client_level}")
+            return True
+        else:
+            logger.warning(f"Клиент {id_telegram} не найден для обновления уровня")
+            return False
+    except Exception as e:
+        logger.exception(f"Ошибка при обновлении уровня клиента {id_telegram}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
 """Всегда в конце, что бы создавать таблицы в базе данных"""
 
 
 def create_tables():
     """Создание таблицы в базе данных"""
-    db.create_tables([RegisteredPersons, StartPersons, GiftWheelSpins, MarketingMessages, PromoCodes, Consents, Events])
+    db.create_tables([
+        RegisteredPersons,
+        StartPersons,
+        GiftWheelSpins,
+        MarketingMessages,
+        PromoCodes,
+        Consents,
+        Events,
+    ])
+
+    # Миграция: добавляем новые поля в существующую таблицу RegisteredPersons
+    try:
+        if db.is_closed():
+            db.connect()
+
+        # Проверяем и добавляем поле client_level если его нет
+        cursor = db.execute_sql("PRAGMA table_info(registered_persons)")
+        columns = [row[1] for row in cursor.fetchall()]
+
+        if "client_level" not in columns:
+            db.execute_sql("ALTER TABLE registered_persons ADD COLUMN client_level TEXT")
+            logger.info("Добавлено поле client_level в таблицу registered_persons")
+
+        if "accumulation_amount" not in columns:
+            db.execute_sql("ALTER TABLE registered_persons ADD COLUMN accumulation_amount REAL")
+            logger.info("Добавлено поле accumulation_amount в таблицу registered_persons")
+
+    except Exception as e:
+        logger.exception(f"Ошибка при миграции таблицы registered_persons: {e}")
+    finally:
+        if not db.is_closed():
+            db.close()
 
 
 """Таблица для учёта маркетинговых рассылок"""

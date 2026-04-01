@@ -37,6 +37,8 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
         "birthday_user": data.get("date_of_birth"),
         "user_bonus": data.get("bonus_ledger"),
         "phone_telegram": phone_telegram,
+        "client_level": data.get("level"),  # Уровень клиента
+        "accumulation_amount": data.get("accumulation_balance", {}).get("ledger", 0),  # Накопительная сумма
     }
 
     write_to_db_registered_person(data)
@@ -44,9 +46,30 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
     # Получаем бонусы из БД
     user_info = get_user_info(callback.from_user.id)
     user_bonus = user_info.get("user_bonus") if user_info else None
+    client_level = user_info.get("client_level") if user_info else None
+    accumulation_amount = user_info.get("accumulation_amount") if user_info else None
+
+    # Формируем сообщение с уровнем клиента
+    from services.client_levels import get_level_description, get_next_level_info
+
+    level_text = ""
+    if client_level:
+        level_text = f"{get_level_description(client_level)}\n\n"
+
+        # Информация о следующем уровне
+        if accumulation_amount:
+            next_level_info = get_next_level_info(client_level, accumulation_amount)
+            if next_level_info["has_next"]:
+                level_text += f"📈 {next_level_info['message']}\n"
+            else:
+                level_text += f"🏆 {next_level_info['message']}\n"
 
     await callback.message.answer(
-        text=f"💰 Ваши бонусы: <b>{user_bonus}</b>\n\nИспользуйте их при следующем посещении!",
+        text=(
+            f"💰 <b>Ваши бонусы: {user_bonus}</b>\n\n"
+            f"{level_text}"
+            f"Используйте их при следующем посещении!"
+        ),
         reply_markup=back_to_main_menu_keyboard(),
     )
 
