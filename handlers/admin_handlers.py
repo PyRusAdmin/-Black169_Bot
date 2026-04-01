@@ -207,17 +207,20 @@ async def broadcast_cancel_handler(callback: CallbackQuery, state: FSMContext) -
 @router.message(Command("cancel"))
 async def broadcast_cancel_command_handler(message: Message, state: FSMContext) -> None:
     """
-    Обработчик команды /cancel для отмены рассылки
+    Обработчик команды /cancel для отмены рассылки или поиска
     """
     logger.info(f"Пользователь {message.from_user.id} отправил /cancel")
 
     current_state = await state.get_state()
     if current_state is None:
-        await message.answer(t("broadcast-no-active"))
+        await message.answer("Нет активной операции для отмены.")
         return
 
     await state.clear()
-    await message.answer(text=t("broadcast-cancelled"), reply_markup=back_to_admin_menu_keyboard())
+    await message.answer(
+        text="❌ Операция отменена.",
+        reply_markup=back_to_admin_menu_keyboard()
+    )
 
 
 @router.message(BroadcastState.waiting_for_message_text, F.text)
@@ -514,7 +517,6 @@ async def search_user_phone_number_handler(message: Message, state: FSMContext) 
                     f"• Телефон: <code>{phone}</code>\n"
                     f"• ID в QuickResto: <code>{client_id}</code>\n"
                     f"• ID в Telegram: <code>{telegram_id}</code>\n\n"
-                    "🔍 Хотите получить полную информацию?"
                 ),
                 reply_markup=back_to_admin_menu_keyboard()
             )
