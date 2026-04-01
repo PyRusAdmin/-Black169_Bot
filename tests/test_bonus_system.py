@@ -2,7 +2,6 @@
 """
 Тесты для приветственных бонусов и колеса подарков
 """
-from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest

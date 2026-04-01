@@ -9,7 +9,6 @@ import pytest
 
 from services.database import (
     Events,
-    create_event,
     get_birthday_users_today,
     get_bonus_burning_users,
     get_events_for_reminder,
