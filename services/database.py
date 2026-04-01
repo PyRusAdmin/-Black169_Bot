@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 # https://docs.peewee-orm.com/en/latest/index.html
@@ -622,6 +623,229 @@ def update_client_level(id_telegram: int, client_level: str, accumulation_amount
 """Всегда в конце, что бы создавать таблицы в базе данных"""
 
 
+class ClientLevels(Model):
+    """Справочник уровней клиентов с привилегиями и критериями"""
+
+    level_name = CharField(unique=True)  # Название уровня (Bronze, Silver, Gold, Black)
+    min_accumulation = DecimalField(max_digits=12, decimal_places=2)  # Мин. накопительная сумма
+    emoji = CharField()  # Эмодзи уровня
+    description = TextField()  # Описание уровня
+    privileges = TextField()  # Привилегии уровня (JSON или текст)
+    discount_percent = IntegerField(default=0)  # Процент скидки
+    bonus_multiplier = DecimalField(max_digits=3, decimal_places=2, default=1.0)  # Множитель бонусов
+    priority_service = BooleanField(default=False)  # Приоритетное обслуживание
+    personal_manager = BooleanField(default=False)  # Персональный менеджер
+    birthday_bonus = DecimalField(max_digits=10, decimal_places=2, default=0)  # Бонус на день рождения
+    free_event_access = BooleanField(default=False)  # Бесплатный доступ на мероприятия
+    created_at = DateTimeField(default=datetime.now)  # Дата создания записи
+    updated_at = DateTimeField(default=datetime.now)  # Дата обновления записи
+
+    class Meta:
+        database = db
+        table_name = "client_levels"
+        indexes = ((("level_name",), True),)  # Уникальный индекс по названию
+
+
+def get_client_level_info(level_name: str) -> dict | None:
+    """
+    Получение информации об уровне клиента.
+    
+    :param level_name: Название уровня (Bronze, Silver, Gold, Black)
+    :return: Словарь с информацией об уровне или None
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+        
+        level = ClientLevels.get_or_none(ClientLevels.level_name == level_name)
+        
+        if level:
+            return {
+                "level_name": level.level_name,
+                "min_accumulation": float(level.min_accumulation),
+                "emoji": level.emoji,
+                "description": level.description,
+                "privileges": level.privileges,
+                "discount_percent": level.discount_percent,
+                "bonus_multiplier": float(level.bonus_multiplier),
+                "priority_service": level.priority_service,
+                "personal_manager": level.personal_manager,
+                "birthday_bonus": float(level.birthday_bonus),
+                "free_event_access": level.free_event_access,
+            }
+        return None
+    except Exception as e:
+        logger.exception(f"Ошибка при получении информации об уровне {level_name}: {e}")
+        return None
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_all_client_levels() -> list:
+    """
+    Получение всех уровней клиентов.
+    
+    :return: Список словарей с информацией об уровнях
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+        
+        levels = ClientLevels.select().order_by(ClientLevels.min_accumulation.desc())
+        
+        result = []
+        for level in levels:
+            result.append({
+                "level_name": level.level_name,
+                "min_accumulation": float(level.min_accumulation),
+                "emoji": level.emoji,
+                "description": level.description,
+                "privileges": level.privileges,
+                "discount_percent": level.discount_percent,
+                "bonus_multiplier": float(level.bonus_multiplier),
+                "priority_service": level.priority_service,
+                "personal_manager": level.personal_manager,
+                "birthday_bonus": float(level.birthday_bonus),
+                "free_event_access": level.free_event_access,
+            })
+        return result
+    except Exception as e:
+        logger.exception(f"Ошибка при получении всех уровней: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def initialize_client_levels():
+    """
+    Инициализация справочника уровней клиентов значениями по умолчанию.
+    
+    :return: True если успешно, False если нет
+    """
+    levels_data = [
+        {
+            "level_name": "Bronze",
+            "min_accumulation": 0,
+            "emoji": "🥉",
+            "description": "Базовый уровень — начните своё путешествие с нами!",
+            "privileges": json.dumps([
+                "Доступ к базовой программе лояльности",
+                "Накопление бонусов с каждого заказа",
+                "Приглашения на открытые мероприятия",
+                "Персональные предложения в день рождения"
+            ]),
+            "discount_percent": 0,
+            "bonus_multiplier": 1.0,
+            "priority_service": False,
+            "personal_manager": False,
+            "birthday_bonus": 500,
+            "free_event_access": False,
+        },
+        {
+            "level_name": "Silver",
+            "min_accumulation": 10000,
+            "emoji": "🥈",
+            "description": "Серебряный уровень — больше преимуществ для постоянных гостей!",
+            "privileges": json.dumps([
+                "Все привилегии Bronze уровня",
+                "Повышенный кэшбэк бонусами (1.2x)",
+                "Приоритетное бронирование столов",
+                "Скидка 5% на банкетные услуги",
+                "Приглашения на закрытые мероприятия",
+                "Комплимент от заведения при посещении"
+            ]),
+            "discount_percent": 5,
+            "bonus_multiplier": 1.2,
+            "priority_service": False,
+            "personal_manager": False,
+            "birthday_bonus": 1000,
+            "free_event_access": False,
+        },
+        {
+            "level_name": "Gold",
+            "min_accumulation": 30000,
+            "emoji": "🥇",
+            "description": "Золотой уровень — элитное обслуживание для избранных!",
+            "privileges": json.dumps([
+                "Все привилегии Silver уровня",
+                "Максимальный кэшбэк бонусами (1.5x)",
+                "Персональный менеджер",
+                "Скидка 10% на все услуги",
+                "Бесплатный доступ на платные мероприятия",
+                "Приоритетное обслуживание",
+                "Подарок на день рождения",
+                "Возможность бронирования VIP-зон"
+            ]),
+            "discount_percent": 10,
+            "bonus_multiplier": 1.5,
+            "priority_service": True,
+            "personal_manager": False,
+            "birthday_bonus": 2000,
+            "free_event_access": True,
+        },
+        {
+            "level_name": "Black",
+            "min_accumulation": 60000,
+            "emoji": "💎",
+            "description": "Black уровень — максимальные привилегии для наших VIP-гостей!",
+            "privileges": json.dumps([
+                "Все привилегии Gold уровня",
+                "Эксклюзивный кэшбэк бонусами (2.0x)",
+                "Персональный консьерж 24/7",
+                "Скидка 15% на все услуги",
+                "Бесплатное посещение всех мероприятий",
+                "Доступ в закрытый Black-клуб",
+                "Индивидуальное меню по предпочтениям",
+                "Бесплатная парковка",
+                "Возможность организации частных мероприятий",
+                "Приоритет при бронировании любых дат"
+            ]),
+            "discount_percent": 15,
+            "bonus_multiplier": 2.0,
+            "priority_service": True,
+            "personal_manager": True,
+            "birthday_bonus": 5000,
+            "free_event_access": True,
+        },
+    ]
+    
+    try:
+        if db.is_closed():
+            db.connect()
+        
+        # Создаём таблицу если не существует
+        db.create_tables([ClientLevels], safe=True)
+        logger.info("Таблица client_levels создана или уже существует")
+        
+        for level_data in levels_data:
+            level, created = ClientLevels.get_or_create(
+                level_name=level_data["level_name"],
+                defaults=level_data
+            )
+            
+            if not created:
+                # Обновляем существующую запись
+                for key, value in level_data.items():
+                    if key != "level_name":
+                        setattr(level, key, value)
+                level.updated_at = datetime.now()
+                level.save()
+            else:
+                logger.info(f"Создан уровень {level_data['level_name']}")
+        
+        logger.info("Справочник уровней клиентов инициализирован")
+        return True
+        
+    except Exception as e:
+        logger.exception(f"Ошибка при инициализации уровней: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
 def create_tables():
     """Создание таблицы в базе данных"""
     db.create_tables([
@@ -632,6 +856,7 @@ def create_tables():
         PromoCodes,
         Consents,
         Events,
+        ClientLevels,
     ])
 
     # Миграция: добавляем новые поля в существующую таблицу RegisteredPersons
@@ -650,7 +875,12 @@ def create_tables():
         if "accumulation_amount" not in columns:
             db.execute_sql("ALTER TABLE registered_persons ADD COLUMN accumulation_amount REAL")
             logger.info("Добавлено поле accumulation_amount в таблицу registered_persons")
-
+        
+        # Проверяем существование таблицы client_levels
+        cursor = db.execute_sql("SELECT name FROM sqlite_master WHERE type='table' AND name='client_levels'")
+        if not cursor.fetchone():
+            logger.info("Таблица client_levels будет создана")
+        
     except Exception as e:
         logger.exception(f"Ошибка при миграции таблицы registered_persons: {e}")
     finally:

@@ -10,7 +10,8 @@ from handlers.menu_handlers import router as menu_handlers
 from handlers.user_handlers import router as user_handlers
 from services.birthday_service import send_birthday_bonus
 from services.bonus_burn_service import check_all_burningBonuses
-from services.database import create_tables
+from services.client_levels import initialize_client_levels
+from services.database import create_tables, initialize_client_levels as init_levels_db
 from services.event_reminder_service import check_and_send_reminders
 from utils.logger import logger
 
@@ -93,7 +94,8 @@ async def main() -> None:
     """
     logger.info("Запуск приложения")
 
-    create_tables()  # Создание таблицы в базе данных
+    create_tables()  # Создание таблиц в базе данных
+    initialize_client_levels()  # Инициализация справочника уровней клиентов
 
     dp.include_router(handlers)  # Общие хендлеры
     dp.include_router(user_handlers)  # Хендлеры для пользователей

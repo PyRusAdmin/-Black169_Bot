@@ -52,10 +52,134 @@ def get_level_description(level: str) -> str:
     return descriptions.get(level, f"📊 {level}")
 
 
+def get_level_privileges(level: str) -> list:
+    """
+    Получение списка привилегий для уровня из базы данных.
+    
+    :param level: Название уровня (Bronze, Silver, Gold, Black)
+    :return: Список привилегий
+    """
+    from services.database import get_client_level_info
+    
+    level_info = get_client_level_info(level)
+    
+    if level_info and level_info.get("privileges"):
+        try:
+            return json.loads(level_info["privileges"])
+        except json.JSONDecodeError:
+            return [level_info["privileges"]]
+    
+    # Привилегии по умолчанию, если БД недоступна
+    default_privileges = {
+        "Bronze": [
+            "Доступ к базовой программе лояльности",
+            "Накопление бонусов с каждого заказа",
+        ],
+        "Silver": [
+            "Все привилегии Bronze уровня",
+            "Повышенный кэшбэк бонусами (1.2x)",
+            "Приоритетное бронирование столов",
+        ],
+        "Gold": [
+            "Все привилегии Silver уровня",
+            "Максимальный кэшбэк бонусами (1.5x)",
+            "Персональный менеджер",
+            "Скидка 10% на все услуги",
+        ],
+        "Black": [
+            "Все привилегии Gold уровня",
+            "Эксклюзивный кэшбэк бонусами (2.0x)",
+            "Персональный консьерж 24/7",
+            "Скидка 15% на все услуги",
+        ],
+    }
+    return default_privileges.get(level, [])
+
+
+def get_level_full_info(level: str) -> dict:
+    """
+    Получение полной информации об уровне из БД.
+    
+    :param level: Название уровня
+    :return: Полная информация об уровне
+    """
+    from services.database import get_client_level_info
+    
+    level_info = get_client_level_info(level)
+    
+    if level_info:
+        level_info["privileges_list"] = get_level_privileges(level)
+        return level_info
+    
+    # Информация по умолчанию
+    return {
+        "level_name": level,
+        "min_accumulation": {"Bronze": 0, "Silver": 10000, "Gold": 30000, "Black": 60000}.get(level, 0),
+        "emoji": {"Bronze": "🥉", "Silver": "🥈", "Gold": "🥇", "Black": "💎"}.get(level, "📊"),
+        "privileges_list": get_level_privileges(level),
+    }
+
+
+def get_all_levels_with_privileges() -> list:
+    """
+    Получение всех уровней с привилегиями.
+    
+    :return: Список уровней с полной информацией
+    """
+    from services.database import get_all_client_levels
+    
+    levels = get_all_client_levels()
+    
+    if levels:
+        for level in levels:
+            level["privileges_list"] = json.loads(level.get("privileges", "[]"))
+        return levels
+    
+    # Возвращаем значения по умолчанию
+    return [
+        {
+            "level_name": "Bronze",
+            "min_accumulation": 0,
+            "emoji": "🥉",
+            "description": "Базовый уровень",
+            "privileges_list": get_level_privileges("Bronze"),
+            "discount_percent": 0,
+            "bonus_multiplier": 1.0,
+        },
+        {
+            "level_name": "Silver",
+            "min_accumulation": 10000,
+            "emoji": "🥈",
+            "description": "Серебряный уровень",
+            "privileges_list": get_level_privileges("Silver"),
+            "discount_percent": 5,
+            "bonus_multiplier": 1.2,
+        },
+        {
+            "level_name": "Gold",
+            "min_accumulation": 30000,
+            "emoji": "🥇",
+            "description": "Золотой уровень",
+            "privileges_list": get_level_privileges("Gold"),
+            "discount_percent": 10,
+            "bonus_multiplier": 1.5,
+        },
+        {
+            "level_name": "Black",
+            "min_accumulation": 60000,
+            "emoji": "💎",
+            "description": "Black уровень",
+            "privileges_list": get_level_privileges("Black"),
+            "discount_percent": 15,
+            "bonus_multiplier": 2.0,
+        },
+    ]
+
+
 def get_next_level_info(current_level: str, current_accumulation: float) -> dict:
     """
     Получение информации о следующем уровне.
-    
+
     :param current_level: Текущий уровень
     :param current_accumulation: Текущая накопительная сумма
     :return: Информация о следующем уровне

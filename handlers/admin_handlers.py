@@ -361,7 +361,7 @@ async def stats_handler(callback: CallbackQuery) -> None:
     registered_users = get_registered_persons_count()  # Привязавшие номер телефона
     broadcast_stats = get_broadcast_stats()  # Статистика по рассылкам
     client_levels_stats = get_client_levels_stats()  # Статистика по уровням в БД
-    
+
     # Получаем статистику по всем клиентам QuickResto из JSON
     quickresto_stats = get_quickresto_clients_stats()
 
@@ -415,25 +415,25 @@ def get_quickresto_clients_stats() -> dict:
     """
     import json
     from pathlib import Path
-    
+
     json_path = Path("data/clients_levels.json")
-    
+
     try:
         with open(json_path, "r", encoding="utf-8") as f:
             clients_data = json.load(f)
-        
+
         total = len(clients_data)
         level_distribution = {}
-        
+
         for client in clients_data:
             level = client.get("level", "Unknown")
             level_distribution[level] = level_distribution.get(level, 0) + 1
-        
+
         return {
             "total": total,
             "level_distribution": level_distribution,
         }
-        
+
     except FileNotFoundError:
         logger.warning("Файл clients_levels.json не найден")
         return {"total": 0, "level_distribution": {}}
