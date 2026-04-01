@@ -8,14 +8,18 @@ from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from config import OWNER_IDS, bot, layer_name_quickresto
 from keyboards.inline import (
     admin_menu_keyboard,
+    admins_menu_keyboard,
     back_to_admin_menu_keyboard,
+    back_to_admins_menu_keyboard,
     broadcast_confirm_keyboard,
     broadcast_type_keyboard,
 )
 from services.database import (
     RegisteredPersons,
+    add_admin as db_add_admin,
     delete_registered_person,
     delete_start_person,
+    get_all_admins,
     get_all_user_ids,
     get_all_winners,
     get_broadcast_stats,
@@ -24,12 +28,30 @@ from services.database import (
     get_registered_persons_count,
     get_start_persons,
     get_start_persons_count,
+    is_admin_in_db,
+    is_owner_in_db,
     log_marketing_message,
+    remove_admin as db_remove_admin,
 )
-from services.excel_service import write_registered_users_to_excel, write_users_to_excel, write_winners_to_excel
+from services.excel_service import (
+    write_registered_users_to_excel,
+    write_users_to_excel,
+    write_winners_to_excel,
+)
 from services.i18n import t
-from services.quickresto_api import auth, base_url, delete_customer, headers, print_client_info
-from states.user_states import BroadcastState, DeleteUserState, SearchUserState
+from services.quickresto_api import (
+    auth,
+    base_url,
+    delete_customer,
+    headers,
+    print_client_info,
+)
+from states.user_states import (
+    AdminManagementState,
+    BroadcastState,
+    DeleteUserState,
+    SearchUserState,
+)
 from utils.logger import logger
 
 router = Router(name=__name__)
@@ -39,12 +61,26 @@ router = Router(name=__name__)
 
 def is_admin(user_id: int) -> bool:
     """
-    Проверка прав администратора
+    Проверка прав администратора (OWNER_IDS из .env + из БД)
 
     :param user_id: ID пользователя в Telegram
     :return: True если администратор, False если нет
     """
-    return user_id in OWNER_IDS
+    if user_id in OWNER_IDS:
+        return True
+    return is_admin_in_db(user_id)
+
+
+def is_owner(user_id: int) -> bool:
+    """
+    Проверка прав владельца
+
+    :param user_id: ID пользователя в Telegram
+    :return: True если владелец, False если нет
+    """
+    if user_id in OWNER_IDS:
+        return True
+    return is_owner_in_db(user_id)
 
 
 @router.callback_query(F.data == "admin_menu")
@@ -53,7 +89,9 @@ async def admin_menu_handler(callback: CallbackQuery) -> None:
     Обработчик кнопки 'В меню администратора'
     """
     logger.info(f"Администратор {callback.from_user.id} запросил меню администратора")
-    await callback.message.answer(text=t("main-menu-admin"), reply_markup=admin_menu_keyboard())
+    await callback.message.answer(
+        text=t("main-menu-admin"), reply_markup=admin_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -72,7 +110,9 @@ async def winners_handler(callback: CallbackQuery) -> None:
     buffer = write_winners_to_excel(result)  # формируем Excel-файл
 
     await callback.message.answer_document(
-        document=BufferedInputFile(buffer.read(), filename="Победители_Колеса_подарков.xlsx"),
+        document=BufferedInputFile(
+            buffer.read(), filename="Победители_Колеса_подарков.xlsx"
+        ),
         caption="🏆 Список победителей «Колеса подарков»",
     )
     await callback.answer()
@@ -93,7 +133,9 @@ async def users_handler(callback: CallbackQuery) -> None:
     buffer = write_users_to_excel(result)  # формируем Excel-файл
 
     await callback.message.answer_document(
-        document=BufferedInputFile(buffer.read(), filename="Пользователи_запускавшие_телеграмм_бота.xlsx"),
+        document=BufferedInputFile(
+            buffer.read(), filename="Пользователи_запускавшие_телеграмм_бота.xlsx"
+        ),
         caption="📊 Список пользователей бота",
     )
     await callback.answer()
@@ -104,24 +146,34 @@ async def registered_users_handler(callback: CallbackQuery) -> None:
     """
     Обработчик кнопки 'Зарегистрированные пользователи' (кто отправил номер телефона)
     """
-    logger.info(f"Администратор {callback.from_user.id} запросил список зарегистрированных пользователей")
+    logger.info(
+        f"Администратор {callback.from_user.id} запросил список зарегистрированных пользователей"
+    )
 
     if not is_admin(callback.from_user.id):
         await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
-    result = get_registered_persons()  # получаем список зарегистрированных пользователей
+    result = (
+        get_registered_persons()
+    )  # получаем список зарегистрированных пользователей
 
     if not result:
-        await callback.message.answer(text=t("delete-no-registered-users"), reply_markup=back_to_admin_menu_keyboard())
+        await callback.message.answer(
+            text=t("delete-no-registered-users"),
+            reply_markup=back_to_admin_menu_keyboard(),
+        )
         await callback.answer()
         return
 
     buffer = write_registered_users_to_excel(result)  # формируем Excel-файл
 
     await callback.message.answer_document(
-        document=BufferedInputFile(buffer.read(), filename="Зарегистрированные_пользователи.xlsx"),
-        caption=f"✅ Зарегистрированные пользователи ({len(result)} чел.)\n\n" f"Полная информация из QuickResto",
+        document=BufferedInputFile(
+            buffer.read(), filename="Зарегистрированные_пользователи.xlsx"
+        ),
+        caption=f"✅ Зарегистрированные пользователи ({len(result)} чел.)\n\n"
+        f"Полная информация из QuickResto",
     )
     await callback.answer()
 
@@ -137,7 +189,9 @@ async def broadcast_handler(callback: CallbackQuery) -> None:
         await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
-    await callback.message.answer(text=t("broadcast-title"), reply_markup=broadcast_type_keyboard())
+    await callback.message.answer(
+        text=t("broadcast-title"), reply_markup=broadcast_type_keyboard()
+    )
     await callback.answer()
 
 
@@ -201,7 +255,9 @@ async def broadcast_cancel_handler(callback: CallbackQuery, state: FSMContext) -
         return
 
     await state.clear()
-    await callback.message.answer(text=t("broadcast-cancelled"), reply_markup=back_to_admin_menu_keyboard())
+    await callback.message.answer(
+        text=t("broadcast-cancelled"), reply_markup=back_to_admin_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -219,8 +275,7 @@ async def broadcast_cancel_command_handler(message: Message, state: FSMContext) 
 
     await state.clear()
     await message.answer(
-        text="❌ Операция отменена.",
-        reply_markup=back_to_admin_menu_keyboard()
+        text="❌ Операция отменена.", reply_markup=back_to_admin_menu_keyboard()
     )
 
 
@@ -283,7 +338,9 @@ async def broadcast_receive_video(message: Message, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == "broadcast_confirm_send")
-async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMContext) -> None:
+async def broadcast_confirm_send_handler(
+    callback: CallbackQuery, state: FSMContext
+) -> None:
     """
     Подтверждение и отправка рассылки
     """
@@ -310,9 +367,17 @@ async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMCont
             if message_type == "text":
                 await bot.send_message(chat_id=user_id, text=data.get("message_text"))
             elif message_type == "photo":
-                await bot.send_photo(chat_id=user_id, photo=data.get("photo_id"), caption=data.get("caption"))
+                await bot.send_photo(
+                    chat_id=user_id,
+                    photo=data.get("photo_id"),
+                    caption=data.get("caption"),
+                )
             elif message_type == "video":
-                await bot.send_video(chat_id=user_id, video=data.get("video_id"), caption=data.get("caption"))
+                await bot.send_video(
+                    chat_id=user_id,
+                    video=data.get("video_id"),
+                    caption=data.get("caption"),
+                )
 
             log_marketing_message(
                 id_telegram=user_id,
@@ -324,7 +389,9 @@ async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMCont
         except Exception as e:
             if "bot was blocked" in str(e).lower():
                 total_blocked += 1
-                log_marketing_message(id_telegram=user_id, message_text="Blocked", message_type="blocked")
+                log_marketing_message(
+                    id_telegram=user_id, message_text="Blocked", message_type="blocked"
+                )
             logger.error(f"Не удалось отправить сообщение пользователю {user_id}: {e}")
 
         # Небольшая задержка для избежания лимитов Telegram
@@ -371,7 +438,9 @@ async def stats_handler(callback: CallbackQuery) -> None:
         level_data = client_levels_stats["levels"].get(level, {})
         count = level_data.get("count", 0)
         percent = level_data.get("percent", 0)
-        emoji = {"Black": "💎", "Gold": "🥇", "Silver": "🥈", "Bronze": "🥉"}.get(level, "📊")
+        emoji = {"Black": "💎", "Gold": "🥇", "Silver": "🥈", "Bronze": "🥉"}.get(
+            level, "📊"
+        )
         levels_text += f"{emoji} <b>{level}</b>: {count} чел. ({percent}%)\n"
 
     # Формируем текст статистики по QuickResto
@@ -381,7 +450,9 @@ async def stats_handler(callback: CallbackQuery) -> None:
     for level in ["Black", "Gold", "Silver", "Bronze"]:
         count = qr_level_dist.get(level, 0)
         percent = round(count / qr_total * 100, 1) if qr_total > 0 else 0
-        emoji = {"Black": "💎", "Gold": "🥇", "Silver": "🥈", "Bronze": "🥉"}.get(level, "📊")
+        emoji = {"Black": "💎", "Gold": "🥇", "Silver": "🥈", "Bronze": "🥉"}.get(
+            level, "📊"
+        )
         qr_levels_text += f"{emoji} <b>{level}</b>: {count} чел. ({percent}%)\n"
 
     await callback.message.answer(
@@ -410,7 +481,7 @@ async def stats_handler(callback: CallbackQuery) -> None:
 def get_quickresto_clients_stats() -> dict:
     """
     Получение статистики по всем клиентам QuickResto из JSON файла.
-    
+
     :return: Статистика по уровням клиентов
     """
     import json
@@ -451,7 +522,9 @@ async def analyze_clients_handler(callback: CallbackQuery) -> None:
     Обработчик кнопки 'Анализ и синхронизация клиентов'
     Запускает полный цикл анализа, нормализации телефонов, сохранения в JSON и синхронизации с БД.
     """
-    logger.info(f"Администратор {callback.from_user.id} запустил анализ и синхронизацию клиентов")
+    logger.info(
+        f"Администратор {callback.from_user.id} запустил анализ и синхронизацию клиентов"
+    )
 
     if not is_admin(callback.from_user.id):
         await callback.answer(t("no-admin-permission"), show_alert=True)
@@ -521,7 +594,9 @@ async def delete_user_handler(callback: CallbackQuery, state: FSMContext) -> Non
 
     await state.set_state(DeleteUserState.waiting_for_user_id)
 
-    await callback.message.answer(text=t("delete-user-enter-id"), reply_markup=back_to_admin_menu_keyboard())
+    await callback.message.answer(
+        text=t("delete-user-enter-id"), reply_markup=back_to_admin_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -532,14 +607,20 @@ async def delete_user_id_handler(message: Message, state: FSMContext) -> None:
     """
     id_user = message.text
 
-    logger.info(f"Администратор {message.from_user.id} ввел ID клиента QuickResto: {id_user}")
+    logger.info(
+        f"Администратор {message.from_user.id} ввел ID клиента QuickResto: {id_user}"
+    )
 
     # Получаем ID пользователя в Telegram по ID QuickResto
-    user = RegisteredPersons.get_or_none(RegisteredPersons.id_quickresto == int(id_user))
+    user = RegisteredPersons.get_or_none(
+        RegisteredPersons.id_quickresto == int(id_user)
+    )
     id_telegram = user.id_telegram if user else None
 
     # Удаляем клиента QuickResto
-    delete_customer(customer_id=int(id_user), base_url=base_url, auth=auth, headers=headers)
+    delete_customer(
+        customer_id=int(id_user), base_url=base_url, auth=auth, headers=headers
+    )
 
     # Удаляем из базы данных registered_persons
     if id_telegram:
@@ -548,7 +629,11 @@ async def delete_user_id_handler(message: Message, state: FSMContext) -> None:
         delete_start_person(id_telegram)
 
     await message.answer(
-        text=t("delete-user-success", user_id=id_user, status="удалён" if id_telegram else "не найден"),
+        text=t(
+            "delete-user-success",
+            user_id=id_user,
+            status="удалён" if id_telegram else "не найден",
+        ),
         reply_markup=back_to_admin_menu_keyboard(),
     )
     await state.clear()
@@ -573,9 +658,13 @@ async def admin_back_handler(callback: CallbackQuery, state: FSMContext) -> None
 
     # Пробуем отредактировать сообщение, а если не получится (документ) — отправляем новое
     try:
-        await callback.message.edit_text(text=t("admin-panel"), reply_markup=admin_menu_keyboard())
+        await callback.message.edit_text(
+            text=t("admin-panel"), reply_markup=admin_menu_keyboard()
+        )
     except Exception:
-        await callback.message.answer(text=t("admin-panel"), reply_markup=admin_menu_keyboard())
+        await callback.message.answer(
+            text=t("admin-panel"), reply_markup=admin_menu_keyboard()
+        )
     await callback.answer()
 
 
@@ -584,7 +673,9 @@ async def search_user_handler(callback: CallbackQuery, state: FSMContext) -> Non
     """
     Обработчик кнопки '🔍 Поиск пользователя по номеру телефона'
     """
-    logger.info(f"Администратор {callback.from_user.id} запросил поиск пользователя по номеру телефона")
+    logger.info(
+        f"Администратор {callback.from_user.id} запросил поиск пользователя по номеру телефона"
+    )
 
     if not is_admin(callback.from_user.id):
         await callback.answer(t("no-admin-permission"), show_alert=True)
@@ -596,7 +687,7 @@ async def search_user_handler(callback: CallbackQuery, state: FSMContext) -> Non
 
     await callback.message.answer(
         text=t("search-user-enter-phone-number"),
-        reply_markup=back_to_admin_menu_keyboard()
+        reply_markup=back_to_admin_menu_keyboard(),
     )
     await callback.answer()
 
@@ -608,17 +699,23 @@ async def search_user_phone_number_handler(message: Message, state: FSMContext) 
     """
     phone_number = message.text.strip()
 
-    logger.info(f"Администратор {message.from_user.id} ввел номер телефона: {phone_number}")
+    logger.info(
+        f"Администратор {message.from_user.id} ввел номер телефона: {phone_number}"
+    )
 
     # Проверяем формат номера (должен быть 79999999999)
-    if not phone_number.isdigit() or len(phone_number) != 11 or not phone_number.startswith('7'):
+    if (
+        not phone_number.isdigit()
+        or len(phone_number) != 11
+        or not phone_number.startswith("7")
+    ):
         await message.answer(
             text=(
                 "❌ <b>Неверный формат номера</b>\n\n"
                 "Номер должен быть в формате <code>79999999999</code> (11 цифр, начиная с 7).\n\n"
                 "Попробуйте снова или отправьте /cancel для отмены."
             ),
-            reply_markup=back_to_admin_menu_keyboard()
+            reply_markup=back_to_admin_menu_keyboard(),
         )
         return
 
@@ -628,15 +725,18 @@ async def search_user_phone_number_handler(message: Message, state: FSMContext) 
 
         if data:
             # Формируем красивое сообщение
-            first_name = data.get('firstName', 'Не указано')
-            last_name = data.get('lastName', 'Не указано')
-            client_id = data.get('client_id', 'Не указано')
-            phone = data.get('phone', phone_number)
+            first_name = data.get("firstName", "Не указано")
+            last_name = data.get("lastName", "Не указано")
+            client_id = data.get("client_id", "Не указано")
+            phone = data.get("phone", phone_number)
 
             # Пробуем найти Telegram ID в базе
             from services.database import RegisteredPersons
-            user = RegisteredPersons.get_or_none(RegisteredPersons.id_quickresto == client_id)
-            telegram_id = user.id_telegram if user else 'Не привязан'
+
+            user = RegisteredPersons.get_or_none(
+                RegisteredPersons.id_quickresto == client_id
+            )
+            telegram_id = user.id_telegram if user else "Не привязан"
 
             await message.answer(
                 text=(
@@ -647,12 +747,12 @@ async def search_user_phone_number_handler(message: Message, state: FSMContext) 
                     f"• ID в QuickResto: <code>{client_id}</code>\n"
                     f"• ID в Telegram: <code>{telegram_id}</code>\n\n"
                 ),
-                reply_markup=back_to_admin_menu_keyboard()
+                reply_markup=back_to_admin_menu_keyboard(),
             )
         else:
             await message.answer(
                 text=t("search-user-not-found", phone=phone_number),
-                reply_markup=back_to_admin_menu_keyboard()
+                reply_markup=back_to_admin_menu_keyboard(),
             )
 
     except Exception as e:
@@ -663,8 +763,304 @@ async def search_user_phone_number_handler(message: Message, state: FSMContext) 
                 "Не удалось получить информацию о клиенте.\n\n"
                 "Проверьте правильность номера телефона и попробуйте снова."
             ),
-            reply_markup=back_to_admin_menu_keyboard()
+            reply_markup=back_to_admin_menu_keyboard(),
         )
 
     # Очищаем состояние FSM
+    await state.clear()
+
+
+"""Управление администраторами"""
+
+
+@router.callback_query(F.data == "admins_menu")
+async def admins_menu_handler(callback: CallbackQuery) -> None:
+    """
+    Обработчик кнопки 'Управление администраторами'
+    Только для владельцев
+    """
+    logger.info(
+        f"Администратор {callback.from_user.id} запросил меню управления администраторами"
+    )
+
+    if not is_owner(callback.from_user.id):
+        await callback.answer(
+            "❌ Только владелец может управлять администраторами", show_alert=True
+        )
+        return
+
+    admins = get_all_admins()
+
+    admins_text = ""
+    if admins:
+        for admin in admins:
+            role_emoji = "👑" if admin["role"] == "owner" else "🔧"
+            name = admin["full_name"] or "Без имени"
+            username = f"@{admin['username']}" if admin["username"] else "нет username"
+            admins_text += f"{role_emoji} <b>{name}</b> ({username})\n   ID: <code>{admin['id_telegram']}</code>\n\n"
+    else:
+        admins_text = "Администраторов нет.\n\n"
+
+    await callback.message.answer(
+        text=(
+            f"👥 <b>Управление администраторами</b>\n\n"
+            f"📋 <b>Текущие администраторы:</b>\n{admins_text}"
+            f"Выберите действие:"
+        ),
+        reply_markup=admins_menu_keyboard(),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "admin_add")
+async def admin_add_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    Обработчик кнопки 'Добавить администратора'
+    Только для владельцев
+    """
+    logger.info(f"Владелец {callback.from_user.id} начал добавление администратора")
+
+    if not is_owner(callback.from_user.id):
+        await callback.answer(
+            "❌ Только владелец может добавлять администраторов", show_alert=True
+        )
+        return
+
+    await state.set_state(AdminManagementState.waiting_for_admin_id)
+
+    await callback.message.answer(
+        text=(
+            "➕ <b>Добавление администратора</b>\n\n"
+            "Отправьте Telegram ID пользователя, которого хотите сделать администратором.\n\n"
+            "📱 Формат: <code>123456789</code>\n\n"
+            "❌ Для отмены отправьте /cancel"
+        ),
+        reply_markup=back_to_admins_menu_keyboard(),
+    )
+    await callback.answer()
+
+
+async def admin_add_id_handler(message: Message, state: FSMContext) -> None:
+    """
+    Обработчик ввода ID нового администратора (вызывается из admin_action_handler)
+    """
+    if not is_owner(message.from_user.id):
+        await message.answer("❌ Только владелец может добавлять администраторов")
+        await state.clear()
+        return
+
+    admin_id_text = message.text.strip()
+
+    # Проверяем что это число
+    if not admin_id_text.isdigit():
+        await message.answer(
+            text="❌ ID должен быть числом. Попробуйте снова или отправьте /cancel",
+            reply_markup=back_to_admins_menu_keyboard(),
+        )
+        return
+
+    admin_id = int(admin_id_text)
+
+    # Нельзя добавить самого себя
+    if admin_id == message.from_user.id:
+        await message.answer(
+            text="❌ Вы уже являетесь владельцем. Нельзя добавить самого себя.",
+            reply_markup=back_to_admins_menu_keyboard(),
+        )
+        await state.clear()
+        return
+
+    # Проверяем что пользователь запускал бота
+    from services.database import StartPersons
+
+    user_in_db = StartPersons.get_or_none(StartPersons.id_telegram == admin_id)
+    username = user_in_db.username_telegram if user_in_db else None
+    full_name = None
+    if user_in_db:
+        full_name = f"{user_in_db.first_name_telegram or ''} {user_in_db.last_name_telegram or ''}".strip()
+
+    # Добавляем администратора
+    result = db_add_admin(
+        id_telegram=admin_id,
+        added_by=message.from_user.id,
+        username=username,
+        full_name=full_name or "Администратор",
+        role="admin",
+    )
+
+    if result["success"]:
+        await message.answer(
+            text=(
+                f"✅ <b>Администратор добавлен!</b>\n\n"
+                f"👤 ID: <code>{admin_id}</code>\n"
+                f"📛 Имя: {full_name or 'Неизвестно'}\n"
+                f"📱 Username: @{username or 'нет'}\n\n"
+                f"Теперь этот пользователь имеет доступ к админ-панели."
+            ),
+            reply_markup=admins_menu_keyboard(),
+        )
+    else:
+        await message.answer(
+            text=f"❌ {result['message']}",
+            reply_markup=admins_menu_keyboard(),
+        )
+
+    await state.clear()
+
+
+@router.callback_query(F.data == "admin_list")
+async def admin_list_handler(callback: CallbackQuery) -> None:
+    """
+    Обработчик кнопки 'Список администраторов'
+    """
+    logger.info(
+        f"Администратор {callback.from_user.id} запросил список администраторов"
+    )
+
+    if not is_admin(callback.from_user.id):
+        await callback.answer(t("no-admin-permission"), show_alert=True)
+        return
+
+    admins = get_all_admins()
+
+    if not admins:
+        await callback.message.answer(
+            text="📋 <b>Список администраторов</b>\n\nАдминистраторов нет.",
+            reply_markup=back_to_admins_menu_keyboard(),
+        )
+        await callback.answer()
+        return
+
+    report = "📋 <b>Список администраторов</b>\n\n"
+
+    for admin in admins:
+        role_emoji = "👑" if admin["role"] == "owner" else "🔧"
+        role_name = "Владелец" if admin["role"] == "owner" else "Администратор"
+        name = admin["full_name"] or "Без имени"
+        username = f"@{admin['username']}" if admin["username"] else "нет username"
+        added_at = (
+            admin["added_at"].strftime("%d.%m.%Y %H:%M") if admin["added_at"] else "—"
+        )
+
+        report += (
+            f"{role_emoji} <b>{name}</b>\n"
+            f"   Роль: {role_name}\n"
+            f"   ID: <code>{admin['id_telegram']}</code>\n"
+            f"   Username: {username}\n"
+            f"   Добавлен: {added_at}\n\n"
+        )
+
+    await callback.message.answer(
+        text=report,
+        reply_markup=back_to_admins_menu_keyboard(),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "admin_remove")
+async def admin_remove_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    Обработчик кнопки 'Удалить администратора'
+    Только для владельцев
+    """
+    logger.info(f"Владелец {callback.from_user.id} начал удаление администратора")
+
+    if not is_owner(callback.from_user.id):
+        await callback.answer(
+            "❌ Только владелец может удалять администраторов", show_alert=True
+        )
+        return
+
+    # Показываем список администраторов для удаления
+    admins = get_all_admins()
+
+    # Фильтруем только админов (не владельцев), которых можно удалить
+    removable_admins = [a for a in admins if a["role"] != "owner"]
+
+    if not removable_admins:
+        await callback.message.answer(
+            text="🗑️ <b>Удаление администратора</b>\n\nНет администраторов для удаления.",
+            reply_markup=back_to_admins_menu_keyboard(),
+        )
+        await callback.answer()
+        return
+
+    admins_list = ""
+    for admin in removable_admins:
+        name = admin["full_name"] or "Без имени"
+        admins_list += f"• <code>{admin['id_telegram']}</code> — {name}\n"
+
+    await callback.message.answer(
+        text=(
+            f"🗑️ <b>Удаление администратора</b>\n\n"
+            f"Текущие администраторы:\n{admins_list}\n"
+            f"Отправьте ID администратора для удаления.\n\n"
+            f"❌ Для отмены отправьте /cancel"
+        ),
+        reply_markup=back_to_admins_menu_keyboard(),
+    )
+
+    # Используем то же состояние, но с другим флагом в state данных
+    await state.set_state(AdminManagementState.waiting_for_admin_id)
+    await state.update_data(action="remove")
+    await callback.answer()
+
+
+# Переопределяем обработчик для удаления (через data action)
+@router.message(F.text, StateFilter(AdminManagementState.waiting_for_admin_id))
+async def admin_action_handler(message: Message, state: FSMContext) -> None:
+    """
+    Универсальный обработчик ввода ID (добавление или удаление)
+    """
+    data = await state.get_data()
+    action = data.get("action", "add")
+
+    if action == "remove":
+        await admin_remove_id_handler(message, state)
+    else:
+        await admin_add_id_handler(message, state)
+
+
+async def admin_remove_id_handler(message: Message, state: FSMContext) -> None:
+    """
+    Обработчик ввода ID администратора для удаления
+    """
+    if not is_owner(message.from_user.id):
+        await message.answer("❌ Только владелец может удалять администраторов")
+        await state.clear()
+        return
+
+    admin_id_text = message.text.strip()
+
+    if not admin_id_text.isdigit():
+        await message.answer(
+            text="❌ ID должен быть числом. Попробуйте снова или отправьте /cancel",
+            reply_markup=back_to_admins_menu_keyboard(),
+        )
+        return
+
+    admin_id = int(admin_id_text)
+
+    # Нельзя удалить самого себя
+    if admin_id == message.from_user.id:
+        await message.answer(
+            text="❌ Нельзя удалить самого себя.",
+            reply_markup=admins_menu_keyboard(),
+        )
+        await state.clear()
+        return
+
+    result = db_remove_admin(admin_id)
+
+    if result:
+        await message.answer(
+            text=f"✅ Администратор <code>{admin_id}</code> удалён.",
+            reply_markup=admins_menu_keyboard(),
+        )
+    else:
+        await message.answer(
+            text=f"❌ Администратор <code>{admin_id}</code> не найден или является владельцем.",
+            reply_markup=admins_menu_keyboard(),
+        )
+
     await state.clear()

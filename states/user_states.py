@@ -40,7 +40,9 @@ class EventState(StatesGroup):
     waiting_for_photo = State()  # Ожидание фото мероприятия (необязательно)
     waiting_for_reminder_3days = State()  # Ожидание текста напоминания за 3 дня
     waiting_for_reminder_1day = State()  # Ожидание текста напоминания за 1 день
-    waiting_for_reminder_event_day = State()  # Ожидание текста напоминания в день мероприятия
+    waiting_for_reminder_event_day = (
+        State()
+    )  # Ожидание текста напоминания в день мероприятия
     waiting_for_confirmation = State()  # Ожидание подтверждения создания
 
 
@@ -48,3 +50,9 @@ class SearchUserState(StatesGroup):
     """Состояния для поиска пользователя"""
 
     waiting_for_phone_number = State()  # Ожидание номера телефона
+
+
+class AdminManagementState(StatesGroup):
+    """Состояния для управления администраторами"""
+
+    waiting_for_admin_id = State()  # Ожидание ID нового администратора

@@ -13,7 +13,14 @@ from keyboards.inline import (
     event_confirm_keyboard,
     events_menu_keyboard,
 )
-from services.database import create_event, delete_event, get_all_events, get_events_count, update_event_status
+from services.database import (
+    create_event,
+    delete_event,
+    get_all_events,
+    get_events_count,
+    is_admin_in_db,
+    update_event_status,
+)
 from services.i18n import t
 from states.user_states import EventState
 from utils.logger import logger
@@ -23,12 +30,14 @@ router = Router(name=__name__)
 
 def is_admin(user_id: int) -> bool:
     """
-    Проверка прав администратора
+    Проверка прав администратора (OWNER_IDS из .env + из БД)
 
     :param user_id: ID пользователя в Telegram
     :return: True если администратор, False если нет
     """
-    return user_id in OWNER_IDS
+    if user_id in OWNER_IDS:
+        return True
+    return is_admin_in_db(user_id)
 
 
 @router.callback_query(F.data == "events_menu")
@@ -42,7 +51,9 @@ async def events_menu_handler(callback: CallbackQuery) -> None:
         await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
-    await callback.message.answer(text=t("events-menu-title"), reply_markup=events_menu_keyboard())
+    await callback.message.answer(
+        text=t("events-menu-title"), reply_markup=events_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -58,7 +69,9 @@ async def event_create_handler(callback: CallbackQuery, state: FSMContext) -> No
         return
 
     await state.set_state(EventState.waiting_for_title)
-    await callback.message.answer(text=t("event-create-title"), reply_markup=back_to_events_menu_keyboard())
+    await callback.message.answer(
+        text=t("event-create-title"), reply_markup=back_to_events_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -71,12 +84,16 @@ async def event_title_handler(message: Message, state: FSMContext) -> None:
 
     title = message.text.strip()
     if len(title) < 3:
-        await message.answer(text="❌ Название должно быть не менее 3 символов.\n\nВведите название ещё раз:")
+        await message.answer(
+            text="❌ Название должно быть не менее 3 символов.\n\nВведите название ещё раз:"
+        )
         return
 
     await state.update_data(title=title)
     await state.set_state(EventState.waiting_for_description)
-    await message.answer(text=t("event-create-description"), reply_markup=back_to_events_menu_keyboard())
+    await message.answer(
+        text=t("event-create-description"), reply_markup=back_to_events_menu_keyboard()
+    )
 
 
 @router.message(EventState.waiting_for_description, F.text)
@@ -88,12 +105,16 @@ async def event_description_handler(message: Message, state: FSMContext) -> None
 
     description = message.text.strip()
     if len(description) < 10:
-        await message.answer(text="❌ Описание должно быть не менее 10 символов.\n\nВведите описание ещё раз:")
+        await message.answer(
+            text="❌ Описание должно быть не менее 10 символов.\n\nВведите описание ещё раз:"
+        )
         return
 
     await state.update_data(description=description)
     await state.set_state(EventState.waiting_for_date)
-    await message.answer(text=t("event-create-date"), reply_markup=back_to_events_menu_keyboard())
+    await message.answer(
+        text=t("event-create-date"), reply_markup=back_to_events_menu_keyboard()
+    )
 
 
 @router.message(EventState.waiting_for_date, F.text)
@@ -116,12 +137,16 @@ async def event_date_handler(message: Message, state: FSMContext) -> None:
 
     # Проверяем, что дата не в прошлом
     if event_date < datetime.now():
-        await message.answer(text="❌ Дата мероприятия не может быть в прошлом.\n\nВведите корректную дату:")
+        await message.answer(
+            text="❌ Дата мероприятия не может быть в прошлом.\n\nВведите корректную дату:"
+        )
         return
 
     await state.update_data(event_date=event_date, event_date_str=date_text)
     await state.set_state(EventState.waiting_for_photo)
-    await message.answer(text=t("event-create-photo"), reply_markup=back_to_events_menu_keyboard())
+    await message.answer(
+        text=t("event-create-photo"), reply_markup=back_to_events_menu_keyboard()
+    )
 
 
 @router.message(EventState.waiting_for_photo, F.photo)
@@ -134,7 +159,10 @@ async def event_photo_handler(message: Message, state: FSMContext) -> None:
     photo_id = message.photo[-1].file_id
     await state.update_data(photo_id=photo_id)
     await state.set_state(EventState.waiting_for_reminder_3days)
-    await message.answer(text=t("event-create-reminder-3days"), reply_markup=back_to_events_menu_keyboard())
+    await message.answer(
+        text=t("event-create-reminder-3days"),
+        reply_markup=back_to_events_menu_keyboard(),
+    )
 
 
 @router.message(EventState.waiting_for_photo, F.text)
@@ -147,7 +175,10 @@ async def event_skip_photo_handler(message: Message, state: FSMContext) -> None:
     if message.text.strip() == "-":
         await state.update_data(photo_id=None)
         await state.set_state(EventState.waiting_for_reminder_3days)
-        await message.answer(text=t("event-create-reminder-3days"), reply_markup=back_to_events_menu_keyboard())
+        await message.answer(
+            text=t("event-create-reminder-3days"),
+            reply_markup=back_to_events_menu_keyboard(),
+        )
     else:
         await message.answer(text="❌ Отправьте фото или введите '-' для пропуска:")
 
@@ -165,7 +196,10 @@ async def event_reminder_3days_handler(message: Message, state: FSMContext) -> N
         await state.update_data(reminder_text_3days=message.text.strip())
 
     await state.set_state(EventState.waiting_for_reminder_1day)
-    await message.answer(text=t("event-create-reminder-1day"), reply_markup=back_to_events_menu_keyboard())
+    await message.answer(
+        text=t("event-create-reminder-1day"),
+        reply_markup=back_to_events_menu_keyboard(),
+    )
 
 
 @router.message(EventState.waiting_for_reminder_1day, F.text)
@@ -181,7 +215,10 @@ async def event_reminder_1day_handler(message: Message, state: FSMContext) -> No
         await state.update_data(reminder_text_1day=message.text.strip())
 
     await state.set_state(EventState.waiting_for_reminder_event_day)
-    await message.answer(text=t("event-create-reminder-event-day"), reply_markup=back_to_events_menu_keyboard())
+    await message.answer(
+        text=t("event-create-reminder-event-day"),
+        reply_markup=back_to_events_menu_keyboard(),
+    )
 
 
 @router.message(EventState.waiting_for_reminder_event_day, F.text)
@@ -189,7 +226,9 @@ async def event_reminder_event_day_handler(message: Message, state: FSMContext) 
     """
     Получение текста напоминания в день мероприятия
     """
-    logger.info(f"Администратор {message.from_user.id} ввёл напоминание в день мероприятия")
+    logger.info(
+        f"Администратор {message.from_user.id} ввёл напоминание в день мероприятия"
+    )
 
     if message.text.strip() == "-":
         await state.update_data(reminder_text_event_day=None)
@@ -220,7 +259,9 @@ async def event_confirm_yes_handler(callback: CallbackQuery, state: FSMContext) 
     """
     Подтверждение создания мероприятия
     """
-    logger.info(f"Администратор {callback.from_user.id} подтвердил создание мероприятия")
+    logger.info(
+        f"Администратор {callback.from_user.id} подтвердил создание мероприятия"
+    )
 
     data = await state.get_data()
     title = data.get("title")
@@ -253,7 +294,11 @@ async def event_confirm_yes_handler(callback: CallbackQuery, state: FSMContext) 
         if reminder_text_event_day:
             reminders_info.append("• В день мероприятия: ✅")
 
-        reminders_text = "\n".join(reminders_info) if reminders_info else "❌ Напоминания не настроены"
+        reminders_text = (
+            "\n".join(reminders_info)
+            if reminders_info
+            else "❌ Напоминания не настроены"
+        )
 
         await callback.message.answer(
             text=f"{t('event-create-success', title=title, date=data.get('event_date_str'))}\n\n🔔 <b>Напоминания:</b>\n{reminders_text}",
@@ -299,14 +344,21 @@ async def event_list_handler(callback: CallbackQuery) -> None:
     events = get_all_events()
 
     if not events:
-        await callback.message.answer(text=t("event-list-empty"), reply_markup=back_to_events_menu_keyboard())
+        await callback.message.answer(
+            text=t("event-list-empty"), reply_markup=back_to_events_menu_keyboard()
+        )
         await callback.answer()
         return
 
     # Показываем статистику
     stats = get_events_count()
     await callback.message.answer(
-        text=t("event-list-title", total=stats["total"], active=stats["active"], inactive=stats["inactive"]),
+        text=t(
+            "event-list-title",
+            total=stats["total"],
+            active=stats["active"],
+            inactive=stats["inactive"],
+        ),
         reply_markup=back_to_events_menu_keyboard(),
     )
 
@@ -315,15 +367,25 @@ async def event_list_handler(callback: CallbackQuery) -> None:
         status = "✅ Активно" if event["is_active"] else "⏸️ Неактивно"
         date_str = event["event_date"].strftime("%d.%m.%Y %H:%M")
 
-        text = t("event-info", title=event["title"], description=event["description"], date=date_str, status=status)
+        text = t(
+            "event-info",
+            title=event["title"],
+            description=event["description"],
+            date=date_str,
+            status=status,
+        )
 
         # Если есть фото, отправляем с фото
         if event.get("photo_id"):
             await callback.message.answer_photo(
-                photo=event["photo_id"], caption=text, reply_markup=event_action_keyboard(event["id"])
+                photo=event["photo_id"],
+                caption=text,
+                reply_markup=event_action_keyboard(event["id"]),
             )
         else:
-            await callback.message.answer(text=text, reply_markup=event_action_keyboard(event["id"]))
+            await callback.message.answer(
+                text=text, reply_markup=event_action_keyboard(event["id"])
+            )
 
     await callback.answer()
 
@@ -334,7 +396,9 @@ async def event_activate_handler(callback: CallbackQuery) -> None:
     Обработчик кнопки 'Активировать мероприятие'
     """
     event_id = int(callback.data.split("_")[-1])
-    logger.info(f"Администратор {callback.from_user.id} активировал мероприятие {event_id}")
+    logger.info(
+        f"Администратор {callback.from_user.id} активировал мероприятие {event_id}"
+    )
 
     if not is_admin(callback.from_user.id):
         await callback.answer(t("no-admin-permission"), show_alert=True)
@@ -354,7 +418,9 @@ async def event_deactivate_handler(callback: CallbackQuery) -> None:
     Обработчик кнопки 'Деактивировать мероприятие'
     """
     event_id = int(callback.data.split("_")[-1])
-    logger.info(f"Администратор {callback.from_user.id} деактивировал мероприятие {event_id}")
+    logger.info(
+        f"Администратор {callback.from_user.id} деактивировал мероприятие {event_id}"
+    )
 
     if not is_admin(callback.from_user.id):
         await callback.answer(t("no-admin-permission"), show_alert=True)
@@ -380,7 +446,9 @@ async def event_delete_menu_handler(callback: CallbackQuery, state: FSMContext) 
         return
 
     await state.set_state(EventState.waiting_for_date)  # Временное состояние
-    await callback.message.answer(text=t("event-delete-title"), reply_markup=back_to_events_menu_keyboard())
+    await callback.message.answer(
+        text=t("event-delete-title"), reply_markup=back_to_events_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -400,9 +468,15 @@ async def event_delete_handler(message: Message, state: FSMContext) -> None:
     result = delete_event(event_id)
 
     if result:
-        await message.answer(text=t("event-delete-success", id=event_id), reply_markup=admin_menu_keyboard())
+        await message.answer(
+            text=t("event-delete-success", id=event_id),
+            reply_markup=admin_menu_keyboard(),
+        )
     else:
-        await message.answer(text=t("event-delete-not-found", id=event_id), reply_markup=back_to_events_menu_keyboard())
+        await message.answer(
+            text=t("event-delete-not-found", id=event_id),
+            reply_markup=back_to_events_menu_keyboard(),
+        )
 
     await state.clear()
 
@@ -448,8 +522,12 @@ async def events_back_handler(callback: CallbackQuery, state: FSMContext) -> Non
 
     # Пробуем отредактировать сообщение
     try:
-        await callback.message.edit_text(text=t("events-menu-title"), reply_markup=events_menu_keyboard())
+        await callback.message.edit_text(
+            text=t("events-menu-title"), reply_markup=events_menu_keyboard()
+        )
     except Exception:
-        await callback.message.answer(text=t("events-menu-title"), reply_markup=events_menu_keyboard())
+        await callback.message.answer(
+            text=t("events-menu-title"), reply_markup=events_menu_keyboard()
+        )
 
     await callback.answer()

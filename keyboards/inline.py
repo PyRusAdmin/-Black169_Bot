@@ -10,11 +10,18 @@ def main_menu_keyboard():
             # Бонусы и подарки
             [
                 InlineKeyboardButton(text="💰 Мои бонусы", callback_data="my_bonuses"),
-                InlineKeyboardButton(text="🎁 Забрать подарок", callback_data="pick_up_gift"),
+                InlineKeyboardButton(
+                    text="🎁 Забрать подарок", callback_data="pick_up_gift"
+                ),
             ],
             [
-                InlineKeyboardButton(text="🔥 Бонусы скоро сгорят", callback_data="bonuses_will_soon_burn_out"),
-                InlineKeyboardButton(text="🎡 Колесо подарков", callback_data="gift_wheel"),
+                InlineKeyboardButton(
+                    text="🔥 Бонусы скоро сгорят",
+                    callback_data="bonuses_will_soon_burn_out",
+                ),
+                InlineKeyboardButton(
+                    text="🎡 Колесо подарков", callback_data="gift_wheel"
+                ),
             ],
             # Акции и мероприятия
             [
@@ -23,12 +30,16 @@ def main_menu_keyboard():
             ],
             # Маркетинг
             [
-                InlineKeyboardButton(text="🔥 Вернуться сегодня", callback_data="back_today"),
+                InlineKeyboardButton(
+                    text="🔥 Вернуться сегодня", callback_data="back_today"
+                ),
             ],
             # Информация
             [
                 InlineKeyboardButton(text="📍 Контакты", callback_data="contacts"),
-                InlineKeyboardButton(text="ℹ️ О заведении", callback_data="about_institution"),
+                InlineKeyboardButton(
+                    text="ℹ️ О заведении", callback_data="about_institution"
+                ),
             ],
         ]
     )
@@ -87,11 +98,18 @@ def main_menu_keyboard_admin():
             # Бонусы и подарки
             [
                 InlineKeyboardButton(text="💰 Мои бонусы", callback_data="my_bonuses"),
-                InlineKeyboardButton(text="🎁 Забрать подарок", callback_data="pick_up_gift"),
+                InlineKeyboardButton(
+                    text="🎁 Забрать подарок", callback_data="pick_up_gift"
+                ),
             ],
             [
-                InlineKeyboardButton(text="🔥 Бонусы скоро сгорят", callback_data="bonuses_will_soon_burn_out"),
-                InlineKeyboardButton(text="🎡 Колесо подарков", callback_data="gift_wheel"),
+                InlineKeyboardButton(
+                    text="🔥 Бонусы скоро сгорят",
+                    callback_data="bonuses_will_soon_burn_out",
+                ),
+                InlineKeyboardButton(
+                    text="🎡 Колесо подарков", callback_data="gift_wheel"
+                ),
             ],
             # Акции и мероприятия
             [
@@ -100,12 +118,16 @@ def main_menu_keyboard_admin():
             ],
             # Маркетинг
             [
-                InlineKeyboardButton(text="🔥 Вернуться сегодня", callback_data="back_today"),
+                InlineKeyboardButton(
+                    text="🔥 Вернуться сегодня", callback_data="back_today"
+                ),
             ],
             # Информация
             [
                 InlineKeyboardButton(text="📍 Контакты", callback_data="contacts"),
-                InlineKeyboardButton(text="ℹ️ О заведении", callback_data="about_institution"),
+                InlineKeyboardButton(
+                    text="ℹ️ О заведении", callback_data="about_institution"
+                ),
             ],
             # Администратор
             [
@@ -124,32 +146,58 @@ def admin_menu_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="🏆 Список победителей «Колеса подарков»", callback_data="winners"),
+                InlineKeyboardButton(
+                    text="🏆 Список победителей «Колеса подарков»",
+                    callback_data="winners",
+                ),
             ],
             [
-                InlineKeyboardButton(text="👥 Список пользователей", callback_data="users"),
-                InlineKeyboardButton(text="✅ Зарегистрированные", callback_data="registered_users"),
+                InlineKeyboardButton(
+                    text="👥 Список пользователей", callback_data="users"
+                ),
+                InlineKeyboardButton(
+                    text="✅ Зарегистрированные", callback_data="registered_users"
+                ),
             ],
             [
-                InlineKeyboardButton(text="📨 Рассылка сообщений", callback_data="broadcast"),
+                InlineKeyboardButton(
+                    text="📨 Рассылка сообщений", callback_data="broadcast"
+                ),
             ],
             [
-                InlineKeyboardButton(text="📊 Статистика пользователей", callback_data="stats"),
+                InlineKeyboardButton(
+                    text="📊 Статистика пользователей", callback_data="stats"
+                ),
             ],
             [
-                InlineKeyboardButton(text="🔄 Анализ и синхронизация клиентов", callback_data="analyze_clients"),
+                InlineKeyboardButton(
+                    text="🔄 Анализ и синхронизация клиентов",
+                    callback_data="analyze_clients",
+                ),
             ],
             [
-                InlineKeyboardButton(text="🗑️ Удалить пользователя", callback_data="delete_user"),
+                InlineKeyboardButton(
+                    text="🗑️ Удалить пользователя", callback_data="delete_user"
+                ),
             ],
             [
-                InlineKeyboardButton(text="🔍 Поиск пользователя по номеру телефона", callback_data="search_user"),
+                InlineKeyboardButton(
+                    text="🔍 Поиск пользователя по номеру телефона",
+                    callback_data="search_user",
+                ),
             ],
             [
                 InlineKeyboardButton(text="🎁 Промокоды", callback_data="promo_menu"),
             ],
             [
-                InlineKeyboardButton(text="📅 Мероприятия", callback_data="events_menu"),
+                InlineKeyboardButton(
+                    text="📅 Мероприятия", callback_data="events_menu"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="👥 Управление администраторами", callback_data="admins_menu"
+                ),
             ],
             [
                 InlineKeyboardButton(
@@ -167,7 +215,9 @@ def back_to_admin_menu_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="🔧 В меню администратора", callback_data="admin_back"),
+                InlineKeyboardButton(
+                    text="🔧 В меню администратора", callback_data="admin_back"
+                ),
             ],
         ]
     )
@@ -187,7 +237,9 @@ def broadcast_type_keyboard():
                 InlineKeyboardButton(text="🎥 Видео", callback_data="broadcast_video"),
             ],
             [
-                InlineKeyboardButton(text="❌ Отмена", callback_data="broadcast_cancel"),
+                InlineKeyboardButton(
+                    text="❌ Отмена", callback_data="broadcast_cancel"
+                ),
             ],
         ]
     )
@@ -198,8 +250,12 @@ def broadcast_confirm_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Отправить", callback_data="broadcast_confirm_send"),
-                InlineKeyboardButton(text="❌ Отмена", callback_data="broadcast_cancel"),
+                InlineKeyboardButton(
+                    text="✅ Отправить", callback_data="broadcast_confirm_send"
+                ),
+                InlineKeyboardButton(
+                    text="❌ Отмена", callback_data="broadcast_cancel"
+                ),
             ],
         ]
     )
@@ -210,16 +266,24 @@ def promo_codes_menu_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="➕ Создать промокод", callback_data="promo_create"),
+                InlineKeyboardButton(
+                    text="➕ Создать промокод", callback_data="promo_create"
+                ),
             ],
             [
-                InlineKeyboardButton(text="📋 Список промокодов", callback_data="promo_list"),
+                InlineKeyboardButton(
+                    text="📋 Список промокодов", callback_data="promo_list"
+                ),
             ],
             [
-                InlineKeyboardButton(text="🗑️ Удалить промокод", callback_data="promo_delete"),
+                InlineKeyboardButton(
+                    text="🗑️ Удалить промокод", callback_data="promo_delete"
+                ),
             ],
             [
-                InlineKeyboardButton(text="🔧 В меню администратора", callback_data="admin_back"),
+                InlineKeyboardButton(
+                    text="🔧 В меню администратора", callback_data="admin_back"
+                ),
             ],
         ]
     )
@@ -230,7 +294,9 @@ def back_to_promo_menu_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="🔙 В меню промокодов", callback_data="promo_menu"),
+                InlineKeyboardButton(
+                    text="🔙 В меню промокодов", callback_data="promo_menu"
+                ),
             ],
         ]
     )
@@ -263,16 +329,24 @@ def events_menu_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="➕ Создать мероприятие", callback_data="event_create"),
+                InlineKeyboardButton(
+                    text="➕ Создать мероприятие", callback_data="event_create"
+                ),
             ],
             [
-                InlineKeyboardButton(text="📋 Список мероприятий", callback_data="event_list"),
+                InlineKeyboardButton(
+                    text="📋 Список мероприятий", callback_data="event_list"
+                ),
             ],
             [
-                InlineKeyboardButton(text="🗑️ Удалить мероприятие", callback_data="event_delete"),
+                InlineKeyboardButton(
+                    text="🗑️ Удалить мероприятие", callback_data="event_delete"
+                ),
             ],
             [
-                InlineKeyboardButton(text="🔧 В меню администратора", callback_data="admin_back"),
+                InlineKeyboardButton(
+                    text="🔧 В меню администратора", callback_data="admin_back"
+                ),
             ],
         ]
     )
@@ -283,7 +357,9 @@ def back_to_events_menu_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="🔙 В меню мероприятий", callback_data="events_menu"),
+                InlineKeyboardButton(
+                    text="🔙 В меню мероприятий", callback_data="events_menu"
+                ),
             ],
         ]
     )
@@ -294,14 +370,23 @@ def event_action_keyboard(event_id: int):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Активировать", callback_data=f"event_activate_{event_id}"),
-                InlineKeyboardButton(text="⏸️ Деактивировать", callback_data=f"event_deactivate_{event_id}"),
+                InlineKeyboardButton(
+                    text="✅ Активировать", callback_data=f"event_activate_{event_id}"
+                ),
+                InlineKeyboardButton(
+                    text="⏸️ Деактивировать",
+                    callback_data=f"event_deactivate_{event_id}",
+                ),
             ],
             [
-                InlineKeyboardButton(text="🗑️ Удалить", callback_data=f"event_delete_{event_id}"),
+                InlineKeyboardButton(
+                    text="🗑️ Удалить", callback_data=f"event_delete_{event_id}"
+                ),
             ],
             [
-                InlineKeyboardButton(text="🔙 В список мероприятий", callback_data="event_list"),
+                InlineKeyboardButton(
+                    text="🔙 В список мероприятий", callback_data="event_list"
+                ),
             ],
         ]
     )
@@ -312,8 +397,53 @@ def event_confirm_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="✅ Да, создать", callback_data="event_confirm_yes"),
-                InlineKeyboardButton(text="❌ Нет, отмена", callback_data="event_confirm_no"),
+                InlineKeyboardButton(
+                    text="✅ Да, создать", callback_data="event_confirm_yes"
+                ),
+                InlineKeyboardButton(
+                    text="❌ Нет, отмена", callback_data="event_confirm_no"
+                ),
+            ],
+        ]
+    )
+
+
+def admins_menu_keyboard():
+    """Клавиатура управления администраторами"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="➕ Добавить администратора", callback_data="admin_add"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📋 Список администраторов", callback_data="admin_list"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🗑️ Удалить администратора", callback_data="admin_remove"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔧 В меню администратора", callback_data="admin_back"
+                ),
+            ],
+        ]
+    )
+
+
+def back_to_admins_menu_keyboard():
+    """Клавиатура возврата в меню администраторов"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🔙 В управление администраторами", callback_data="admins_menu"
+                ),
             ],
         ]
     )

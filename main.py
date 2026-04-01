@@ -2,7 +2,7 @@ import asyncio
 import logging
 import sys
 
-from config import bot, dp
+from config import OWNER_IDS, bot, dp
 from handlers.admin_handlers import router as admin_handlers
 from handlers.event_handlers import router as event_handlers
 from handlers.handlers import router as handlers
@@ -10,8 +10,8 @@ from handlers.menu_handlers import router as menu_handlers
 from handlers.user_handlers import router as user_handlers
 from services.birthday_service import send_birthday_bonus
 from services.bonus_burn_service import check_all_burningBonuses
-from services.client_levels import initialize_client_levels
-from services.database import create_tables, initialize_client_levels as init_levels_db
+
+from services.database import create_tables, initialize_client_levels, initialize_owners
 from services.event_reminder_service import check_and_send_reminders
 from utils.logger import logger
 
@@ -29,7 +29,9 @@ async def birthday_scheduler():
             now = asyncio.get_event_loop().time()
             next_midnight = 86400 - (now % 86400)  # Секунд до полуночи
 
-            logger.info(f"Следующая проверка дней рождения через {next_midnight:.0f} секунд")
+            logger.info(
+                f"Следующая проверка дней рождения через {next_midnight:.0f} секунд"
+            )
             await asyncio.sleep(next_midnight)
 
             # Запускаем проверку дней рождения
@@ -53,7 +55,9 @@ async def bonus_burn_scheduler():
             now = asyncio.get_event_loop().time()
             next_midnight = 86400 - (now % 86400)  # Секунд до полуночи
 
-            logger.info(f"Следующая проверка сгорания бонусов через {next_midnight:.0f} секунд")
+            logger.info(
+                f"Следующая проверка сгорания бонусов через {next_midnight:.0f} секунд"
+            )
             await asyncio.sleep(next_midnight)
 
             # Запускаем проверку сгорания бонусов (7, 3, 1 день)
@@ -77,7 +81,9 @@ async def event_reminder_scheduler():
             now = asyncio.get_event_loop().time()
             next_midnight = 86400 - (now % 86400)  # Секунд до полуночи
 
-            logger.info(f"Следующая проверка напоминаний о мероприятиях через {next_midnight:.0f} секунд")
+            logger.info(
+                f"Следующая проверка напоминаний о мероприятиях через {next_midnight:.0f} секунд"
+            )
             await asyncio.sleep(next_midnight)
 
             # Запускаем проверку и отправку напоминаний
@@ -96,6 +102,7 @@ async def main() -> None:
 
     create_tables()  # Создание таблиц в базе данных
     initialize_client_levels()  # Инициализация справочника уровней клиентов
+    initialize_owners(OWNER_IDS)  # Инициализация владельцев из .env в БД
 
     dp.include_router(handlers)  # Общие хендлеры
     dp.include_router(user_handlers)  # Хендлеры для пользователей

@@ -35,12 +35,22 @@ class RegisteredPersons(Model):
     patronymic_name = CharField(null=True)  # ✅ Отчество пользователя QuickResto
     birthday_user = CharField(null=True)  # ✅ День рождения пользователя QuickResto
     user_bonus = CharField(null=True)  # ✅ Бонус пользователя QuickResto
-    date_of_visit = DateTimeField(default=datetime.now)  # Дата и время последнего посещения QuickResto
+    date_of_visit = DateTimeField(
+        default=datetime.now
+    )  # Дата и время последнего посещения QuickResto
     updated_at = DateTimeField(default=datetime.now)  # Дата обновления данных
-    bonus_accrued_at = DateTimeField(null=True)  # ✅ Дата начисления бонусов ботом (для отслеживания сгорания)
-    bot_bonus_amount = DecimalField(null=True, max_digits=10, decimal_places=2)  # ✅ Сумма бонусов, начисленных ботом
-    client_level = CharField(null=True)  # ✅ Уровень клиента (Bronze, Silver, Gold, Black)
-    accumulation_amount = DecimalField(null=True, max_digits=12, decimal_places=2)  # ✅ Накопительная сумма для уровня
+    bonus_accrued_at = DateTimeField(
+        null=True
+    )  # ✅ Дата начисления бонусов ботом (для отслеживания сгорания)
+    bot_bonus_amount = DecimalField(
+        null=True, max_digits=10, decimal_places=2
+    )  # ✅ Сумма бонусов, начисленных ботом
+    client_level = CharField(
+        null=True
+    )  # ✅ Уровень клиента (Bronze, Silver, Gold, Black)
+    accumulation_amount = DecimalField(
+        null=True, max_digits=12, decimal_places=2
+    )  # ✅ Накопительная сумма для уровня
 
     class Meta:
         database = db  # база данных
@@ -58,7 +68,9 @@ def delete_registered_person(id_telegram: int) -> bool:
         if db.is_closed():
             db.connect()
 
-        query = RegisteredPersons.delete().where(RegisteredPersons.id_telegram == id_telegram)
+        query = RegisteredPersons.delete().where(
+            RegisteredPersons.id_telegram == id_telegram
+        )
         result = query.execute()
 
         if result > 0:
@@ -112,7 +124,9 @@ def write_to_db_registered_person(data):
     patronymic_name = data.get("patronymic_name")  # отчество пользователя QuickResto
     user_bonus = data.get("user_bonus")  # бонус пользователя QuickResto
     birthday_user = data.get("birthday_user")  # день рождения пользователя QuickResto
-    phone_telegram = data.get("phone_telegram")  # номер телефона пользователя в Telegram
+    phone_telegram = data.get(
+        "phone_telegram"
+    )  # номер телефона пользователя в Telegram
     client_level = data.get("client_level")  # уровень клиента
     accumulation_amount = data.get("accumulation_amount")  # накопительная сумма
 
@@ -134,16 +148,24 @@ def write_to_db_registered_person(data):
             },
         )
         if not created:
-            person.id_quickresto = id_quickresto  # идентификатор пользователя в QuickResto
+            person.id_quickresto = (
+                id_quickresto  # идентификатор пользователя в QuickResto
+            )
             person.last_name = last_name  # фамилия пользователя QuickResto
             person.first_name = first_name  # имя пользователя QuickResto
             person.patronymic_name = patronymic_name  # отчество пользователя QuickResto
             person.user_bonus = user_bonus  # бонус пользователя QuickResto
-            person.birthday_user = birthday_user  # день рождения пользователя QuickResto
-            person.phone_telegram = phone_telegram  # номер телефона пользователя в Telegram
+            person.birthday_user = (
+                birthday_user  # день рождения пользователя QuickResto
+            )
+            person.phone_telegram = (
+                phone_telegram  # номер телефона пользователя в Telegram
+            )
             person.client_level = client_level  # уровень клиента
             person.accumulation_amount = accumulation_amount  # накопительная сумма
-            person.updated_at = datetime.now()  # дата и время обновления данных о пользователе
+            person.updated_at = (
+                datetime.now()
+            )  # дата и время обновления данных о пользователе
         person.save()
     except Exception as e:
         logger.exception(e)
@@ -213,10 +235,14 @@ def is_user_registered(id_telegram: int) -> bool:
     try:
         if db.is_closed():
             db.connect()
-        exists = RegisteredPersons.get_or_none(RegisteredPersons.id_telegram == id_telegram)
+        exists = RegisteredPersons.get_or_none(
+            RegisteredPersons.id_telegram == id_telegram
+        )
         return exists is not None
     except Exception as e:
-        logger.exception(f"Ошибка при проверке регистрации пользователя {id_telegram}: {e}")
+        logger.exception(
+            f"Ошибка при проверке регистрации пользователя {id_telegram}: {e}"
+        )
         return False
     finally:
         if not db.is_closed():
@@ -233,7 +259,9 @@ def get_user_info(id_telegram: int) -> dict | None:
     try:
         if db.is_closed():
             db.connect()
-        user = RegisteredPersons.get_or_none(RegisteredPersons.id_telegram == id_telegram)
+        user = RegisteredPersons.get_or_none(
+            RegisteredPersons.id_telegram == id_telegram
+        )
         if user:
             return {
                 "id_telegram": user.id_telegram,
@@ -268,12 +296,16 @@ def get_user_bonus(id_telegram: int):
     try:
         if db.is_closed():
             db.connect()
-        user = RegisteredPersons.get_or_none(RegisteredPersons.id_telegram == id_telegram)
+        user = RegisteredPersons.get_or_none(
+            RegisteredPersons.id_telegram == id_telegram
+        )
         if user:
             return user.id_quickresto, user.phone_telegram
         return None
     except Exception as e:
-        logger.exception(f"Ошибка при получении бонусов пользователя {id_telegram}: {e}")
+        logger.exception(
+            f"Ошибка при получении бонусов пользователя {id_telegram}: {e}"
+        )
         return None
     finally:
         if not db.is_closed():
@@ -290,7 +322,9 @@ def get_user_by_phone(phone_telegram: str) -> dict | None:
     try:
         if db.is_closed():
             db.connect()
-        user = RegisteredPersons.get_or_none(RegisteredPersons.phone_telegram == phone_telegram)
+        user = RegisteredPersons.get_or_none(
+            RegisteredPersons.phone_telegram == phone_telegram
+        )
         if user:
             return {
                 "id_telegram": user.id_telegram,
@@ -306,7 +340,9 @@ def get_user_by_phone(phone_telegram: str) -> dict | None:
             }
         return None
     except Exception as e:
-        logger.exception(f"Ошибка при получении данных пользователя по телефону {phone_telegram}: {e}")
+        logger.exception(
+            f"Ошибка при получении данных пользователя по телефону {phone_telegram}: {e}"
+        )
         return None
     finally:
         if not db.is_closed():
@@ -325,13 +361,17 @@ class GiftWheelSpins(Model):
     id_telegram = IntegerField()  # ID пользователя в Telegram
     id_quickresto = IntegerField(null=True)  # ID пользователя в QuickResto
     bonus_name = CharField()  # Название выигранного бонуса
-    is_winner = BooleanField(default=False)  # True если выиграл, False если 'Попробуйте завтра'
+    is_winner = BooleanField(
+        default=False
+    )  # True если выиграл, False если 'Попробуйте завтра'
     spun_at = DateTimeField(default=datetime.now)  # Дата и время розыгрыша
 
     class Meta:
         database = db
         table_name = "gift_wheel_spins"
-        indexes = ((("id_telegram", "spun_at"), False),)  # Индекс для быстрого поиска по дате
+        indexes = (
+            (("id_telegram", "spun_at"), False),
+        )  # Индекс для быстрого поиска по дате
 
 
 def write_spin_result(data):
@@ -383,11 +423,14 @@ def has_user_spun_today(id_telegram: int) -> bool:
 
         # Ищем записи за сегодня
         spin = GiftWheelSpins.get_or_none(
-            (GiftWheelSpins.id_telegram == id_telegram) & (GiftWheelSpins.spun_at >= today_start)
+            (GiftWheelSpins.id_telegram == id_telegram)
+            & (GiftWheelSpins.spun_at >= today_start)
         )
         return spin is not None
     except Exception as e:
-        logger.exception(f"Ошибка при проверке участия пользователя {id_telegram} в розыгрыше: {e}")
+        logger.exception(
+            f"Ошибка при проверке участия пользователя {id_telegram} в розыгрыше: {e}"
+        )
         return False
     finally:
         if not db.is_closed():
@@ -425,7 +468,9 @@ def get_user_spin_history(id_telegram: int, limit: int = 10) -> list:
             )
         return history
     except Exception as e:
-        logger.exception(f"Ошибка при получении истории розыгрышей пользователя {id_telegram}: {e}")
+        logger.exception(
+            f"Ошибка при получении истории розыгрышей пользователя {id_telegram}: {e}"
+        )
         return []
     finally:
         if not db.is_closed():
@@ -442,7 +487,11 @@ def get_all_winners() -> list:
         if db.is_closed():
             db.connect()
 
-        winners = GiftWheelSpins.select().where(GiftWheelSpins.is_winner).order_by(GiftWheelSpins.spun_at.desc())
+        winners = (
+            GiftWheelSpins.select()
+            .where(GiftWheelSpins.is_winner)
+            .order_by(GiftWheelSpins.spun_at.desc())
+        )
 
         result = []
         for winner in winners:
@@ -508,7 +557,9 @@ def get_registered_persons() -> list:
         if db.is_closed():
             db.connect()
 
-        registered_persons = RegisteredPersons.select().order_by(RegisteredPersons.updated_at.desc())
+        registered_persons = RegisteredPersons.select().order_by(
+            RegisteredPersons.updated_at.desc()
+        )
 
         result = []  # список словарей с данными пользователей
         for person in registered_persons:
@@ -530,7 +581,9 @@ def get_registered_persons() -> list:
             )
         return result
     except Exception as e:
-        logger.exception(f"Ошибка при получении списка зарегистрированных пользователей: {e}")
+        logger.exception(
+            f"Ошибка при получении списка зарегистрированных пользователей: {e}"
+        )
         return []
     finally:
         if not db.is_closed():
@@ -553,16 +606,25 @@ def get_client_levels_stats() -> dict:
         # Количество по уровням
         levels = {}
         for level in ["Black", "Gold", "Silver", "Bronze"]:
-            count = RegisteredPersons.select().where(RegisteredPersons.client_level == level).count()
+            count = (
+                RegisteredPersons.select()
+                .where(RegisteredPersons.client_level == level)
+                .count()
+            )
             levels[level] = {
                 "count": count,
-                "percent": round(count / total * 100, 1) if total > 0 else 0
+                "percent": round(count / total * 100, 1) if total > 0 else 0,
             }
 
         # Клиенты без определенного уровня
-        no_level = RegisteredPersons.select().where(
-            (RegisteredPersons.client_level.is_null()) | (RegisteredPersons.client_level == "")
-        ).count()
+        no_level = (
+            RegisteredPersons.select()
+            .where(
+                (RegisteredPersons.client_level.is_null())
+                | (RegisteredPersons.client_level == "")
+            )
+            .count()
+        )
 
         return {
             "total": total,
@@ -586,7 +648,9 @@ def get_client_levels_stats() -> dict:
             db.close()
 
 
-def update_client_level(id_telegram: int, client_level: str, accumulation_amount: float = None) -> bool:
+def update_client_level(
+    id_telegram: int, client_level: str, accumulation_amount: float = None
+) -> bool:
     """
     Обновление уровня клиента в базе данных
 
@@ -599,11 +663,11 @@ def update_client_level(id_telegram: int, client_level: str, accumulation_amount
         if db.is_closed():
             db.connect()
 
-        query = (
-            RegisteredPersons
-            .update(client_level=client_level, accumulation_amount=accumulation_amount, updated_at=datetime.now())
-            .where(RegisteredPersons.id_telegram == id_telegram)
-        )
+        query = RegisteredPersons.update(
+            client_level=client_level,
+            accumulation_amount=accumulation_amount,
+            updated_at=datetime.now(),
+        ).where(RegisteredPersons.id_telegram == id_telegram)
         result = query.execute()
 
         if result > 0:
@@ -627,15 +691,21 @@ class ClientLevels(Model):
     """Справочник уровней клиентов с привилегиями и критериями"""
 
     level_name = CharField(unique=True)  # Название уровня (Bronze, Silver, Gold, Black)
-    min_accumulation = DecimalField(max_digits=12, decimal_places=2)  # Мин. накопительная сумма
+    min_accumulation = DecimalField(
+        max_digits=12, decimal_places=2
+    )  # Мин. накопительная сумма
     emoji = CharField()  # Эмодзи уровня
     description = TextField()  # Описание уровня
     privileges = TextField()  # Привилегии уровня (JSON или текст)
     discount_percent = IntegerField(default=0)  # Процент скидки
-    bonus_multiplier = DecimalField(max_digits=3, decimal_places=2, default=1.0)  # Множитель бонусов
+    bonus_multiplier = DecimalField(
+        max_digits=3, decimal_places=2, default=1.0
+    )  # Множитель бонусов
     priority_service = BooleanField(default=False)  # Приоритетное обслуживание
     personal_manager = BooleanField(default=False)  # Персональный менеджер
-    birthday_bonus = DecimalField(max_digits=10, decimal_places=2, default=0)  # Бонус на день рождения
+    birthday_bonus = DecimalField(
+        max_digits=10, decimal_places=2, default=0
+    )  # Бонус на день рождения
     free_event_access = BooleanField(default=False)  # Бесплатный доступ на мероприятия
     created_at = DateTimeField(default=datetime.now)  # Дата создания записи
     updated_at = DateTimeField(default=datetime.now)  # Дата обновления записи
@@ -649,16 +719,16 @@ class ClientLevels(Model):
 def get_client_level_info(level_name: str) -> dict | None:
     """
     Получение информации об уровне клиента.
-    
+
     :param level_name: Название уровня (Bronze, Silver, Gold, Black)
     :return: Словарь с информацией об уровне или None
     """
     try:
         if db.is_closed():
             db.connect()
-        
+
         level = ClientLevels.get_or_none(ClientLevels.level_name == level_name)
-        
+
         if level:
             return {
                 "level_name": level.level_name,
@@ -685,30 +755,32 @@ def get_client_level_info(level_name: str) -> dict | None:
 def get_all_client_levels() -> list:
     """
     Получение всех уровней клиентов.
-    
+
     :return: Список словарей с информацией об уровнях
     """
     try:
         if db.is_closed():
             db.connect()
-        
+
         levels = ClientLevels.select().order_by(ClientLevels.min_accumulation.desc())
-        
+
         result = []
         for level in levels:
-            result.append({
-                "level_name": level.level_name,
-                "min_accumulation": float(level.min_accumulation),
-                "emoji": level.emoji,
-                "description": level.description,
-                "privileges": level.privileges,
-                "discount_percent": level.discount_percent,
-                "bonus_multiplier": float(level.bonus_multiplier),
-                "priority_service": level.priority_service,
-                "personal_manager": level.personal_manager,
-                "birthday_bonus": float(level.birthday_bonus),
-                "free_event_access": level.free_event_access,
-            })
+            result.append(
+                {
+                    "level_name": level.level_name,
+                    "min_accumulation": float(level.min_accumulation),
+                    "emoji": level.emoji,
+                    "description": level.description,
+                    "privileges": level.privileges,
+                    "discount_percent": level.discount_percent,
+                    "bonus_multiplier": float(level.bonus_multiplier),
+                    "priority_service": level.priority_service,
+                    "personal_manager": level.personal_manager,
+                    "birthday_bonus": float(level.birthday_bonus),
+                    "free_event_access": level.free_event_access,
+                }
+            )
         return result
     except Exception as e:
         logger.exception(f"Ошибка при получении всех уровней: {e}")
@@ -721,7 +793,7 @@ def get_all_client_levels() -> list:
 def initialize_client_levels():
     """
     Инициализация справочника уровней клиентов значениями по умолчанию.
-    
+
     :return: True если успешно, False если нет
     """
     levels_data = [
@@ -730,12 +802,14 @@ def initialize_client_levels():
             "min_accumulation": 0,
             "emoji": "🥉",
             "description": "Базовый уровень — начните своё путешествие с нами!",
-            "privileges": json.dumps([
-                "Доступ к базовой программе лояльности",
-                "Накопление бонусов с каждого заказа",
-                "Приглашения на открытые мероприятия",
-                "Персональные предложения в день рождения"
-            ]),
+            "privileges": json.dumps(
+                [
+                    "Доступ к базовой программе лояльности",
+                    "Накопление бонусов с каждого заказа",
+                    "Приглашения на открытые мероприятия",
+                    "Персональные предложения в день рождения",
+                ]
+            ),
             "discount_percent": 0,
             "bonus_multiplier": 1.0,
             "priority_service": False,
@@ -748,14 +822,16 @@ def initialize_client_levels():
             "min_accumulation": 10000,
             "emoji": "🥈",
             "description": "Серебряный уровень — больше преимуществ для постоянных гостей!",
-            "privileges": json.dumps([
-                "Все привилегии Bronze уровня",
-                "Повышенный кэшбэк бонусами (1.2x)",
-                "Приоритетное бронирование столов",
-                "Скидка 5% на банкетные услуги",
-                "Приглашения на закрытые мероприятия",
-                "Комплимент от заведения при посещении"
-            ]),
+            "privileges": json.dumps(
+                [
+                    "Все привилегии Bronze уровня",
+                    "Повышенный кэшбэк бонусами (1.2x)",
+                    "Приоритетное бронирование столов",
+                    "Скидка 5% на банкетные услуги",
+                    "Приглашения на закрытые мероприятия",
+                    "Комплимент от заведения при посещении",
+                ]
+            ),
             "discount_percent": 5,
             "bonus_multiplier": 1.2,
             "priority_service": False,
@@ -768,16 +844,18 @@ def initialize_client_levels():
             "min_accumulation": 30000,
             "emoji": "🥇",
             "description": "Золотой уровень — элитное обслуживание для избранных!",
-            "privileges": json.dumps([
-                "Все привилегии Silver уровня",
-                "Максимальный кэшбэк бонусами (1.5x)",
-                "Персональный менеджер",
-                "Скидка 10% на все услуги",
-                "Бесплатный доступ на платные мероприятия",
-                "Приоритетное обслуживание",
-                "Подарок на день рождения",
-                "Возможность бронирования VIP-зон"
-            ]),
+            "privileges": json.dumps(
+                [
+                    "Все привилегии Silver уровня",
+                    "Максимальный кэшбэк бонусами (1.5x)",
+                    "Персональный менеджер",
+                    "Скидка 10% на все услуги",
+                    "Бесплатный доступ на платные мероприятия",
+                    "Приоритетное обслуживание",
+                    "Подарок на день рождения",
+                    "Возможность бронирования VIP-зон",
+                ]
+            ),
             "discount_percent": 10,
             "bonus_multiplier": 1.5,
             "priority_service": True,
@@ -790,18 +868,20 @@ def initialize_client_levels():
             "min_accumulation": 60000,
             "emoji": "💎",
             "description": "Black уровень — максимальные привилегии для наших VIP-гостей!",
-            "privileges": json.dumps([
-                "Все привилегии Gold уровня",
-                "Эксклюзивный кэшбэк бонусами (2.0x)",
-                "Персональный консьерж 24/7",
-                "Скидка 15% на все услуги",
-                "Бесплатное посещение всех мероприятий",
-                "Доступ в закрытый Black-клуб",
-                "Индивидуальное меню по предпочтениям",
-                "Бесплатная парковка",
-                "Возможность организации частных мероприятий",
-                "Приоритет при бронировании любых дат"
-            ]),
+            "privileges": json.dumps(
+                [
+                    "Все привилегии Gold уровня",
+                    "Эксклюзивный кэшбэк бонусами (2.0x)",
+                    "Персональный консьерж 24/7",
+                    "Скидка 15% на все услуги",
+                    "Бесплатное посещение всех мероприятий",
+                    "Доступ в закрытый Black-клуб",
+                    "Индивидуальное меню по предпочтениям",
+                    "Бесплатная парковка",
+                    "Возможность организации частных мероприятий",
+                    "Приоритет при бронировании любых дат",
+                ]
+            ),
             "discount_percent": 15,
             "bonus_multiplier": 2.0,
             "priority_service": True,
@@ -810,21 +890,20 @@ def initialize_client_levels():
             "free_event_access": True,
         },
     ]
-    
+
     try:
         if db.is_closed():
             db.connect()
-        
+
         # Создаём таблицу если не существует
         db.create_tables([ClientLevels], safe=True)
         logger.info("Таблица client_levels создана или уже существует")
-        
+
         for level_data in levels_data:
             level, created = ClientLevels.get_or_create(
-                level_name=level_data["level_name"],
-                defaults=level_data
+                level_name=level_data["level_name"], defaults=level_data
             )
-            
+
             if not created:
                 # Обновляем существующую запись
                 for key, value in level_data.items():
@@ -834,10 +913,10 @@ def initialize_client_levels():
                 level.save()
             else:
                 logger.info(f"Создан уровень {level_data['level_name']}")
-        
+
         logger.info("Справочник уровней клиентов инициализирован")
         return True
-        
+
     except Exception as e:
         logger.exception(f"Ошибка при инициализации уровней: {e}")
         return False
@@ -846,18 +925,310 @@ def initialize_client_levels():
             db.close()
 
 
+def initialize_owners(owner_ids: list[int]) -> None:
+    """
+    Инициализация владельцев из .env в таблицу Admins.
+    Вызывается при запуске, чтобы владельцы из конфига всегда были в БД.
+
+    :param owner_ids: Список ID владельцев из .env
+    """
+    if not owner_ids:
+        logger.info("OWNER_IDS не задан в .env, пропускаем инициализацию владельцев")
+        return
+
+    try:
+        if db.is_closed():
+            db.connect()
+
+        for owner_id in owner_ids:
+            admin, created = Admins.get_or_create(
+                id_telegram=owner_id,
+                defaults={
+                    "role": "owner",
+                    "is_active": True,
+                    "full_name": "Владелец",
+                },
+            )
+
+            if not created:
+                # Убеждаемся что роль owner и активен
+                if admin.role != "owner" or not admin.is_active:
+                    admin.role = "owner"
+                    admin.is_active = True
+                    admin.save()
+                    logger.info(f"Обновлён владелец {owner_id}")
+            else:
+                logger.info(f"Создан владелец {owner_id}")
+
+        logger.info(f"Владельцы инициализированы: {owner_ids}")
+
+    except Exception as e:
+        logger.exception(f"Ошибка при инициализации владельцев: {e}")
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+"""Таблица для управления администраторами бота"""
+
+
+class Admins(Model):
+    """Таблица администраторов бота (дополнительные к OWNER_IDS из .env)"""
+
+    id_telegram = IntegerField(unique=True)  # ID пользователя в Telegram
+    username = CharField(null=True)  # Username в Telegram
+    full_name = CharField(null=True)  # Имя и фамилия
+    role = CharField(default="admin")  # Роль: owner, admin
+    added_by = IntegerField(null=True)  # ID владельца, который добавил
+    added_at = DateTimeField(default=datetime.now)  # Дата добавления
+    is_active = BooleanField(default=True)  # Активен ли администратор
+
+    class Meta:
+        database = db
+        table_name = "admins"
+        indexes = ((("id_telegram",), True),)
+
+
+def add_admin(
+    id_telegram: int,
+    added_by: int,
+    username: str = None,
+    full_name: str = None,
+    role: str = "admin",
+) -> dict:
+    """
+    Добавление администратора
+
+    :param id_telegram: ID пользователя в Telegram
+    :param added_by: ID владельца, который добавляет
+    :param username: Username в Telegram
+    :param full_name: Имя и фамилия
+    :param role: Роль (admin)
+    :return: Словарь с результатом
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        # Проверяем, не является ли уже администратором
+        existing = Admins.get_or_none(Admins.id_telegram == id_telegram)
+        if existing:
+            if existing.is_active:
+                return {"success": False, "message": "Уже является администратором"}
+            else:
+                # Реактивируем
+                existing.is_active = True
+                existing.role = role
+                existing.added_by = added_by
+                existing.added_at = datetime.now()
+                existing.username = username
+                existing.full_name = full_name
+                existing.save()
+                logger.info(f"Администратор {id_telegram} реактивирован")
+                return {
+                    "success": True,
+                    "message": "Администратор реактивирован",
+                    "action": "reactivated",
+                }
+
+        Admins.create(
+            id_telegram=id_telegram,
+            username=username,
+            full_name=full_name,
+            role=role,
+            added_by=added_by,
+            is_active=True,
+        )
+        logger.info(f"Добавлен администратор: {id_telegram} ({full_name})")
+        return {"success": True, "message": "Администратор добавлен", "action": "added"}
+
+    except Exception as e:
+        logger.exception(f"Ошибка при добавлении администратора {id_telegram}: {e}")
+        return {"success": False, "message": f"Ошибка: {e}"}
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def remove_admin(id_telegram: int) -> bool:
+    """
+    Удаление (деактивация) администратора
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если удалён, False если не найден
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        query = Admins.update(is_active=False).where(
+            (Admins.id_telegram == id_telegram) & (Admins.role != "owner")
+        )
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Администратор {id_telegram} деактивирован")
+            return True
+        logger.warning(f"Администратор {id_telegram} не найден или является владельцем")
+        return False
+
+    except Exception as e:
+        logger.exception(f"Ошибка при удалении администратора {id_telegram}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def is_admin_in_db(id_telegram: int) -> bool:
+    """
+    Проверка, является ли пользователь администратором в БД
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если администратор
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        admin = Admins.get_or_none(
+            (Admins.id_telegram == id_telegram) & Admins.is_active
+        )
+        return admin is not None
+
+    except Exception as e:
+        logger.exception(f"Ошибка при проверке администратора {id_telegram}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def is_owner_in_db(id_telegram: int) -> bool:
+    """
+    Проверка, является ли пользователь владельцем в БД
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если владелец
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        admin = Admins.get_or_none(
+            (Admins.id_telegram == id_telegram)
+            & Admins.is_active
+            & (Admins.role == "owner")
+        )
+        return admin is not None
+
+    except Exception as e:
+        logger.exception(f"Ошибка при проверке владельца {id_telegram}: {e}")
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_all_admins() -> list:
+    """
+    Получение списка всех активных администраторов
+
+    :return: Список словарей с данными администраторов
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        admins = (
+            Admins.select()
+            .where(Admins.is_active)
+            .order_by(Admins.role.desc(), Admins.added_at.asc())
+        )
+
+        result = []
+        for admin in admins:
+            result.append(
+                {
+                    "id_telegram": admin.id_telegram,
+                    "username": admin.username,
+                    "full_name": admin.full_name,
+                    "role": admin.role,
+                    "added_by": admin.added_by,
+                    "added_at": admin.added_at,
+                    "is_active": admin.is_active,
+                }
+            )
+        return result
+
+    except Exception as e:
+        logger.exception(f"Ошибка при получении списка администраторов: {e}")
+        return []
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_admin_role(id_telegram: int) -> str | None:
+    """
+    Получение роли пользователя
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: Роль (owner, admin) или None если не администратор
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        admin = Admins.get_or_none(
+            (Admins.id_telegram == id_telegram) & Admins.is_active
+        )
+        return admin.role if admin else None
+
+    except Exception as e:
+        logger.exception(f"Ошибка при получении роли {id_telegram}: {e}")
+        return None
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def get_admins_count() -> int:
+    """
+    Получение количества активных администраторов
+
+    :return: Количество администраторов
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        count = Admins.select().where(Admins.is_active).count()
+        return count
+
+    except Exception as e:
+        logger.exception(f"Ошибка при подсчёте администраторов: {e}")
+        return 0
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
 def create_tables():
     """Создание таблицы в базе данных"""
-    db.create_tables([
-        RegisteredPersons,
-        StartPersons,
-        GiftWheelSpins,
-        MarketingMessages,
-        PromoCodes,
-        Consents,
-        Events,
-        ClientLevels,
-    ])
+    db.create_tables(
+        [
+            RegisteredPersons,
+            StartPersons,
+            GiftWheelSpins,
+            MarketingMessages,
+            PromoCodes,
+            Consents,
+            Events,
+            ClientLevels,
+            Admins,
+        ]
+    )
 
     # Миграция: добавляем новые поля в существующую таблицу RegisteredPersons
     try:
@@ -869,18 +1240,26 @@ def create_tables():
         columns = [row[1] for row in cursor.fetchall()]
 
         if "client_level" not in columns:
-            db.execute_sql("ALTER TABLE registered_persons ADD COLUMN client_level TEXT")
+            db.execute_sql(
+                "ALTER TABLE registered_persons ADD COLUMN client_level TEXT"
+            )
             logger.info("Добавлено поле client_level в таблицу registered_persons")
 
         if "accumulation_amount" not in columns:
-            db.execute_sql("ALTER TABLE registered_persons ADD COLUMN accumulation_amount REAL")
-            logger.info("Добавлено поле accumulation_amount в таблицу registered_persons")
-        
+            db.execute_sql(
+                "ALTER TABLE registered_persons ADD COLUMN accumulation_amount REAL"
+            )
+            logger.info(
+                "Добавлено поле accumulation_amount в таблицу registered_persons"
+            )
+
         # Проверяем существование таблицы client_levels
-        cursor = db.execute_sql("SELECT name FROM sqlite_master WHERE type='table' AND name='client_levels'")
+        cursor = db.execute_sql(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='client_levels'"
+        )
         if not cursor.fetchone():
             logger.info("Таблица client_levels будет создана")
-        
+
     except Exception as e:
         logger.exception(f"Ошибка при миграции таблицы registered_persons: {e}")
     finally:
@@ -907,7 +1286,9 @@ class MarketingMessages(Model):
         indexes = ((("id_telegram", "sent_at"), False),)  # Индекс для быстрого поиска
 
 
-def log_marketing_message(id_telegram: int, message_text: str, message_type: str = "text") -> None:
+def log_marketing_message(
+    id_telegram: int, message_text: str, message_type: str = "text"
+) -> None:
     """
     Логирование отправки маркетингового сообщения
 
@@ -931,7 +1312,9 @@ def log_marketing_message(id_telegram: int, message_text: str, message_type: str
             db.close()
 
 
-def update_message_status(id_telegram: int, is_blocked: bool = False, is_read: bool = False) -> None:
+def update_message_status(
+    id_telegram: int, is_blocked: bool = False, is_read: bool = False
+) -> None:
     """
     Обновление статуса сообщения (заблокировано/прочитано)
 
@@ -967,7 +1350,9 @@ def get_all_user_ids() -> list:
         if db.is_closed():
             db.connect()
 
-        user_ids = StartPersons.select(StartPersons.id_telegram).order_by(StartPersons.updated_at.desc())
+        user_ids = StartPersons.select(StartPersons.id_telegram).order_by(
+            StartPersons.updated_at.desc()
+        )
 
         return [user.id_telegram for user in user_ids]
     except Exception as e:
@@ -1011,7 +1396,9 @@ def get_registered_persons_count() -> int:
         count = RegisteredPersons.select().count()
         return count
     except Exception as e:
-        logger.exception(f"Ошибка при получении количества зарегистрированных пользователей: {e}")
+        logger.exception(
+            f"Ошибка при получении количества зарегистрированных пользователей: {e}"
+        )
         return 0
     finally:
         if not db.is_closed():
@@ -1032,13 +1419,29 @@ def get_broadcast_stats() -> dict:
         total_messages = MarketingMessages.select().count()
 
         # Количество по типам
-        text_count = MarketingMessages.select().where(MarketingMessages.message_type == "text").count()
-        photo_count = MarketingMessages.select().where(MarketingMessages.message_type == "photo").count()
-        video_count = MarketingMessages.select().where(MarketingMessages.message_type == "video").count()
-        blocked_count = MarketingMessages.select().where(MarketingMessages.is_blocked).count()
+        text_count = (
+            MarketingMessages.select()
+            .where(MarketingMessages.message_type == "text")
+            .count()
+        )
+        photo_count = (
+            MarketingMessages.select()
+            .where(MarketingMessages.message_type == "photo")
+            .count()
+        )
+        video_count = (
+            MarketingMessages.select()
+            .where(MarketingMessages.message_type == "video")
+            .count()
+        )
+        blocked_count = (
+            MarketingMessages.select().where(MarketingMessages.is_blocked).count()
+        )
 
         # Уникальные пользователи, получившие рассылки
-        unique_users = MarketingMessages.select(fn.COUNT(fn.DISTINCT(MarketingMessages.id_telegram))).scalar()
+        unique_users = MarketingMessages.select(
+            fn.COUNT(fn.DISTINCT(MarketingMessages.id_telegram))
+        ).scalar()
 
         return {
             "total_messages": total_messages,
@@ -1166,10 +1569,14 @@ def get_bonus_burning_users(days_until_burn: int = 7) -> list:
         from datetime import timedelta
 
         # Дата начисления должна быть: сегодня - (90 - days_until_burn) дней
-        target_accrual_date = (datetime.now() - timedelta(days=90 - days_until_burn)).date()
+        target_accrual_date = (
+            datetime.now() - timedelta(days=90 - days_until_burn)
+        ).date()
 
         # Получаем только тех пользователей, у которых есть дата начисления бонусов ботом
-        registered_persons = RegisteredPersons.select().where(RegisteredPersons.bonus_accrued_at.is_null(False))
+        registered_persons = RegisteredPersons.select().where(
+            RegisteredPersons.bonus_accrued_at.is_null(False)
+        )
 
         result = []
         for person in registered_persons:
@@ -1194,14 +1601,18 @@ def get_bonus_burning_users(days_until_burn: int = 7) -> list:
 
         return result
     except Exception as e:
-        logger.exception(f"Ошибка при получении пользователей с горящими бонусами бота: {e}")
+        logger.exception(
+            f"Ошибка при получении пользователей с горящими бонусами бота: {e}"
+        )
         return []
     finally:
         if not db.is_closed():
             db.close()
 
 
-def update_bonus_accrual_date(id_telegram: int, accrued_at: datetime = None, bonus_amount: float = None) -> bool:
+def update_bonus_accrual_date(
+    id_telegram: int, accrued_at: datetime = None, bonus_amount: float = None
+) -> bool:
     """
     Обновление даты начисления бонусов ботом для пользователя
 
@@ -1219,9 +1630,9 @@ def update_bonus_accrual_date(id_telegram: int, accrued_at: datetime = None, bon
 
         # Если передана сумма бонуса, обновляем и её
         if bonus_amount is not None:
-            query = RegisteredPersons.update(bonus_accrued_at=accrued_at, bot_bonus_amount=bonus_amount).where(
-                RegisteredPersons.id_telegram == id_telegram
-            )
+            query = RegisteredPersons.update(
+                bonus_accrued_at=accrued_at, bot_bonus_amount=bonus_amount
+            ).where(RegisteredPersons.id_telegram == id_telegram)
         else:
             query = RegisteredPersons.update(bonus_accrued_at=accrued_at).where(
                 RegisteredPersons.id_telegram == id_telegram
@@ -1230,7 +1641,9 @@ def update_bonus_accrual_date(id_telegram: int, accrued_at: datetime = None, bon
         result = query.execute()
 
         if result > 0:
-            logger.info(f"Дата начисления бонусов ботом обновлена для пользователя {id_telegram}")
+            logger.info(
+                f"Дата начисления бонусов ботом обновлена для пользователя {id_telegram}"
+            )
             return True
         return False
     except Exception as e:
@@ -1274,7 +1687,12 @@ def create_promo_code(code: str, bonus_amount: float, description: str = None) -
         if db.is_closed():
             db.connect()
 
-        PromoCodes.create(code=code, bonus_amount=bonus_amount, description=description, is_active=True)
+        PromoCodes.create(
+            code=code,
+            bonus_amount=bonus_amount,
+            description=description,
+            is_active=True,
+        )
         logger.info(f"Создан промокод: {code} на сумму {bonus_amount}")
         return True
     except Exception as e:
@@ -1329,15 +1747,19 @@ def activate_promo_code(code: str, id_telegram: int) -> bool:
             db.connect()
 
         # Проверяем, существует ли промокод и активен ли он
-        promo = PromoCodes.get_or_none((PromoCodes.code == code) & PromoCodes.is_active & PromoCodes.used_by.is_null())
+        promo = PromoCodes.get_or_none(
+            (PromoCodes.code == code)
+            & PromoCodes.is_active
+            & PromoCodes.used_by.is_null()
+        )
 
         if not promo:
             return False
 
         # Помечаем как использованный
-        query = PromoCodes.update(used_by=id_telegram, used_at=datetime.now(), is_active=False).where(
-            PromoCodes.code == code
-        )
+        query = PromoCodes.update(
+            used_by=id_telegram, used_at=datetime.now(), is_active=False
+        ).where(PromoCodes.code == code)
 
         result = query.execute()
 
@@ -1469,7 +1891,9 @@ class Consents(Model):
         indexes = ((("id_telegram",), True),)  # Уникальный индекс на ID пользователя
 
 
-def add_consent(id_telegram: int, ip_address: str = None, user_agent: str = None) -> bool:
+def add_consent(
+    id_telegram: int, ip_address: str = None, user_agent: str = None
+) -> bool:
     """
     Добавление согласия на обработку персональных данных
 
@@ -1489,10 +1913,14 @@ def add_consent(id_telegram: int, ip_address: str = None, user_agent: str = None
             ip_address=ip_address,
             user_agent=user_agent,
         )
-        logger.info(f"Пользователь {id_telegram} дал согласие на обработку персональных данных")
+        logger.info(
+            f"Пользователь {id_telegram} дал согласие на обработку персональных данных"
+        )
         return True
     except Exception as e:
-        logger.exception(f"Ошибка при добавлении согласия пользователя {id_telegram}: {e}")
+        logger.exception(
+            f"Ошибка при добавлении согласия пользователя {id_telegram}: {e}"
+        )
         return False
     finally:
         if not db.is_closed():
@@ -1510,10 +1938,14 @@ def has_consent(id_telegram: int) -> bool:
         if db.is_closed():
             db.connect()
 
-        consent = Consents.get_or_none((Consents.id_telegram == id_telegram) & Consents.is_consent)
+        consent = Consents.get_or_none(
+            (Consents.id_telegram == id_telegram) & Consents.is_consent
+        )
         return consent is not None
     except Exception as e:
-        logger.exception(f"Ошибка при проверке согласия пользователя {id_telegram}: {e}")
+        logger.exception(
+            f"Ошибка при проверке согласия пользователя {id_telegram}: {e}"
+        )
         return False
     finally:
         if not db.is_closed():
@@ -1542,7 +1974,9 @@ def get_consent_info(id_telegram: int) -> dict | None:
             }
         return None
     except Exception as e:
-        logger.exception(f"Ошибка при получении информации о согласии {id_telegram}: {e}")
+        logger.exception(
+            f"Ошибка при получении информации о согласии {id_telegram}: {e}"
+        )
         return None
     finally:
         if not db.is_closed():
@@ -1560,12 +1994,16 @@ def revoke_consent(id_telegram: int) -> bool:
         if db.is_closed():
             db.connect()
 
-        query = Consents.update(is_consent=False).where(Consents.id_telegram == id_telegram)
+        query = Consents.update(is_consent=False).where(
+            Consents.id_telegram == id_telegram
+        )
 
         result = query.execute()
 
         if result > 0:
-            logger.info(f"Пользователь {id_telegram} отозвал согласие на обработку персональных данных")
+            logger.info(
+                f"Пользователь {id_telegram} отозвал согласие на обработку персональных данных"
+            )
             return True
         return False
     except Exception as e:
@@ -1613,10 +2051,18 @@ class Events(Model):
     # Поля для автоматических напоминаний
     reminder_text_3days = TextField(null=True)  # Текст напоминания за 3 дня
     reminder_text_1day = TextField(null=True)  # Текст напоминания за 1 день
-    reminder_text_event_day = TextField(null=True)  # Текст напоминания в день мероприятия
-    reminder_3days_sent = BooleanField(default=False)  # Отправлено ли напоминание за 3 дня
-    reminder_1day_sent = BooleanField(default=False)  # Отправлено ли напоминание за 1 день
-    reminder_event_day_sent = BooleanField(default=False)  # Отправлено ли напоминание в день мероприятия
+    reminder_text_event_day = TextField(
+        null=True
+    )  # Текст напоминания в день мероприятия
+    reminder_3days_sent = BooleanField(
+        default=False
+    )  # Отправлено ли напоминание за 3 дня
+    reminder_1day_sent = BooleanField(
+        default=False
+    )  # Отправлено ли напоминание за 1 день
+    reminder_event_day_sent = BooleanField(
+        default=False
+    )  # Отправлено ли напоминание в день мероприятия
 
     class Meta:
         database = db
@@ -1628,14 +2074,14 @@ class Events(Model):
 
 
 def create_event(
-        title: str,
-        description: str,
-        event_date: datetime,
-        created_by: int,
-        photo_id: str = None,
-        reminder_text_3days: str = None,
-        reminder_text_1day: str = None,
-        reminder_text_event_day: str = None,
+    title: str,
+    description: str,
+    event_date: datetime,
+    created_by: int,
+    photo_id: str = None,
+    reminder_text_3days: str = None,
+    reminder_text_1day: str = None,
+    reminder_text_event_day: str = None,
 ) -> bool:
     """
     Создание нового мероприятия
@@ -1792,7 +2238,9 @@ def update_reminder_sent(event_id: int, reminder_type: str) -> bool:
         result = query.execute()
 
         if result > 0:
-            logger.info(f"Обновлён статус напоминания {reminder_type} для мероприятия {event_id}")
+            logger.info(
+                f"Обновлён статус напоминания {reminder_type} для мероприятия {event_id}"
+            )
             return True
         return False
     except Exception as e:
@@ -1856,7 +2304,10 @@ def get_events_for_reminder(days_until: int) -> list:
                     "event_date": event.event_date,
                     "photo_id": event.photo_id,
                     "reminder_text": getattr(
-                        event, f"reminder_text_{days_until}days" if days_until > 0 else "reminder_text_event_day"
+                        event,
+                        f"reminder_text_{days_until}days"
+                        if days_until > 0
+                        else "reminder_text_event_day",
                     ),
                 }
             )
@@ -1914,7 +2365,11 @@ def get_upcoming_events(days: int = 7) -> list:
 
         events = (
             Events.select()
-            .where(Events.is_active & (Events.event_date >= now) & (Events.event_date <= future_date))
+            .where(
+                Events.is_active
+                & (Events.event_date >= now)
+                & (Events.event_date <= future_date)
+            )
             .order_by(Events.event_date.asc())
         )
 
