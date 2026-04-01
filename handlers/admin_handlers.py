@@ -5,7 +5,7 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
-from config import OWNER_IDS, bot
+from config import OWNER_IDS, bot, layer_name_quickresto
 from keyboards.inline import (
     admin_menu_keyboard,
     back_to_admin_menu_keyboard,
@@ -27,8 +27,8 @@ from services.database import (
 )
 from services.excel_service import write_registered_users_to_excel, write_users_to_excel, write_winners_to_excel
 from services.i18n import t
-from services.quickresto_api import auth, base_url, delete_customer, headers
-from states.user_states import BroadcastState, DeleteUserState
+from services.quickresto_api import auth, base_url, delete_customer, headers, print_client_info
+from states.user_states import BroadcastState, DeleteUserState, SearchUserState
 from utils.logger import logger
 
 router = Router(name=__name__)
@@ -445,3 +445,39 @@ async def admin_back_handler(callback: CallbackQuery, state: FSMContext) -> None
     except Exception:
         await callback.message.answer(text=t("admin-panel"), reply_markup=admin_menu_keyboard())
     await callback.answer()
+
+
+@router.callback_query(F.data == "search_user")
+async def search_user_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    Обработчик кнопки 'Поиск пользователя по номеру телефона'
+    """
+    logger.info(f"Администратор {callback.from_user.id} запросил поиск пользователя по номеру телефона")
+
+    # Очищаем состояние FSM если есть активная рассылка
+    await state.clear()
+
+    if not is_admin(callback.from_user.id):
+        await callback.answer(t("no-admin-permission"), show_alert=True)
+        return
+
+    await state.set_state(SearchUserState.waiting_for_phone_number)
+
+    await callback.message.answer(text=t("search-user-enter-phone-number"), reply_markup=back_to_admin_menu_keyboard())
+    await callback.answer()
+
+
+@router.message(F.text, StateFilter(SearchUserState.waiting_for_phone_number))
+async def search_user_phone_number_handler(message: Message, state: FSMContext) -> None:
+    """
+    Обработчик ввода номера телефона пользователя
+    """
+    phone_number = message.text
+
+    logger.info(f"Администратор {message.from_user.id} ввел номер телефона: {phone_number}")
+
+    # Получаем ID пользователя в Telegram по номеру телефону
+    print_client_info(layer_name_quickresto, phone_number, auth, headers)
+
+    # Очищаем состояние FSM если есть активная рассылка
+    await state.clear()

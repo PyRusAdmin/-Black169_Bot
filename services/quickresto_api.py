@@ -197,7 +197,7 @@ def print_full_client_info(client_id):
 
 
 def update_customer_bonus(
-    layer_name_quickresto: str, customer_id: int, amount: float, customer_phone: str, auth, headers
+        layer_name_quickresto: str, customer_id: int, amount: float, customer_phone: str, auth, headers
 ):
     """
     Редактирование бонусных балов для клиента. Для изменения бонусных балов, требуется ID клиента в QuickResto и номер

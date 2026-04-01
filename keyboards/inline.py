@@ -140,6 +140,9 @@ def admin_menu_keyboard():
                 InlineKeyboardButton(text="🗑️ Удалить пользователя", callback_data="delete_user"),
             ],
             [
+                InlineKeyboardButton(text="🔍 Поиск пользователя по номеру телефона", callback_data="search_user"),
+            ],
+            [
                 InlineKeyboardButton(text="🎁 Промокоды", callback_data="promo_menu"),
             ],
             [

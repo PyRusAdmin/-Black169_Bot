@@ -1270,14 +1270,14 @@ class Events(Model):
 
 
 def create_event(
-    title: str,
-    description: str,
-    event_date: datetime,
-    created_by: int,
-    photo_id: str = None,
-    reminder_text_3days: str = None,
-    reminder_text_1day: str = None,
-    reminder_text_event_day: str = None,
+        title: str,
+        description: str,
+        event_date: datetime,
+        created_by: int,
+        photo_id: str = None,
+        reminder_text_3days: str = None,
+        reminder_text_1day: str = None,
+        reminder_text_event_day: str = None,
 ) -> bool:
     """
     Создание нового мероприятия
