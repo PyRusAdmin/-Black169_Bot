@@ -450,20 +450,22 @@ async def admin_back_handler(callback: CallbackQuery, state: FSMContext) -> None
 @router.callback_query(F.data == "search_user")
 async def search_user_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """
-    Обработчик кнопки 'Поиск пользователя по номеру телефона'
+    Обработчик кнопки '🔍 Поиск пользователя по номеру телефона'
     """
     logger.info(f"Администратор {callback.from_user.id} запросил поиск пользователя по номеру телефона")
-
-    # Очищаем состояние FSM если есть активная рассылка
-    await state.clear()
 
     if not is_admin(callback.from_user.id):
         await callback.answer(t("no-admin-permission"), show_alert=True)
         return
 
+    # Очищаем состояние FSM если есть активная рассылка
+    await state.clear()
     await state.set_state(SearchUserState.waiting_for_phone_number)
 
-    await callback.message.answer(text=t("search-user-enter-phone-number"), reply_markup=back_to_admin_menu_keyboard())
+    await callback.message.answer(
+        text=t("search-user-enter-phone-number"),
+        reply_markup=back_to_admin_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -472,12 +474,66 @@ async def search_user_phone_number_handler(message: Message, state: FSMContext) 
     """
     Обработчик ввода номера телефона пользователя
     """
-    phone_number = message.text
+    phone_number = message.text.strip()
 
     logger.info(f"Администратор {message.from_user.id} ввел номер телефона: {phone_number}")
 
-    # Получаем ID пользователя в Telegram по номеру телефону
-    print_client_info(layer_name_quickresto, phone_number, auth, headers)
+    # Проверяем формат номера (должен быть 79999999999)
+    if not phone_number.isdigit() or len(phone_number) != 11 or not phone_number.startswith('7'):
+        await message.answer(
+            text=(
+                "❌ <b>Неверный формат номера</b>\n\n"
+                "Номер должен быть в формате <code>79999999999</code> (11 цифр, начиная с 7).\n\n"
+                "Попробуйте снова или отправьте /cancel для отмены."
+            ),
+            reply_markup=back_to_admin_menu_keyboard()
+        )
+        return
 
-    # Очищаем состояние FSM если есть активная рассылка
+    try:
+        # Получаем информацию о клиенте
+        data = print_client_info(layer_name_quickresto, phone_number, auth, headers)
+
+        if data:
+            # Формируем красивое сообщение
+            first_name = data.get('firstName', 'Не указано')
+            last_name = data.get('lastName', 'Не указано')
+            client_id = data.get('client_id', 'Не указано')
+            phone = data.get('phone', phone_number)
+
+            # Пробуем найти Telegram ID в базе
+            from services.database import RegisteredPersons
+            user = RegisteredPersons.get_or_none(RegisteredPersons.id_quickresto == client_id)
+            telegram_id = user.id_telegram if user else 'Не привязан'
+
+            await message.answer(
+                text=(
+                    "✅ <b>Пользователь найден!</b>\n\n"
+                    "👤 <b>Информация о клиенте:</b>\n"
+                    f"• Имя: <b>{first_name} {last_name}</b>\n"
+                    f"• Телефон: <code>{phone}</code>\n"
+                    f"• ID в QuickResto: <code>{client_id}</code>\n"
+                    f"• ID в Telegram: <code>{telegram_id}</code>\n\n"
+                    "🔍 Хотите получить полную информацию?"
+                ),
+                reply_markup=back_to_admin_menu_keyboard()
+            )
+        else:
+            await message.answer(
+                text=t("search-user-not-found", phone=phone_number),
+                reply_markup=back_to_admin_menu_keyboard()
+            )
+
+    except Exception as e:
+        logger.exception(f"Ошибка при поиске пользователя: {e}")
+        await message.answer(
+            text=(
+                "⚠️ <b>Ошибка поиска</b>\n\n"
+                "Не удалось получить информацию о клиенте.\n\n"
+                "Проверьте правильность номера телефона и попробуйте снова."
+            ),
+            reply_markup=back_to_admin_menu_keyboard()
+        )
+
+    # Очищаем состояние FSM
     await state.clear()
