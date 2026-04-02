@@ -135,44 +135,45 @@ def write_to_db_registered_person(data):
     birthday_user - день рождения пользователя в базе QuickResto
     phone_telegram - номер телефона пользователя в Telegram
     """
-    id_telegram = data.get("id_telegram")  # идентификатор пользователя в Telegram
-    id_quickresto = data.get("id_quickresto")  # идентификатор пользователя в QuickResto
-    last_name = data.get("last_name")  # фамилия пользователя QuickResto
-    first_name = data.get("first_name")  # имя пользователя QuickResto
-    patronymic_name = data.get("patronymic_name")  # отчество пользователя QuickResto
-    user_bonus = data.get("user_bonus")  # бонус пользователя QuickResto
-    birthday_user = data.get("birthday_user")  # день рождения пользователя QuickResto
-    phone_telegram = data.get("phone_telegram")
-    client_level = data.get("client_level")  # уровень клиента
-    accumulation_amount = data.get("accumulation_amount")  # накопительная сумма
-
     try:
         if db.is_closed():
             db.connect()
         person, created = RegisteredPersons.get_or_create(
-            id_telegram=id_telegram,
+            id_telegram=data.get("id_telegram"),
             defaults={
-                "id_quickresto": id_quickresto,  # идентификатор пользователя в QuickResto
-                "last_name": last_name,  # фамилия пользователя QuickResto
-                "first_name": first_name,  # имя пользователя QuickResto
-                "patronymic_name": patronymic_name,  # отчество пользователя QuickResto
-                "user_bonus": user_bonus,  # бонус пользователя QuickResto
-                "birthday_user": birthday_user,  # день рождения пользователя QuickResto
-                "phone_telegram": phone_telegram,
-                "client_level": client_level,  # уровень клиента
-                "accumulation_amount": accumulation_amount,  # накопительная сумма
+                "id_quickresto": data.get(
+                    "id_quickresto"
+                ),  # идентификатор пользователя в QuickResto
+                "last_name": data.get("last_name"),  # фамилия пользователя QuickResto
+                "first_name": data.get("first_name"),  # имя пользователя QuickResto
+                "patronymic_name": data.get(
+                    "patronymic_name"
+                ),  # отчество пользователя QuickResto
+                "user_bonus": data.get("user_bonus"),  # бонус пользователя QuickResto
+                "birthday_user": data.get(
+                    "birthday_user"
+                ),  # день рождения пользователя QuickResto
+                "phone_telegram": data.get("phone_telegram"),
+                "client_level": data.get("client_level"),  # уровень клиента
+                "accumulation_amount": data.get(
+                    "accumulation_amount"
+                ),  # накопительная сумма
             },
         )
         if not created:
-            person.id_quickresto = id_quickresto
-            person.last_name = last_name  # фамилия пользователя QuickResto
-            person.first_name = first_name  # имя пользователя QuickResto
-            person.patronymic_name = patronymic_name  # отчество пользователя QuickResto
-            person.user_bonus = user_bonus  # бонус пользователя QuickResto
-            person.birthday_user = birthday_user
-            person.phone_telegram = phone_telegram
-            person.client_level = client_level  # уровень клиента
-            person.accumulation_amount = accumulation_amount  # накопительная сумма
+            person.id_quickresto = data.get("id_quickresto")
+            person.last_name = data.get("last_name")  # фамилия пользователя QuickResto
+            person.first_name = data.get("first_name")  # имя пользователя QuickResto
+            person.patronymic_name = data.get(
+                "patronymic_name"
+            )  # отчество пользователя QuickResto
+            person.user_bonus = data.get("user_bonus")  # бонус пользователя QuickResto
+            person.birthday_user = data.get("birthday_user")
+            person.phone_telegram = data.get("phone_telegram")
+            person.client_level = data.get("client_level")  # уровень клиента
+            person.accumulation_amount = data.get(
+                "accumulation_amount"
+            )  # накопительная сумма
             person.updated_at = (
                 datetime.now()
             )  # дата и время обновления данных о пользователе
@@ -322,9 +323,6 @@ def get_user_bonus(id_telegram: int):
             db.close()
 
 
-
-
-
 """
 Таблица для учёта розыгрышей в 'Колесе подарков'
 Фиксирует попытки участия, выигрыши и статус (победитель/не победитель)
@@ -411,8 +409,6 @@ def has_user_spun_today(id_telegram: int) -> bool:
     finally:
         if not db.is_closed():
             db.close()
-
-
 
 
 def get_all_winners() -> list:
@@ -1214,9 +1210,6 @@ def log_marketing_message(
             db.close()
 
 
-
-
-
 def get_all_user_ids() -> list:
     """
     Получение всех ID пользователей, которые запускали бота
@@ -1391,9 +1384,6 @@ def get_birthday_users_today() -> list:
     finally:
         if not db.is_closed():
             db.close()
-
-
-
 
 
 def get_bonus_burning_users(days_until_burn: int = 7) -> list:
@@ -1763,9 +1753,6 @@ def create_event(
             db.close()
 
 
-
-
-
 def get_all_events(active_only: bool = False) -> list:
     """
     Получение всех мероприятий
@@ -1960,8 +1947,6 @@ def update_event_status(event_id: int, is_active: bool) -> bool:
     finally:
         if not db.is_closed():
             db.close()
-
-
 
 
 def get_events_count() -> dict:
