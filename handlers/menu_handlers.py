@@ -34,22 +34,20 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
     id_quickresto, phone_telegram = get_user_bonus(callback.from_user.id)
     data = print_full_client_info(client_id=id_quickresto)
 
-    data = {
-        "id_telegram": callback.from_user.id,
-        "id_quickresto": data.get("id"),
-        "last_name": data.get("last_name"),
-        "first_name": data.get("first_name"),
-        "patronymic_name": data.get("middle_name"),
-        "birthday_user": data.get("date_of_birth"),
-        "user_bonus": data.get("bonus_ledger"),
-        "phone_telegram": phone_telegram,
-        "client_level": data.get("level"),  # Уровень клиента
-        "accumulation_amount": data.get("accumulation_balance", {}).get(
-            "ledger", 0
-        ),  # Накопительная сумма
-    }
-
-    write_to_db_registered_person(data)
+    write_to_db_registered_person(
+        {
+            "id_telegram": callback.from_user.id,
+            "id_quickresto": data.get("id"),
+            "last_name": data.get("last_name"),
+            "first_name": data.get("first_name"),
+            "patronymic_name": data.get("middle_name"),
+            "birthday_user": data.get("date_of_birth"),
+            "user_bonus": data.get("bonus_ledger"),
+            "phone_telegram": phone_telegram,
+            "client_level": data.get("level"),  # Уровень клиента
+            "accumulation_amount": data.get("accumulation_balance", {}).get("ledger", 0),  # Накопительная сумма
+        }
+    )
 
     # Получаем бонусы из БД
     user_info = get_user_info(callback.from_user.id)
@@ -110,7 +108,7 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
     is_claimed = has_user_claimed_gift_bonus(callback.from_user.id)
     logger.info(is_claimed)
 
-    if is_claimed == False:
+    if not is_claimed:
         promo_code = generate_promo_code()
         logger.info(f"Сгенерирован промокод: {promo_code} для пользователя {callback.from_user.id}")
 
@@ -119,6 +117,7 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
 
         # Отмечаем, что пользователь получил подарок
         mark_gift_bonus_claimed(id_telegram=callback.from_user.id, promo_code=promo_code)
+
         # Обновляем дату начисления бонусов (для отслеживания сгорания)
         update_bonus_accrual_date(callback.from_user.id, bonus_amount=3000.00)
 
@@ -127,7 +126,7 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
                 "🎁 <b>Поздравляем!</b>\n\n"
                 "Вам начислено <b>3000 бонусов</b>!\n\n"
                 f"Ваш промокод: <code>{promo_code}</code>\n"
-                f"Для получения бонусов, покажите промокод администратору\n\n"
+                f"Для получения бонусов, назовите свой ID администратору и он проверит на наличие промокод\n\n"
                 "Используйте их при следующем посещении The Black 169.\n\n"
                 "Спасибо, что вы с нами! 🖤"
             ),
@@ -135,7 +134,7 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
         )
         await callback.answer()
 
-    elif is_claimed == True:
+    elif is_claimed:
         await callback.message.edit_text(
             text=(
                 "❌ <b>Вы уже получили подарочные бонусы</b>\n\n"

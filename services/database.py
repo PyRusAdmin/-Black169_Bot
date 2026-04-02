@@ -1468,51 +1468,23 @@ def has_user_claimed_gift_bonus(id_telegram: int):
     :param id_telegram: ID пользователя в Telegram
     :return: True если получил, False если нет
     """
-    is_claimed = RegisteredPersons.select(RegisteredPersons.gift_bonus_claimed).where(
-        RegisteredPersons.id_telegram == id_telegram
-    ).scalar()
-    return is_claimed
-    # scalar() вернёт True/False, если запись найдена, или None, если нет
-    # if is_claimed is not None:
-    #     print(f"Подарочный бонус получен: {is_claimed}")
-    # else:
-    #     print("Пользователь не найден")
+    return RegisteredPersons.select(RegisteredPersons.gift_bonus_claimed).where(
+        RegisteredPersons.id_telegram == id_telegram).scalar()
 
 
-def mark_gift_bonus_claimed(id_telegram: int, promo_code: str) -> bool:
+def mark_gift_bonus_claimed(id_telegram: int, promo_code: str):
     """
-    Отметить, что пользователь получил подарочные бонусы 3000
+    Записывает в базу данных, что пользователь получил подарочные бонусы или нет
 
     :param id_telegram: ID пользователя в Telegram
     :param promo_code: Промокод для получения подарка
-    :return: True если успешно, False если ошибка
     """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        query = RegisteredPersons.update(
-            gift_bonus_claimed=True,
-            gift_bonus_claimed_at=datetime.now(),
-            promo_code=promo_code,
-        ).where(RegisteredPersons.id_telegram == id_telegram)
-
-        result = query.execute()
-
-        if result > 0:
-            logger.info(
-                f"Пользователь {id_telegram} получил подарочные бонусы 3000, промокод: {promo_code}"
-            )
-            return True
-        return False
-    except Exception as e:
-        logger.exception(
-            f"Ошибка при отметке получения подарочных бонусов пользователем {id_telegram}: {e}"
-        )
-        return False
-    finally:
-        if not db.is_closed():
-            db.close()
+    query = RegisteredPersons.update(
+        gift_bonus_claimed=True,  # Получил подарочные бонусы
+        gift_bonus_claimed_at=datetime.now(),  # Дата получения подарочных бонусов
+        promo_code=promo_code,  # Промокод для получения подарка
+    ).where(RegisteredPersons.id_telegram == id_telegram)
+    query.execute()
 
 
 """Таблица для учёта промокодов"""
