@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
 from config import layer_name_quickresto
-from keyboards.inline import back_to_main_menu_keyboard, twist_keyboard
+from keyboards.keyboards import back_to_main_menu_keyboard, twist_keyboard
 from services.bonus import random_bonus, generate_promo_code
 
 # Формируем сообщение с уровнем клиента

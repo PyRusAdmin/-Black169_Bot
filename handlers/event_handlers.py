@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_IDS
-from keyboards.inline import (
+from keyboards.keyboards import (
     admin_menu_keyboard,
     back_to_events_menu_keyboard,
     event_action_keyboard,

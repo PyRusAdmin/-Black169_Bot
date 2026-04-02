@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from config import OWNER_IDS, bot, layer_name_quickresto
-from keyboards.inline import (
+from keyboards.keyboards import (
     admin_menu_keyboard,
     admins_menu_keyboard,
     back_to_admin_menu_keyboard,

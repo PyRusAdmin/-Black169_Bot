@@ -3,7 +3,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_IDS
-from keyboards.inline import (
+from keyboards.keyboards import (
     consent_keyboard,
     main_menu_keyboard,
     main_menu_keyboard_admin,
