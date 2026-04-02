@@ -579,20 +579,14 @@ async def delete_user_id_handler(message: Message, state: FSMContext) -> None:
     """
     id_user = message.text
 
-    logger.info(
-        f"Администратор {message.from_user.id} ввел ID клиента QuickResto: {id_user}"
-    )
+    logger.info(f"Администратор {message.from_user.id} ввел ID клиента QuickResto: {id_user}")
 
     # Получаем ID пользователя в Telegram по ID QuickResto
-    user = RegisteredPersons.get_or_none(
-        RegisteredPersons.id_quickresto == int(id_user)
-    )
+    user = RegisteredPersons.get_or_none(RegisteredPersons.id_quickresto == int(id_user))
     id_telegram = user.id_telegram if user else None
 
     # Удаляем клиента QuickResto
-    delete_customer(
-        customer_id=int(id_user), base_url=base_url, auth=auth, headers=headers
-    )
+    delete_customer(customer_id=int(id_user))
 
     # Удаляем из базы данных registered_persons
     if id_telegram:

@@ -1,12 +1,15 @@
 import json
+import time
+from collections import Counter
 
 import requests
 from requests.auth import HTTPBasicAuth
-from collections import Counter
-from config import console, layer_name_quickresto, password_quickresto, username_quickresto
-from utils.logger import logger
-import time
 
+from config import console, layer_name_quickresto, password_quickresto, username_quickresto
+from services.client_levels import analyze_and_save_clients
+from utils.logger import logger
+
+BASE_URL = f"https://{layer_name_quickresto}.quickresto.ru/platform/online/api"
 base_url = f"https://{layer_name_quickresto}.quickresto.ru/platform/online/api"
 auth = HTTPBasicAuth(username_quickresto, password_quickresto)
 headers = {"Content-Type": "application/json"}
@@ -254,14 +257,11 @@ def update_customer_bonus(customer_id: int, amount: float, customer_phone: str):
 """Удаление клиента из QuickResto"""
 
 
-def delete_customer(customer_id: int, base_url, auth, headers):
+def delete_customer(customer_id: int):
     """
     Удаление клиента по ID
 
     :param customer_id: ID клиента
-    :param base_url: базовый URL
-    :param auth: аутентификация
-    :param headers: заголовки
     """
     try:
         logger.info(f"Удаление клиента {customer_id}")
@@ -300,9 +300,6 @@ def get_level(accumulation: float) -> str:
         if accumulation >= level["min_amount"]:
             return level["name"]
     return "Bronze"
-
-
-BASE_URL = f"https://{layer_name_quickresto}.quickresto.ru/platform/online/api"
 
 
 def get_all_clients_full() -> list:
@@ -470,10 +467,6 @@ def analyze_and_sync_clients():
 
     :return: Статистика обработки
     """
-    from services.client_levels import (
-        analyze_and_save_clients,
-        normalize_clients_phone_numbers,
-    )
 
     # Получаем данные из API
     clients_data = analyze_clients()

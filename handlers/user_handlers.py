@@ -5,9 +5,7 @@ from handlers.menu_handlers import updates_bonuses_in_the_database
 from keyboards.keyboards import main_menu_keyboard
 from services.database import write_to_db_registered_person
 from services.i18n import t
-from services.quickresto_api import (
-    create_client, print_client_info, print_full_client_info, update_customer_bonus,
-)
+from services.quickresto_api import create_client, print_client_info, print_full_client_info, update_customer_bonus
 from utils.logger import logger
 
 router = Router(name=__name__)

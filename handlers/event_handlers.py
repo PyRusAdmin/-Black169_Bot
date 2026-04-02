@@ -7,7 +7,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_IDS
-from keyboards.keyboards import admin_menu_keyboard, back_to_events_menu_keyboard, event_action_keyboard, event_confirm_keyboard, events_menu_keyboard
+from keyboards.keyboards import admin_menu_keyboard, back_to_events_menu_keyboard, event_action_keyboard, \
+    event_confirm_keyboard, events_menu_keyboard
 from services.database import is_admin_in_db
 from services.events_json import create_event_json, delete_event_json, get_all_events_json, update_event_json
 from services.i18n import t

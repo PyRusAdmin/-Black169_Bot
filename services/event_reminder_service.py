@@ -6,7 +6,6 @@
 - За 1 день до мероприятия
 - В день мероприятия
 """
-
 import asyncio
 
 from config import OWNER_IDS, bot
