@@ -13,7 +13,12 @@ from services.database import (
     write_to_db_registered_person,
 )
 from services.i18n import t
-from services.quickresto_api import auth, headers, print_full_client_info, update_customer_bonus
+from services.quickresto_api import (
+    auth,
+    headers,
+    print_full_client_info,
+    update_customer_bonus,
+)
 from utils.logger import logger
 
 router = Router(name=__name__)
@@ -38,7 +43,9 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
         "user_bonus": data.get("bonus_ledger"),
         "phone_telegram": phone_telegram,
         "client_level": data.get("level"),  # Уровень клиента
-        "accumulation_amount": data.get("accumulation_balance", {}).get("ledger", 0),  # Накопительная сумма
+        "accumulation_amount": data.get("accumulation_balance", {}).get(
+            "ledger", 0
+        ),  # Накопительная сумма
     }
 
     write_to_db_registered_person(data)
@@ -80,7 +87,64 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
 async def pick_up_gift_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Забрать подарок'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Забрать подарок'")
-    await callback.message.answer(text=t("menu-pick-up-gift"), reply_markup=back_to_main_menu_keyboard())
+
+    from services.database import (
+        has_user_claimed_gift_bonus,
+        mark_gift_bonus_claimed,
+        get_user_info,
+    )
+
+    # Проверяем, получал ли пользователь подарок ранее
+    if has_user_claimed_gift_bonus(callback.from_user.id):
+        await callback.message.answer(
+            text=(
+                "❌ <b>Вы уже получили подарочные бонусы</b>\n\n"
+                "Подарочные бонусы можно получить только один раз.\n\n"
+                "Спасибо, что вы с нами! 🖤"
+            ),
+            reply_markup=back_to_main_menu_keyboard(),
+        )
+        await callback.answer()
+        return
+
+    # Получаем информацию о пользователе
+    user_info = get_user_info(callback.from_user.id)
+    if not user_info:
+        await callback.message.answer(
+            text="❌ Ошибка получения данных пользователя",
+            reply_markup=back_to_main_menu_keyboard(),
+        )
+        await callback.answer()
+        return
+
+    id_quickresto = user_info.get("id_quickresto")
+    phone_telegram = user_info.get("phone_telegram")
+
+    # Начисляем 3000 бонусов
+    update_customer_bonus(
+        layer_name_quickresto=layer_name_quickresto,
+        customer_id=id_quickresto,
+        amount=3000.00,
+        customer_phone=phone_telegram,
+        auth=auth,
+        headers=headers,
+    )
+
+    # Отмечаем, что пользователь получил подарок
+    mark_gift_bonus_claimed(callback.from_user.id)
+
+    # Обновляем дату начисления бонусов (для отслеживания сгорания)
+    update_bonus_accrual_date(callback.from_user.id, bonus_amount=3000.00)
+
+    await callback.message.answer(
+        text=(
+            "🎁 <b>Поздравляем!</b>\n\n"
+            "Вам начислено <b>3000 бонусов</b>!\n\n"
+            "Используйте их при следующем посещении The Black 169.\n\n"
+            "Спасибо, что вы с нами! 🖤"
+        ),
+        reply_markup=back_to_main_menu_keyboard(),
+    )
     await callback.answer()
 
 
@@ -88,7 +152,49 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
 async def bonuses_will_soon_burn_out_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Бонусы скоро сгорят'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Бонусы скоро сгорят'")
-    await callback.message.answer(text=t("menu-bonuses-will-soon-burn-out"), reply_markup=back_to_main_menu_keyboard())
+
+    from services.database import get_user_burning_bonus_info
+
+    # Получаем информацию о сгорающих бонусах
+    burning_info = get_user_burning_bonus_info(callback.from_user.id)
+
+    if burning_info:
+        bot_bonus_amount = burning_info.get("bot_bonus_amount")
+        burn_date = burning_info.get("burn_date")
+        days_until_burn = burning_info.get("days_until_burn")
+
+        burn_date_str = burn_date.strftime("%d.%m.%Y")
+
+        if days_until_burn <= 1:
+            warning_emoji = "❗"
+            warning_text = "завтра" if days_until_burn == 1 else "сегодня"
+        elif days_until_burn <= 3:
+            warning_emoji = "🔥"
+            warning_text = f"через {days_until_burn} дня"
+        elif days_until_burn <= 7:
+            warning_emoji = "⚠️"
+            warning_text = f"через {days_until_burn} дней"
+        else:
+            warning_emoji = "⏰"
+            warning_text = f"через {days_until_burn} дней"
+
+        message_text = (
+            f"{warning_emoji} <b>Бонусы скоро сгорят!</b>\n\n"
+            f"Напоминаем, что {warning_text} сгорят бонусы, начисленные нашим ботом.\n\n"
+            f"💰 Сумма бонусов: <b>{bot_bonus_amount} бонусов</b>\n"
+            f"📅 Дата сгорания: <b>{burn_date_str}</b>\n\n"
+            f"Успейте использовать бонусы до этой даты!\n\n"
+            f"Ждём Вас в The Black 169! 🖤"
+        )
+    else:
+        message_text = (
+            "✅ <b>У вас нет бонусов, которые скоро сгорят</b>\n\n"
+            "Все ваши бонусы в безопасности! 🖤"
+        )
+
+    await callback.message.answer(
+        text=message_text, reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -99,7 +205,9 @@ async def bonuses_will_soon_burn_out_handler(callback: CallbackQuery) -> None:
 async def gift_wheel_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Колесо подарков'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Колесо подарков'")
-    await callback.message.answer(text=t("menu-gift-wheel"), reply_markup=twist_keyboard())
+    await callback.message.answer(
+        text=t("menu-gift-wheel"), reply_markup=twist_keyboard()
+    )
     await callback.answer()
 
 
@@ -135,17 +243,29 @@ async def twist_handler(callback: CallbackQuery) -> None:
 
     # Записываем результат в базу данных
     write_spin_result(
-        {"id_telegram": id_telegram, "id_quickresto": id_quickresto, "bonus_name": bonus, "is_winner": is_winner},
+        {
+            "id_telegram": id_telegram,
+            "id_quickresto": id_quickresto,
+            "bonus_name": bonus,
+            "is_winner": is_winner,
+        },
     )
 
     if bonus == "Коктейль на выбор":
-        await callback.message.answer(text=t("cocktail-winning-message"), reply_markup=back_to_main_menu_keyboard())
+        await callback.message.answer(
+            text=t("cocktail-winning-message"),
+            reply_markup=back_to_main_menu_keyboard(),
+        )
         return
     if bonus == "Кальян на выбор":
-        await callback.message.answer(text=t("hookah-winning-message"), reply_markup=back_to_main_menu_keyboard())
+        await callback.message.answer(
+            text=t("hookah-winning-message"), reply_markup=back_to_main_menu_keyboard()
+        )
         return
     if bonus == "Бонус в рублях (1000)":
-        await callback.message.answer(text=t("bonus-winning-message"), reply_markup=back_to_main_menu_keyboard())
+        await callback.message.answer(
+            text=t("bonus-winning-message"), reply_markup=back_to_main_menu_keyboard()
+        )
         # Добавляем бонус клиенту, если выпал денежный бонус
         update_customer_bonus(
             layer_name_quickresto=layer_name_quickresto,  # Название слоя QuickResto
@@ -161,7 +281,10 @@ async def twist_handler(callback: CallbackQuery) -> None:
 
         return
     if bonus == "Попробуйте завтра":
-        await callback.message.answer(text=t("try-tomorrow-winning-message"), reply_markup=back_to_main_menu_keyboard())
+        await callback.message.answer(
+            text=t("try-tomorrow-winning-message"),
+            reply_markup=back_to_main_menu_keyboard(),
+        )
         return
 
 
@@ -172,7 +295,9 @@ async def twist_handler(callback: CallbackQuery) -> None:
 async def promotions_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Акции'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Акции'")
-    await callback.message.answer(text=t("menu-promotions"), reply_markup=back_to_main_menu_keyboard())
+    await callback.message.answer(
+        text=t("menu-promotions"), reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -180,7 +305,9 @@ async def promotions_handler(callback: CallbackQuery) -> None:
 async def events_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Мероприятия'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Мероприятия'")
-    await callback.message.answer(text=t("menu-events"), reply_markup=back_to_main_menu_keyboard())
+    await callback.message.answer(
+        text=t("menu-events"), reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -188,7 +315,9 @@ async def events_handler(callback: CallbackQuery) -> None:
 async def back_today_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Вернуться сегодня'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Вернуться сегодня'")
-    await callback.message.answer(text=t("menu-back-today"), reply_markup=back_to_main_menu_keyboard())
+    await callback.message.answer(
+        text=t("menu-back-today"), reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -196,7 +325,9 @@ async def back_today_handler(callback: CallbackQuery) -> None:
 async def contacts_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки '📍 Контакты'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал '📍 Контакты'")
-    await callback.message.answer(text=t("menu-contacts"), reply_markup=back_to_main_menu_keyboard())
+    await callback.message.answer(
+        text=t("menu-contacts"), reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()
 
 
@@ -204,5 +335,7 @@ async def contacts_handler(callback: CallbackQuery) -> None:
 async def about_institution_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'ℹ️ О заведении'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'ℹ️ О заведении'")
-    await callback.message.answer(text=t("menu-about-institution"), reply_markup=back_to_main_menu_keyboard())
+    await callback.message.answer(
+        text=t("menu-about-institution"), reply_markup=back_to_main_menu_keyboard()
+    )
     await callback.answer()

@@ -51,6 +51,12 @@ class RegisteredPersons(Model):
     accumulation_amount = DecimalField(
         null=True, max_digits=12, decimal_places=2
     )  # ✅ Накопительная сумма для уровня
+    gift_bonus_claimed = BooleanField(
+        default=False
+    )  # ✅ Получил ли пользователь подарочные бонусы 3000
+    gift_bonus_claimed_at = DateTimeField(
+        null=True
+    )  # ✅ Дата получения подарочных бонусов
 
     class Meta:
         database = db  # база данных
@@ -1654,6 +1660,110 @@ def update_bonus_accrual_date(
             db.close()
 
 
+def get_user_burning_bonus_info(id_telegram: int) -> dict | None:
+    """
+    Получение информации о сгорающих бонусах конкретного пользователя
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: Словарь с информацией о сгорающих бонусах или None
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        from datetime import timedelta
+
+        user = RegisteredPersons.get_or_none(
+            RegisteredPersons.id_telegram == id_telegram
+        )
+
+        if not user or not user.bonus_accrued_at or not user.bot_bonus_amount:
+            return None
+
+        # Бонусы сгорают через 90 дней (3 месяца) с момента начисления
+        burn_date = user.bonus_accrued_at + timedelta(days=90)
+        days_until_burn = (burn_date.date() - datetime.now().date()).days
+
+        # Если бонусы уже сгорели, возвращаем None
+        if days_until_burn < 0:
+            return None
+
+        return {
+            "bot_bonus_amount": user.bot_bonus_amount,
+            "bonus_accrued_at": user.bonus_accrued_at,
+            "burn_date": burn_date,
+            "days_until_burn": days_until_burn,
+        }
+    except Exception as e:
+        logger.exception(
+            f"Ошибка при получении информации о сгорающих бонусах пользователя {id_telegram}: {e}"
+        )
+        return None
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def has_user_claimed_gift_bonus(id_telegram: int) -> bool:
+    """
+    Проверка, получил ли пользователь подарочные бонусы 3000
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если получил, False если нет
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        user = RegisteredPersons.get_or_none(
+            RegisteredPersons.id_telegram == id_telegram
+        )
+
+        if not user:
+            return False
+
+        return user.gift_bonus_claimed
+    except Exception as e:
+        logger.exception(
+            f"Ошибка при проверке получения подарочных бонусов пользователем {id_telegram}: {e}"
+        )
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
+def mark_gift_bonus_claimed(id_telegram: int) -> bool:
+    """
+    Отметить, что пользователь получил подарочные бонусы 3000
+
+    :param id_telegram: ID пользователя в Telegram
+    :return: True если успешно, False если ошибка
+    """
+    try:
+        if db.is_closed():
+            db.connect()
+
+        query = RegisteredPersons.update(
+            gift_bonus_claimed=True, gift_bonus_claimed_at=datetime.now()
+        ).where(RegisteredPersons.id_telegram == id_telegram)
+
+        result = query.execute()
+
+        if result > 0:
+            logger.info(f"Пользователь {id_telegram} получил подарочные бонусы 3000")
+            return True
+        return False
+    except Exception as e:
+        logger.exception(
+            f"Ошибка при отметке получения подарочных бонусов пользователем {id_telegram}: {e}"
+        )
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
+
+
 """Таблица для учёта промокодов"""
 
 
@@ -2106,7 +2216,7 @@ def create_event(
             event_date=event_date,
             created_by=created_by,
             photo_id=photo_id,
-            is_active=True,
+            is_active=False,  # Создаем неактивным, чтобы администратор мог активировать вручную
             reminder_text_3days=reminder_text_3days,
             reminder_text_1day=reminder_text_1day,
             reminder_text_event_day=reminder_text_event_day,

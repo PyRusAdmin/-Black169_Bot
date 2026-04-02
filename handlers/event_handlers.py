@@ -301,7 +301,7 @@ async def event_confirm_yes_handler(callback: CallbackQuery, state: FSMContext) 
         )
 
         await callback.message.answer(
-            text=f"{t('event-create-success', title=title, date=data.get('event_date_str'))}\n\n🔔 <b>Напоминания:</b>\n{reminders_text}",
+            text=f"{t('event-create-success', title=title, date=data.get('event_date_str'))}\n\n🔔 <b>Напоминания:</b>\n{reminders_text}\n\n⚠️ <b>Мероприятие создано неактивным.</b>\nПерейдите в «Список мероприятий» и активируйте его.",
             reply_markup=admin_menu_keyboard(),
             parse_mode="HTML",
         )
