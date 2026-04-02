@@ -7,19 +7,11 @@ from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_IDS
 from keyboards.keyboards import (
-    admin_menu_keyboard,
-    back_to_events_menu_keyboard,
-    event_action_keyboard,
-    event_confirm_keyboard,
+    admin_menu_keyboard, back_to_events_menu_keyboard, event_action_keyboard, event_confirm_keyboard,
     events_menu_keyboard,
 )
 from services.database import (
-    create_event,
-    delete_event,
-    get_all_events,
-    get_events_count,
-    is_admin_in_db,
-    update_event_status,
+    create_event, delete_event, get_all_events, get_events_count, is_admin_in_db, update_event_status,
 )
 from services.i18n import t
 from states.user_states import EventState
@@ -28,16 +20,17 @@ from utils.logger import logger
 router = Router(name=__name__)
 
 
-def is_admin(user_id: int) -> bool:
+async def verifies_the_user_for_admin(callback):
     """
-    Проверка прав администратора (OWNER_IDS из .env + из БД)
+    Проверяет пользователя на права администратора (OWNER_IDS из .env + из БД)
 
-    :param user_id: ID пользователя в Telegram
+    :param callback: CallbackQuery
     :return: True если администратор, False если нет
     """
-    if user_id in OWNER_IDS:
+    if callback.from_user.id in OWNER_IDS or is_admin_in_db(callback.from_user.id):
         return True
-    return is_admin_in_db(user_id)
+    await callback.answer(t("no-admin-permission"), show_alert=True)
+    return False
 
 
 @router.callback_query(F.data == "events_menu")
@@ -47,8 +40,8 @@ async def events_menu_handler(callback: CallbackQuery) -> None:
     """
     logger.info(f"Администратор {callback.from_user.id} запросил меню мероприятий")
 
-    if not is_admin(callback.from_user.id):
-        await callback.answer(t("no-admin-permission"), show_alert=True)
+    # Проверяет пользователя на права администратора
+    if not await verifies_the_user_for_admin(callback):
         return
 
     await callback.message.answer(
@@ -64,8 +57,8 @@ async def event_create_handler(callback: CallbackQuery, state: FSMContext) -> No
     """
     logger.info(f"Администратор {callback.from_user.id} начал создание мероприятия")
 
-    if not is_admin(callback.from_user.id):
-        await callback.answer(t("no-admin-permission"), show_alert=True)
+    # Проверяет пользователя на права администратора
+    if not await verifies_the_user_for_admin(callback):
         return
 
     await state.set_state(EventState.waiting_for_title)
@@ -337,8 +330,8 @@ async def event_list_handler(callback: CallbackQuery) -> None:
     """
     logger.info(f"Администратор {callback.from_user.id} запросил список мероприятий")
 
-    if not is_admin(callback.from_user.id):
-        await callback.answer(t("no-admin-permission"), show_alert=True)
+    # Проверяет пользователя на права администратора
+    if not await verifies_the_user_for_admin(callback):
         return
 
     events = get_all_events()
@@ -400,8 +393,8 @@ async def event_activate_handler(callback: CallbackQuery) -> None:
         f"Администратор {callback.from_user.id} активировал мероприятие {event_id}"
     )
 
-    if not is_admin(callback.from_user.id):
-        await callback.answer(t("no-admin-permission"), show_alert=True)
+    # Проверяет пользователя на права администратора
+    if not await verifies_the_user_for_admin(callback):
         return
 
     result = update_event_status(event_id, is_active=True)
@@ -422,8 +415,8 @@ async def event_deactivate_handler(callback: CallbackQuery) -> None:
         f"Администратор {callback.from_user.id} деактивировал мероприятие {event_id}"
     )
 
-    if not is_admin(callback.from_user.id):
-        await callback.answer(t("no-admin-permission"), show_alert=True)
+    # Проверяет пользователя на права администратора
+    if not await verifies_the_user_for_admin(callback):
         return
 
     result = update_event_status(event_id, is_active=False)
@@ -441,8 +434,8 @@ async def event_delete_menu_handler(callback: CallbackQuery, state: FSMContext) 
     """
     logger.info(f"Администратор {callback.from_user.id} запросил удаление мероприятия")
 
-    if not is_admin(callback.from_user.id):
-        await callback.answer(t("no-admin-permission"), show_alert=True)
+    # Проверяет пользователя на права администратора
+    if not await verifies_the_user_for_admin(callback):
         return
 
     await state.set_state(EventState.waiting_for_date)  # Временное состояние
@@ -489,8 +482,8 @@ async def event_delete_direct_handler(callback: CallbackQuery) -> None:
     event_id = int(callback.data.split("_")[-1])
     logger.info(f"Администратор {callback.from_user.id} удаляет мероприятие {event_id}")
 
-    if not is_admin(callback.from_user.id):
-        await callback.answer(t("no-admin-permission"), show_alert=True)
+    # Проверяет пользователя на права администратора
+    if not await verifies_the_user_for_admin(callback):
         return
 
     result = delete_event(event_id)
@@ -513,8 +506,8 @@ async def events_back_handler(callback: CallbackQuery, state: FSMContext) -> Non
     """
     logger.info(f"Администратор {callback.from_user.id} вернулся в меню мероприятий")
 
-    if not is_admin(callback.from_user.id):
-        await callback.answer(t("no-admin-permission"), show_alert=True)
+    # Проверяет пользователя на права администратора
+    if not await verifies_the_user_for_admin(callback):
         return
 
     # Очищаем состояние FSM
