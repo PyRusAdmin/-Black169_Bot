@@ -4,7 +4,6 @@ from datetime import datetime
 from utils.logger import logger
 from utils.phone_utils import normalize_phone_number
 
-
 """
 Сервис для управления уровнями клиентов.
 
@@ -14,7 +13,6 @@ from utils.phone_utils import normalize_phone_number
 - Silver: от 10 000 ₽
 - Bronze: от 0 ₽
 """
-
 
 # Конфигурация уровней клиентов
 LEVELS = [
@@ -230,7 +228,7 @@ def get_next_level_info(current_level: str, current_accumulation: float) -> dict
 
 
 def save_clients_to_json(
-    clients_data: list, filepath: str = "data/clients_levels.json"
+        clients_data: list, filepath: str = "data/clients_levels.json"
 ) -> bool:
     """
     Сохранение данных о клиентах в JSON файл.

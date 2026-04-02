@@ -7,50 +7,24 @@ from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from config import OWNER_IDS, bot, layer_name_quickresto
 from keyboards.keyboards import (
-    admin_menu_keyboard,
-    admins_menu_keyboard,
-    back_to_admin_menu_keyboard,
-    back_to_admins_menu_keyboard,
-    broadcast_confirm_keyboard,
-    broadcast_type_keyboard,
+    admin_menu_keyboard, admins_menu_keyboard, back_to_admin_menu_keyboard, back_to_admins_menu_keyboard,
+    broadcast_confirm_keyboard, broadcast_type_keyboard,
 )
 from services.database import (
-    RegisteredPersons,
-    add_admin as db_add_admin,
-    delete_registered_person,
-    delete_start_person,
-    get_all_admins,
-    get_all_user_ids,
-    get_all_winners,
-    get_broadcast_stats,
-    get_client_levels_stats,
-    get_registered_persons,
-    get_registered_persons_count,
-    get_start_persons,
-    get_start_persons_count,
-    is_admin_in_db,
-    is_owner_in_db,
-    log_marketing_message,
-    remove_admin as db_remove_admin,
+    RegisteredPersons, add_admin as db_add_admin, delete_registered_person, delete_start_person, get_all_admins,
+    get_all_user_ids, get_all_winners, get_broadcast_stats, get_client_levels_stats, get_registered_persons,
+    get_registered_persons_count, get_start_persons, get_start_persons_count, is_admin_in_db, is_owner_in_db,
+    log_marketing_message, remove_admin as db_remove_admin,
 )
 from services.excel_service import (
-    write_registered_users_to_excel,
-    write_users_to_excel,
-    write_winners_to_excel,
+    write_registered_users_to_excel, write_users_to_excel, write_winners_to_excel,
 )
 from services.i18n import t
 from services.quickresto_api import (
-    auth,
-    base_url,
-    delete_customer,
-    headers,
-    print_client_info,
+    auth, base_url, delete_customer, headers, print_client_info,
 )
 from states.user_states import (
-    AdminManagementState,
-    BroadcastState,
-    DeleteUserState,
-    SearchUserState,
+    AdminManagementState, BroadcastState, DeleteUserState, SearchUserState,
 )
 from utils.logger import logger
 
@@ -173,7 +147,7 @@ async def registered_users_handler(callback: CallbackQuery) -> None:
             buffer.read(), filename="Зарегистрированные_пользователи.xlsx"
         ),
         caption=f"✅ Зарегистрированные пользователи ({len(result)} чел.)\n\n"
-        f"Полная информация из QuickResto",
+                f"Полная информация из QuickResto",
     )
     await callback.answer()
 
@@ -338,9 +312,7 @@ async def broadcast_receive_video(message: Message, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == "broadcast_confirm_send")
-async def broadcast_confirm_send_handler(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """
     Подтверждение и отправка рассылки
     """
@@ -705,9 +677,9 @@ async def search_user_phone_number_handler(message: Message, state: FSMContext) 
 
     # Проверяем формат номера (должен быть 79999999999)
     if (
-        not phone_number.isdigit()
-        or len(phone_number) != 11
-        or not phone_number.startswith("7")
+            not phone_number.isdigit()
+            or len(phone_number) != 11
+            or not phone_number.startswith("7")
     ):
         await message.answer(
             text=(

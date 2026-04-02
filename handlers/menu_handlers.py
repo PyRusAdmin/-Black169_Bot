@@ -1,33 +1,21 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
-from config import layer_name_quickresto
 from keyboards.keyboards import back_to_main_menu_keyboard, twist_keyboard
 from services.bonus import random_bonus, generate_promo_code
-
 # Формируем сообщение с уровнем клиента
 from services.client_levels import get_level_description, get_next_level_info
 from services.database import (
-    get_user_bonus,
-    has_user_spun_today,
-    update_bonus_accrual_date,
-    write_spin_result,
-    write_to_db_registered_person,
+    get_user_bonus, has_user_spun_today, update_bonus_accrual_date, write_spin_result, write_to_db_registered_person,
 )
-
 # Формируем сообщение с информацией о бонусах пользователя
 from services.database import get_user_burning_bonus_info
 from services.database import (
-    has_user_claimed_gift_bonus,
-    mark_gift_bonus_claimed,
-    get_user_info,
+    has_user_claimed_gift_bonus, mark_gift_bonus_claimed, get_user_info,
 )
 from services.i18n import t
 from services.quickresto_api import (
-    auth,
-    headers,
-    print_full_client_info,
-    update_customer_bonus,
+    print_full_client_info, update_customer_bonus,
 )
 from utils.logger import logger
 
@@ -98,9 +86,40 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
 async def pick_up_gift_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Забрать подарок'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Забрать подарок'")
-
     # Проверяем, получал ли пользователь подарок ранее
-    if has_user_claimed_gift_bonus(callback.from_user.id):
+    is_claimed = has_user_claimed_gift_bonus(callback.from_user.id)
+    logger.info(is_claimed)
+
+    if is_claimed == False:
+        promo_code = generate_promo_code()
+        logger.info(f"Сгенерирован промокод: {promo_code} для пользователя {callback.from_user.id}")
+        # Получаем информацию о пользователе
+        user_info = get_user_info(callback.from_user.id)
+        # Начисляем 3000 бонусов
+        update_customer_bonus(
+            customer_id=user_info.get("id_quickresto"),
+            amount=3000.00,
+            customer_phone=user_info.get("phone_telegram"),
+        )
+        # Отмечаем, что пользователь получил подарок
+        mark_gift_bonus_claimed(id_telegram=callback.from_user.id, promo_code=promo_code)
+        # Обновляем дату начисления бонусов (для отслеживания сгорания)
+        update_bonus_accrual_date(callback.from_user.id, bonus_amount=3000.00)
+        await callback.message.answer(
+            text=(
+                "🎁 <b>Поздравляем!</b>\n\n"
+                "Вам начислено <b>3000 бонусов</b>!\n\n"
+                f"Ваш промокод: <code>{promo_code}</code>\n"
+                f"Для получения бонусов, покажите промокод администратору\n\n"
+                "Используйте их при следующем посещении The Black 169.\n\n"
+                "Спасибо, что вы с нами! 🖤"
+            ),
+            reply_markup=back_to_main_menu_keyboard(),
+        )
+        await callback.answer()
+
+    elif is_claimed == True:
+        # if has_user_claimed_gift_bonus(callback.from_user.id):
         await callback.message.answer(
             text=(
                 "❌ <b>Вы уже получили подарочные бонусы</b>\n\n"
@@ -111,51 +130,6 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
         )
         await callback.answer()
         return
-
-    # if not user_info:
-    #     await callback.message.answer(
-    #         text="❌ Ошибка получения данных пользователя",
-    #         reply_markup=back_to_main_menu_keyboard(),
-    #     )
-    #     await callback.answer()
-    #     return
-
-    promo_code = generate_promo_code()
-    logger.info(
-        f"Сгенерирован промокод: {promo_code} для пользователя {callback.from_user.id}"
-    )
-    # Получаем информацию о пользователе
-    user_info = get_user_info(callback.from_user.id)
-    id_quickresto = user_info.get("id_quickresto")
-    phone_telegram = user_info.get("phone_telegram")
-
-    # Начисляем 3000 бонусов
-    update_customer_bonus(
-        layer_name_quickresto=layer_name_quickresto,
-        customer_id=id_quickresto,
-        amount=3000.00,
-        customer_phone=phone_telegram,
-        auth=auth,
-        headers=headers,
-    )
-
-    # Отмечаем, что пользователь получил подарок
-    mark_gift_bonus_claimed(id_telegram=callback.from_user.id, promo_code=promo_code)
-    # Обновляем дату начисления бонусов (для отслеживания сгорания)
-    update_bonus_accrual_date(callback.from_user.id, bonus_amount=3000.00)
-
-    await callback.message.answer(
-        text=(
-            "🎁 <b>Поздравляем!</b>\n\n"
-            "Вам начислено <b>3000 бонусов</b>!\n\n"
-            f"Ваш промокод: <code>{promo_code}</code>\n"
-            f"Для получения бонусов, покажите промокод администратору\n\n"
-            "Используйте их при следующем посещении The Black 169.\n\n"
-            "Спасибо, что вы с нами! 🖤"
-        ),
-        reply_markup=back_to_main_menu_keyboard(),
-    )
-    await callback.answer()
 
 
 @router.callback_query(F.data == "bonuses_will_soon_burn_out")
