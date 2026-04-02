@@ -33,41 +33,36 @@ async def command_start_handler(message: Message) -> None:
     """
     logger.info(f"Получена команда /start от пользователя {message.from_user.id}")
 
-    id_telegram = message.from_user.id
-    first_name_telegram = message.from_user.first_name
-    last_name_telegram = message.from_user.last_name
-    username_telegram = message.from_user.username
-
     # Проверяем, является ли пользователь владельцем бота. ID пользователя должен быть в списке OWNER_IDS в файле .env
-    if id_telegram in OWNER_IDS:
-        logger.info(f"Пользователь {id_telegram} является владельцем бота")
+    if message.from_user.id in OWNER_IDS:
+        logger.info(f"Пользователь {message.from_user.id} является владельцем бота")
         await message.answer(
             text=t("main-menu"),
             reply_markup=main_menu_keyboard_admin(),
         )
         return
 
-    data = {
-        "id_telegram": id_telegram,
-        "last_name_telegram": last_name_telegram,
-        "first_name_telegram": first_name_telegram,
-        "username_telegram": username_telegram,
-    }
+    # Записываем данные в базу данных (пользователь который запустил бота)
     write_to_db_start_person(
-        data
-    )  # Записываем данные в базу данных (пользователь который запустил бота)
+        {
+            "id_telegram": message.from_user.id,
+            "last_name_telegram": message.from_user.last_name,
+            "first_name_telegram": message.from_user.first_name,
+            "username_telegram": message.from_user.username,
+        }
+    )
 
     # Проверяем, давал ли пользователь согласие на обработку персональных данных
-    if has_consent(id_telegram):
+    if has_consent(message.from_user.id):
         logger.info(
-            f"Пользователь {id_telegram} уже дал согласие на обработку персональных данных"
+            f"Пользователь {message.from_user.id} уже дал согласие на обработку персональных данных"
         )
 
         # Проверяем, был ли уже зарегистрирован пользователь
-        if is_user_registered(id_telegram):
+        if is_user_registered(message.from_user.id):
             # Пользователь уже зарегистрирован — показываем главное меню
             logger.info(
-                f"Пользователь {id_telegram} уже зарегистрирован, показываем главное меню"
+                f"Пользователь {message.from_user.id} уже зарегистрирован, показываем главное меню"
             )
             await message.answer(
                 text=t("main-menu"),

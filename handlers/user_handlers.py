@@ -72,12 +72,9 @@ async def message_handler(message: Message) -> None:
 
                 # Добавляем бонус клиенту, если пользователя нет в базе QuickResto
                 update_customer_bonus(
-                    layer_name_quickresto=layer_name_quickresto,  # Название слоя QuickResto
                     customer_id=client_id,  # ID клиента в QuickResto
                     amount=1000.00,  # Сумма бонуса в рублях
                     customer_phone=phone_telegram,  # Телефон клиента в QuickResto
-                    auth=auth,
-                    headers=headers,
                 )
 
                 # Обновляем дату начисления бонусов (для отслеживания сгорания)

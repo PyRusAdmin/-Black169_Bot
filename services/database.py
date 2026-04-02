@@ -1,5 +1,4 @@
 import json
-import random
 from datetime import datetime
 from datetime import timedelta
 
@@ -323,41 +322,41 @@ def get_user_bonus(id_telegram: int):
             db.close()
 
 
-def get_user_by_phone(phone_telegram: str) -> dict | None:
-    """
-    Получение информации о пользователе по номеру телефона
-
-    :param phone_telegram: Номер телефона пользователя
-    :return: Словарь с данными пользователя или None если пользователь не найден
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-        user = RegisteredPersons.get_or_none(
-            RegisteredPersons.phone_telegram == phone_telegram
-        )
-        if user:
-            return {
-                "id_telegram": user.id_telegram,
-                "id_quickresto": user.id_quickresto,
-                "phone_telegram": user.phone_telegram,
-                "last_name": user.last_name,
-                "first_name": user.first_name,
-                "patronymic_name": user.patronymic_name,
-                "birthday_user": user.birthday_user,
-                "user_bonus": user.user_bonus,
-                "date_of_visit": user.date_of_visit,
-                "updated_at": user.updated_at,
-            }
-        return None
-    except Exception as e:
-        logger.exception(
-            f"Ошибка при получении данных пользователя по телефону {phone_telegram}: {e}"
-        )
-        return None
-    finally:
-        if not db.is_closed():
-            db.close()
+# def get_user_by_phone(phone_telegram: str) -> dict | None:
+#     """
+#     Получение информации о пользователе по номеру телефона
+#
+#     :param phone_telegram: Номер телефона пользователя
+#     :return: Словарь с данными пользователя или None если пользователь не найден
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#         user = RegisteredPersons.get_or_none(
+#             RegisteredPersons.phone_telegram == phone_telegram
+#         )
+#         if user:
+#             return {
+#                 "id_telegram": user.id_telegram,
+#                 "id_quickresto": user.id_quickresto,
+#                 "phone_telegram": user.phone_telegram,
+#                 "last_name": user.last_name,
+#                 "first_name": user.first_name,
+#                 "patronymic_name": user.patronymic_name,
+#                 "birthday_user": user.birthday_user,
+#                 "user_bonus": user.user_bonus,
+#                 "date_of_visit": user.date_of_visit,
+#                 "updated_at": user.updated_at,
+#             }
+#         return None
+#     except Exception as e:
+#         logger.exception(
+#             f"Ошибка при получении данных пользователя по телефону {phone_telegram}: {e}"
+#         )
+#         return None
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
 """
@@ -448,44 +447,44 @@ def has_user_spun_today(id_telegram: int) -> bool:
             db.close()
 
 
-def get_user_spin_history(id_telegram: int, limit: int = 10) -> list:
-    """
-    Получение истории розыгрышей пользователя
-
-    :param id_telegram: ID пользователя в Telegram
-    :param limit: Количество последних записей
-    :return: Список словарей с историей розыгрышей
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        spins = (
-            GiftWheelSpins.select()
-            .where(GiftWheelSpins.id_telegram == id_telegram)
-            .order_by(GiftWheelSpins.spun_at.desc())
-            .limit(limit)
-        )
-
-        history = []
-        for spin in spins:
-            history.append(
-                {
-                    "id_telegram": spin.id_telegram,
-                    "bonus_name": spin.bonus_name,
-                    "is_winner": spin.is_winner,
-                    "spun_at": spin.spun_at,
-                }
-            )
-        return history
-    except Exception as e:
-        logger.exception(
-            f"Ошибка при получении истории розыгрышей пользователя {id_telegram}: {e}"
-        )
-        return []
-    finally:
-        if not db.is_closed():
-            db.close()
+# def get_user_spin_history(id_telegram: int, limit: int = 10) -> list:
+#     """
+#     Получение истории розыгрышей пользователя
+#
+#     :param id_telegram: ID пользователя в Telegram
+#     :param limit: Количество последних записей
+#     :return: Список словарей с историей розыгрышей
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         spins = (
+#             GiftWheelSpins.select()
+#             .where(GiftWheelSpins.id_telegram == id_telegram)
+#             .order_by(GiftWheelSpins.spun_at.desc())
+#             .limit(limit)
+#         )
+#
+#         history = []
+#         for spin in spins:
+#             history.append(
+#                 {
+#                     "id_telegram": spin.id_telegram,
+#                     "bonus_name": spin.bonus_name,
+#                     "is_winner": spin.is_winner,
+#                     "spun_at": spin.spun_at,
+#                 }
+#             )
+#         return history
+#     except Exception as e:
+#         logger.exception(
+#             f"Ошибка при получении истории розыгрышей пользователя {id_telegram}: {e}"
+#         )
+#         return []
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
 def get_all_winners() -> list:
@@ -1241,42 +1240,6 @@ def create_tables():
         ]
     )
 
-    # Миграция: добавляем новые поля в существующую таблицу RegisteredPersons
-    try:
-        if db.is_closed():
-            db.connect()
-
-        # Проверяем и добавляем поле client_level если его нет
-        cursor = db.execute_sql("PRAGMA table_info(registered_persons)")
-        columns = [row[1] for row in cursor.fetchall()]
-
-        if "client_level" not in columns:
-            db.execute_sql(
-                "ALTER TABLE registered_persons ADD COLUMN client_level TEXT"
-            )
-            logger.info("Добавлено поле client_level в таблицу registered_persons")
-
-        if "accumulation_amount" not in columns:
-            db.execute_sql(
-                "ALTER TABLE registered_persons ADD COLUMN accumulation_amount REAL"
-            )
-            logger.info(
-                "Добавлено поле accumulation_amount в таблицу registered_persons"
-            )
-
-        # Проверяем существование таблицы client_levels
-        cursor = db.execute_sql(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='client_levels'"
-        )
-        if not cursor.fetchone():
-            logger.info("Таблица client_levels будет создана")
-
-    except Exception as e:
-        logger.exception(f"Ошибка при миграции таблицы registered_persons: {e}")
-    finally:
-        if not db.is_closed():
-            db.close()
-
 
 """Таблица для учёта маркетинговых рассылок"""
 
@@ -1323,32 +1286,32 @@ def log_marketing_message(
             db.close()
 
 
-def update_message_status(
-    id_telegram: int, is_blocked: bool = False, is_read: bool = False
-) -> None:
-    """
-    Обновление статуса сообщения (заблокировано/прочитано)
-
-    :param id_telegram: ID пользователя в Telegram
-    :param is_blocked: True если пользователь заблокировал бота
-    :param is_read: True если пользователь прочитал сообщение
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-        # Обновляем последнее сообщение для этого пользователя
-        query = (
-            MarketingMessages.update(is_blocked=is_blocked, is_read=is_read)
-            .where(MarketingMessages.id_telegram == id_telegram)
-            .order_by(MarketingMessages.sent_at.desc())
-            .limit(1)
-        )
-        query.execute()
-    except Exception as e:
-        logger.exception(f"Ошибка при обновлении статуса сообщения: {e}")
-    finally:
-        if not db.is_closed():
-            db.close()
+# def update_message_status(
+#     id_telegram: int, is_blocked: bool = False, is_read: bool = False
+# ) -> None:
+#     """
+#     Обновление статуса сообщения (заблокировано/прочитано)
+#
+#     :param id_telegram: ID пользователя в Telegram
+#     :param is_blocked: True если пользователь заблокировал бота
+#     :param is_read: True если пользователь прочитал сообщение
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#         # Обновляем последнее сообщение для этого пользователя
+#         query = (
+#             MarketingMessages.update(is_blocked=is_blocked, is_read=is_read)
+#             .where(MarketingMessages.id_telegram == id_telegram)
+#             .order_by(MarketingMessages.sent_at.desc())
+#             .limit(1)
+#         )
+#         query.execute()
+#     except Exception as e:
+#         logger.exception(f"Ошибка при обновлении статуса сообщения: {e}")
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
 def get_all_user_ids() -> list:
@@ -1527,41 +1490,41 @@ def get_birthday_users_today() -> list:
             db.close()
 
 
-def get_birthday_users_count() -> int:
-    """
-    Получение количества пользователей, у которых сегодня день рождения
-
-    :return: Количество именинников
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        today = datetime.now().strftime("%d.%m")
-        registered_persons = RegisteredPersons.select()
-
-        count = 0
-        for person in registered_persons:
-            if person.birthday_user:
-                birthday = person.birthday_user
-                if len(birthday) == 10:
-                    if "-" in birthday:
-                        birthday_formatted = f"{birthday[8:10]}.{birthday[5:7]}"
-                    elif "." in birthday:
-                        birthday_formatted = birthday[:5]
-                    else:
-                        continue
-
-                    if birthday_formatted == today:
-                        count += 1
-
-        return count
-    except Exception as e:
-        logger.exception(f"Ошибка при подсчёте именинников: {e}")
-        return 0
-    finally:
-        if not db.is_closed():
-            db.close()
+# def get_birthday_users_count() -> int:
+#     """
+#     Получение количества пользователей, у которых сегодня день рождения
+#
+#     :return: Количество именинников
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         today = datetime.now().strftime("%d.%m")
+#         registered_persons = RegisteredPersons.select()
+#
+#         count = 0
+#         for person in registered_persons:
+#             if person.birthday_user:
+#                 birthday = person.birthday_user
+#                 if len(birthday) == 10:
+#                     if "-" in birthday:
+#                         birthday_formatted = f"{birthday[8:10]}.{birthday[5:7]}"
+#                     elif "." in birthday:
+#                         birthday_formatted = birthday[:5]
+#                     else:
+#                         continue
+#
+#                     if birthday_formatted == today:
+#                         count += 1
+#
+#         return count
+#     except Exception as e:
+#         logger.exception(f"Ошибка при подсчёте именинников: {e}")
+#         return 0
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
 def get_bonus_burning_users(days_until_burn: int = 7) -> list:
@@ -1688,7 +1651,7 @@ def get_user_burning_bonus_info(id_telegram: int) -> dict | None:
             db.close()
 
 
-def has_user_claimed_gift_bonus(id_telegram: int) -> bool:
+def has_user_claimed_gift_bonus(id_telegram: int):
     """
     Проверка, получил ли пользователь подарочные бонусы 3000
 
@@ -1696,26 +1659,23 @@ def has_user_claimed_gift_bonus(id_telegram: int) -> bool:
     :return: True если получил, False если нет
     """
     try:
-        if db.is_closed():
-            db.connect()
-
+        # if db.is_closed():
+        #     db.connect()
         user = RegisteredPersons.get_or_none(
             RegisteredPersons.id_telegram == id_telegram
         )
-
-        if not user:
-            return False
-
+        # if not user:
+        #     return False
         # Явно проверяем на True, чтобы избежать проблем с NULL
         return user.gift_bonus_claimed is True or user.gift_bonus_claimed == 1
     except Exception as e:
         logger.exception(
             f"Ошибка при проверке получения подарочных бонусов пользователем {id_telegram}: {e}"
         )
-        return False
-    finally:
-        if not db.is_closed():
-            db.close()
+        # return False
+    # finally:
+    #     if not db.is_closed():
+    #         db.close()
 
 
 def mark_gift_bonus_claimed(id_telegram: int, promo_code: str) -> bool:
@@ -1774,216 +1734,205 @@ class PromoCodes(Model):
         indexes = ((("code",), True),)  # Уникальный индекс на код
 
 
-def generate_promo_code():
-    """
-    Генерирует промокод в формате BLACK169-XXXXXXXXXXXXXXX
-
-    :return: Сгенерированный промокод
-    """
-    prefix = "BLACK169-"
-    code = prefix + str(random.randint(100000000000000, 999999999999999))
-    return code
-
-
-def write_promocode_tu_databese(
-    code: str, bonus_amount: float, description: str = None
-) -> bool:
-    """
-    Создание нового промокода в виде
-
-    :param code: Уникальный код промокода
-    :param bonus_amount: Сумма бонусов
-    :param description: Описание промокода
-    :return: True если создан, False если ошибка
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        PromoCodes.create(
-            code=code,  # Промокод
-            bonus_amount=bonus_amount,  # Сумма бонусов
-            description=description,  # Описание
-            is_active=True,  # Активен ли промокод
-        )
-        logger.info(f"Создан промокод: {code} на сумму {bonus_amount}")
-        return True
-    except Exception as e:
-        logger.exception(f"Ошибка при создании промокода {code}: {e}")
-        return False
-    finally:
-        if not db.is_closed():
-            db.close()
+# def write_promocode_tu_databese(
+#     code: str, bonus_amount: float, description: str = None
+# ) -> bool:
+#     """
+#     Создание нового промокода в виде
+#
+#     :param code: Уникальный код промокода
+#     :param bonus_amount: Сумма бонусов
+#     :param description: Описание промокода
+#     :return: True если создан, False если ошибка
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         PromoCodes.create(
+#             code=code,  # Промокод
+#             bonus_amount=bonus_amount,  # Сумма бонусов
+#             description=description,  # Описание
+#             is_active=True,  # Активен ли промокод
+#         )
+#         logger.info(f"Создан промокод: {code} на сумму {bonus_amount}")
+#         return True
+#     except Exception as e:
+#         logger.exception(f"Ошибка при создании промокода {code}: {e}")
+#         return False
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
-def get_promo_code(code: str) -> dict | None:
-    """
-    Получение информации о промокоде по коду
-
-    :param code: Код промокода
-    :return: Словарь с данными промокода или None если не найден
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        promo = PromoCodes.get_or_none(PromoCodes.code == code)
-        if promo:
-            return {
-                "code": promo.code,
-                "bonus_amount": promo.bonus_amount,
-                "description": promo.description,
-                "is_active": promo.is_active,
-                "created_at": promo.created_at,
-                "used_by": promo.used_by,
-                "used_at": promo.used_at,
-            }
-        return None
-    except Exception as e:
-        logger.exception(f"Ошибка при получении промокода {code}: {e}")
-        return None
-    finally:
-        if not db.is_closed():
-            db.close()
-
-
-def activate_promo_code(code: str, id_telegram: int) -> bool:
-    """
-    Активация промокода пользователем
-
-    :param code: Код промокода
-    :param id_telegram: ID пользователя в Telegram
-    :return: True если активирован, False если ошибка или уже использован
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        # Проверяем, существует ли промокод и активен ли он
-        promo = PromoCodes.get_or_none(
-            (PromoCodes.code == code)
-            & PromoCodes.is_active
-            & PromoCodes.used_by.is_null()
-        )
-
-        if not promo:
-            return False
-
-        # Помечаем как использованный
-        query = PromoCodes.update(
-            used_by=id_telegram, used_at=datetime.now(), is_active=False
-        ).where(PromoCodes.code == code)
-
-        result = query.execute()
-
-        if result > 0:
-            logger.info(f"Промокод {code} активирован пользователем {id_telegram}")
-            return True
-        return False
-    except Exception as e:
-        logger.exception(f"Ошибка при активации промокода {code}: {e}")
-        return False
-    finally:
-        if not db.is_closed():
-            db.close()
+# def get_promo_code(code: str) -> dict | None:
+#     """
+#     Получение информации о промокоде по коду
+#
+#     :param code: Код промокода
+#     :return: Словарь с данными промокода или None если не найден
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         promo = PromoCodes.get_or_none(PromoCodes.code == code)
+#         if promo:
+#             return {
+#                 "code": promo.code,
+#                 "bonus_amount": promo.bonus_amount,
+#                 "description": promo.description,
+#                 "is_active": promo.is_active,
+#                 "created_at": promo.created_at,
+#                 "used_by": promo.used_by,
+#                 "used_at": promo.used_at,
+#             }
+#         return None
+#     except Exception as e:
+#         logger.exception(f"Ошибка при получении промокода {code}: {e}")
+#         return None
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
-def get_all_promo_codes() -> list:
-    """
-    Получение всех промокодов
-
-    :return: Список словарей с данными промокодов
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        promo_codes = PromoCodes.select().order_by(PromoCodes.created_at.desc())
-
-        result = []
-        for promo in promo_codes:
-            result.append(
-                {
-                    "code": promo.code,
-                    "bonus_amount": promo.bonus_amount,
-                    "description": promo.description,
-                    "is_active": promo.is_active,
-                    "created_at": promo.created_at,
-                    "used_by": promo.used_by,
-                    "used_at": promo.used_at,
-                }
-            )
-        return result
-    except Exception as e:
-        logger.exception(f"Ошибка при получении списка промокодов: {e}")
-        return []
-    finally:
-        if not db.is_closed():
-            db.close()
-
-
-def delete_promo_code(code: str) -> bool:
-    """
-    Удаление промокода
-
-    :param code: Код промокода
-    :return: True если удалён, False если не найден
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        query = PromoCodes.delete().where(PromoCodes.code == code)
-        result = query.execute()
-
-        if result > 0:
-            logger.info(f"Промокод {code} удалён")
-            return True
-        logger.warning(f"Промокод {code} не найден")
-        return False
-    except Exception as e:
-        logger.exception(f"Ошибка при удалении промокода {code}: {e}")
-        return False
-    finally:
-        if not db.is_closed():
-            db.close()
+# def activate_promo_code(code: str, id_telegram: int) -> bool:
+#     """
+#     Активация промокода пользователем
+#
+#     :param code: Код промокода
+#     :param id_telegram: ID пользователя в Telegram
+#     :return: True если активирован, False если ошибка или уже использован
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         # Проверяем, существует ли промокод и активен ли он
+#         promo = PromoCodes.get_or_none(
+#             (PromoCodes.code == code)
+#             & PromoCodes.is_active
+#             & PromoCodes.used_by.is_null()
+#         )
+#
+#         if not promo:
+#             return False
+#
+#         # Помечаем как использованный
+#         query = PromoCodes.update(
+#             used_by=id_telegram, used_at=datetime.now(), is_active=False
+#         ).where(PromoCodes.code == code)
+#
+#         result = query.execute()
+#
+#         if result > 0:
+#             logger.info(f"Промокод {code} активирован пользователем {id_telegram}")
+#             return True
+#         return False
+#     except Exception as e:
+#         logger.exception(f"Ошибка при активации промокода {code}: {e}")
+#         return False
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
-def get_active_promo_codes_count() -> int:
-    """
-    Получение количества активных промокодов
+# def get_all_promo_codes() -> list:
+#     """
+#     Получение всех промокодов
+#
+#     :return: Список словарей с данными промокодов
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         promo_codes = PromoCodes.select().order_by(PromoCodes.created_at.desc())
+#
+#         result = []
+#         for promo in promo_codes:
+#             result.append(
+#                 {
+#                     "code": promo.code,
+#                     "bonus_amount": promo.bonus_amount,
+#                     "description": promo.description,
+#                     "is_active": promo.is_active,
+#                     "created_at": promo.created_at,
+#                     "used_by": promo.used_by,
+#                     "used_at": promo.used_at,
+#                 }
+#             )
+#         return result
+#     except Exception as e:
+#         logger.exception(f"Ошибка при получении списка промокодов: {e}")
+#         return []
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
-    :return: Количество активных промокодов
-    """
-    try:
-        if db.is_closed():
-            db.connect()
 
-        count = PromoCodes.select().where(PromoCodes.is_active).count()
-        return count
-    except Exception as e:
-        logger.exception(f"Ошибка при подсчёте активных промокодов: {e}")
-        return 0
-    finally:
-        if not db.is_closed():
-            db.close()
+# def delete_promo_code(code: str) -> bool:
+#     """
+#     Удаление промокода
+#
+#     :param code: Код промокода
+#     :return: True если удалён, False если не найден
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         query = PromoCodes.delete().where(PromoCodes.code == code)
+#         result = query.execute()
+#
+#         if result > 0:
+#             logger.info(f"Промокод {code} удалён")
+#             return True
+#         logger.warning(f"Промокод {code} не найден")
+#         return False
+#     except Exception as e:
+#         logger.exception(f"Ошибка при удалении промокода {code}: {e}")
+#         return False
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
-def get_used_promo_codes_count() -> int:
-    """
-    Получение количества использованных промокодов
+# def get_active_promo_codes_count() -> int:
+#     """
+#     Получение количества активных промокодов
+#
+#     :return: Количество активных промокодов
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         count = PromoCodes.select().where(PromoCodes.is_active).count()
+#         return count
+#     except Exception as e:
+#         logger.exception(f"Ошибка при подсчёте активных промокодов: {e}")
+#         return 0
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
-    :return: Количество использованных промокодов
-    """
-    try:
-        if db.is_closed():
-            db.connect()
 
-        count = PromoCodes.select().where(PromoCodes.used_by.is_null(False)).count()
-        return count
-    finally:
-        if not db.is_closed():
-            db.close()
+# def get_used_promo_codes_count() -> int:
+#     """
+#     Получение количества использованных промокодов
+#
+#     :return: Количество использованных промокодов
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         count = PromoCodes.select().where(PromoCodes.used_by.is_null(False)).count()
+#         return count
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
 """Таблица для учёта согласий на обработку персональных данных"""
@@ -2065,86 +2014,86 @@ def has_consent(id_telegram: int) -> bool:
             db.close()
 
 
-def get_consent_info(id_telegram: int) -> dict | None:
-    """
-    Получение информации о согласии пользователя
-
-    :param id_telegram: ID пользователя в Telegram
-    :return: Словарь с данными согласия или None если не найдено
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        consent = Consents.get_or_none(Consents.id_telegram == id_telegram)
-        if consent:
-            return {
-                "id_telegram": consent.id_telegram,
-                "is_consent": consent.is_consent,
-                "consented_at": consent.consented_at,
-                "ip_address": consent.ip_address,
-                "user_agent": consent.user_agent,
-            }
-        return None
-    except Exception as e:
-        logger.exception(
-            f"Ошибка при получении информации о согласии {id_telegram}: {e}"
-        )
-        return None
-    finally:
-        if not db.is_closed():
-            db.close()
-
-
-def revoke_consent(id_telegram: int) -> bool:
-    """
-    Отзыв согласия на обработку персональных данных
-
-    :param id_telegram: ID пользователя в Telegram
-    :return: True если отозвано, False если ошибка
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        query = Consents.update(is_consent=False).where(
-            Consents.id_telegram == id_telegram
-        )
-
-        result = query.execute()
-
-        if result > 0:
-            logger.info(
-                f"Пользователь {id_telegram} отозвал согласие на обработку персональных данных"
-            )
-            return True
-        return False
-    except Exception as e:
-        logger.exception(f"Ошибка при отзыве согласия пользователя {id_telegram}: {e}")
-        return False
-    finally:
-        if not db.is_closed():
-            db.close()
+# def get_consent_info(id_telegram: int) -> dict | None:
+#     """
+#     Получение информации о согласии пользователя
+#
+#     :param id_telegram: ID пользователя в Telegram
+#     :return: Словарь с данными согласия или None если не найдено
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         consent = Consents.get_or_none(Consents.id_telegram == id_telegram)
+#         if consent:
+#             return {
+#                 "id_telegram": consent.id_telegram,
+#                 "is_consent": consent.is_consent,
+#                 "consented_at": consent.consented_at,
+#                 "ip_address": consent.ip_address,
+#                 "user_agent": consent.user_agent,
+#             }
+#         return None
+#     except Exception as e:
+#         logger.exception(
+#             f"Ошибка при получении информации о согласии {id_telegram}: {e}"
+#         )
+#         return None
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
-def get_consents_count() -> int:
-    """
-    Получение количества пользователей, давших согласие
+# def revoke_consent(id_telegram: int) -> bool:
+#     """
+#     Отзыв согласия на обработку персональных данных
+#
+#     :param id_telegram: ID пользователя в Telegram
+#     :return: True если отозвано, False если ошибка
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         query = Consents.update(is_consent=False).where(
+#             Consents.id_telegram == id_telegram
+#         )
+#
+#         result = query.execute()
+#
+#         if result > 0:
+#             logger.info(
+#                 f"Пользователь {id_telegram} отозвал согласие на обработку персональных данных"
+#             )
+#             return True
+#         return False
+#     except Exception as e:
+#         logger.exception(f"Ошибка при отзыве согласия пользователя {id_telegram}: {e}")
+#         return False
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
-    :return: Количество пользователей с согласием
-    """
-    try:
-        if db.is_closed():
-            db.connect()
 
-        count = Consents.select().where(Consents.is_consent).count()
-        return count
-    except Exception as e:
-        logger.exception(f"Ошибка при подсчёте согласий: {e}")
-        return 0
-    finally:
-        if not db.is_closed():
-            db.close()
+# def get_consents_count() -> int:
+#     """
+#     Получение количества пользователей, давших согласие
+#
+#     :return: Количество пользователей с согласием
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         count = Consents.select().where(Consents.is_consent).count()
+#         return count
+#     except Exception as e:
+#         logger.exception(f"Ошибка при подсчёте согласий: {e}")
+#         return 0
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
 """Таблица для учёта мероприятий"""
@@ -2234,36 +2183,36 @@ def create_event(
             db.close()
 
 
-def get_event(event_id: int) -> dict | None:
-    """
-    Получение информации о мероприятии по ID
-
-    :param event_id: ID мероприятия
-    :return: Словарь с данными мероприятия или None если не найдено
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        event = Events.get_or_none(Events.id == event_id)
-        if event:
-            return {
-                "id": event.id,
-                "title": event.title,
-                "description": event.description,
-                "event_date": event.event_date,
-                "photo_id": event.photo_id,
-                "is_active": event.is_active,
-                "created_at": event.created_at,
-                "created_by": event.created_by,
-            }
-        return None
-    except Exception as e:
-        logger.exception(f"Ошибка при получении мероприятия {event_id}: {e}")
-        return None
-    finally:
-        if not db.is_closed():
-            db.close()
+# def get_event(event_id: int) -> dict | None:
+#     """
+#     Получение информации о мероприятии по ID
+#
+#     :param event_id: ID мероприятия
+#     :return: Словарь с данными мероприятия или None если не найдено
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         event = Events.get_or_none(Events.id == event_id)
+#         if event:
+#             return {
+#                 "id": event.id,
+#                 "title": event.title,
+#                 "description": event.description,
+#                 "event_date": event.event_date,
+#                 "photo_id": event.photo_id,
+#                 "is_active": event.is_active,
+#                 "created_at": event.created_at,
+#                 "created_by": event.created_by,
+#             }
+#         return None
+#     except Exception as e:
+#         logger.exception(f"Ошибка при получении мероприятия {event_id}: {e}")
+#         return None
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
 def get_all_events(active_only: bool = False) -> list:
@@ -2462,53 +2411,53 @@ def update_event_status(event_id: int, is_active: bool) -> bool:
             db.close()
 
 
-def get_upcoming_events(days: int = 7) -> list:
-    """
-    Получение предстоящих мероприятий (в течение указанного количества дней)
-
-    :param days: Количество дней
-    :return: Список словарей с данными мероприятий
-    """
-    try:
-        if db.is_closed():
-            db.connect()
-
-        from datetime import timedelta
-
-        now = datetime.now()
-        future_date = now + timedelta(days=days)
-
-        events = (
-            Events.select()
-            .where(
-                Events.is_active
-                & (Events.event_date >= now)
-                & (Events.event_date <= future_date)
-            )
-            .order_by(Events.event_date.asc())
-        )
-
-        result = []
-        for event in events:
-            result.append(
-                {
-                    "id": event.id,
-                    "title": event.title,
-                    "description": event.description,
-                    "event_date": event.event_date,
-                    "photo_id": event.photo_id,
-                    "is_active": event.is_active,
-                    "created_at": event.created_at,
-                    "created_by": event.created_by,
-                }
-            )
-        return result
-    except Exception as e:
-        logger.exception(f"Ошибка при получении предстоящих мероприятий: {e}")
-        return []
-    finally:
-        if not db.is_closed():
-            db.close()
+# def get_upcoming_events(days: int = 7) -> list:
+#     """
+#     Получение предстоящих мероприятий (в течение указанного количества дней)
+#
+#     :param days: Количество дней
+#     :return: Список словарей с данными мероприятий
+#     """
+#     try:
+#         if db.is_closed():
+#             db.connect()
+#
+#         from datetime import timedelta
+#
+#         now = datetime.now()
+#         future_date = now + timedelta(days=days)
+#
+#         events = (
+#             Events.select()
+#             .where(
+#                 Events.is_active
+#                 & (Events.event_date >= now)
+#                 & (Events.event_date <= future_date)
+#             )
+#             .order_by(Events.event_date.asc())
+#         )
+#
+#         result = []
+#         for event in events:
+#             result.append(
+#                 {
+#                     "id": event.id,
+#                     "title": event.title,
+#                     "description": event.description,
+#                     "event_date": event.event_date,
+#                     "photo_id": event.photo_id,
+#                     "is_active": event.is_active,
+#                     "created_at": event.created_at,
+#                     "created_by": event.created_by,
+#                 }
+#             )
+#         return result
+#     except Exception as e:
+#         logger.exception(f"Ошибка при получении предстоящих мероприятий: {e}")
+#         return []
+#     finally:
+#         if not db.is_closed():
+#             db.close()
 
 
 def get_events_count() -> dict:

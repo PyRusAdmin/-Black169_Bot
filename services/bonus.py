@@ -38,15 +38,11 @@ def random_bonus():
     return random.choice(bonuses)
 
 
-def generate_promo_code(prefix: str = "BLACK169") -> str:
+def generate_promo_code():
     """
-    Генерация уникального промокода
+    Генерирует промокод в формате BLACK169-XXXXXXXXXXXXXXX
 
-    :param prefix: Префикс промокода (по умолчанию BLACK169)
-    :return: Промокод в формате PREFIX-TELEGRAM_ID
+    :return: Сгенерированный промокод
     """
-    import time
-
-    # Используем timestamp + случайное число для уникальности
-    suffix = str(int(time.time() * 1000)) + str(random.randint(1000, 9999))
-    return f"{prefix}-{suffix}"
+    prefix = "BLACK169-"
+    return prefix + str(random.randint(100000000000000, 999999999999999))
