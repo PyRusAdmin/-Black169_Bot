@@ -1,8 +1,9 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
+from config import layer_name_quickresto
 from keyboards.inline import back_to_main_menu_keyboard, twist_keyboard
-from services.bonus import random_bonus
+from services.bonus import random_bonus, generate_promo_code
 
 # Формируем сообщение с уровнем клиента
 from services.client_levels import get_level_description, get_next_level_info
@@ -12,7 +13,6 @@ from services.database import (
     update_bonus_accrual_date,
     write_spin_result,
     write_to_db_registered_person,
-    generate_promo_code,
 )
 
 # Формируем сообщение с информацией о бонусах пользователя
@@ -24,6 +24,8 @@ from services.database import (
 )
 from services.i18n import t
 from services.quickresto_api import (
+    auth,
+    headers,
     print_full_client_info,
     update_customer_bonus,
 )
@@ -110,33 +112,35 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
         await callback.answer()
         return
 
-    # Получаем информацию о пользователе
-    user_info = get_user_info(callback.from_user.id)
-    if not user_info:
-        await callback.message.answer(
-            text="❌ Ошибка получения данных пользователя",
-            reply_markup=back_to_main_menu_keyboard(),
-        )
-        await callback.answer()
-        return
+    # if not user_info:
+    #     await callback.message.answer(
+    #         text="❌ Ошибка получения данных пользователя",
+    #         reply_markup=back_to_main_menu_keyboard(),
+    #     )
+    #     await callback.answer()
+    #     return
 
     promo_code = generate_promo_code()
     logger.info(
         f"Сгенерирован промокод: {promo_code} для пользователя {callback.from_user.id}"
     )
-
+    # Получаем информацию о пользователе
+    user_info = get_user_info(callback.from_user.id)
     id_quickresto = user_info.get("id_quickresto")
     phone_telegram = user_info.get("phone_telegram")
 
     # Начисляем 3000 бонусов
     update_customer_bonus(
-        customer_id=id_quickresto,  # ID пользователя в QuickResto
-        amount=3000.00,  # Сумма бонусов
-        customer_phone=phone_telegram,  # Телефон пользователя в Telegram
+        layer_name_quickresto=layer_name_quickresto,
+        customer_id=id_quickresto,
+        amount=3000.00,
+        customer_phone=phone_telegram,
+        auth=auth,
+        headers=headers,
     )
 
     # Отмечаем, что пользователь получил подарок
-    mark_gift_bonus_claimed(callback.from_user.id)
+    mark_gift_bonus_claimed(id_telegram=callback.from_user.id, promo_code=promo_code)
     # Обновляем дату начисления бонусов (для отслеживания сгорания)
     update_bonus_accrual_date(callback.from_user.id, bonus_amount=3000.00)
 

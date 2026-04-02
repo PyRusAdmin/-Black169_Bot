@@ -40,7 +40,7 @@ client_level - Уровень клиента (Bronze, Silver, Gold, Black)
 accumulation_amount - Сумма накопления бонусов
 gift_bonus_claimed - Получил ли пользователь подарочные бонусы 3000
 gift_bonus_claimed_at - Дата получения подарка
-
+promo_code - Промокод пользователя
 """
 
 
@@ -63,6 +63,7 @@ class RegisteredPersons(Model):
     accumulation_amount = DecimalField(null=True, max_digits=12, decimal_places=2)
     gift_bonus_claimed = BooleanField(default=False)
     gift_bonus_claimed_at = DateTimeField(null=True)
+    promo_code = CharField(null=True)
 
     class Meta:
         database = db  # база данных
@@ -1705,7 +1706,8 @@ def has_user_claimed_gift_bonus(id_telegram: int) -> bool:
         if not user:
             return False
 
-        return user.gift_bonus_claimed
+        # Явно проверяем на True, чтобы избежать проблем с NULL
+        return user.gift_bonus_claimed is True or user.gift_bonus_claimed == 1
     except Exception as e:
         logger.exception(
             f"Ошибка при проверке получения подарочных бонусов пользователем {id_telegram}: {e}"
@@ -1716,23 +1718,40 @@ def has_user_claimed_gift_bonus(id_telegram: int) -> bool:
             db.close()
 
 
-def mark_gift_bonus_claimed(id_telegram: int) -> None:
+def mark_gift_bonus_claimed(id_telegram: int, promo_code: str) -> bool:
     """
     Отметить, что пользователь получил подарочные бонусы 3000
 
     :param id_telegram: ID пользователя в Telegram
+    :param promo_code: Промокод для получения подарка
     :return: True если успешно, False если ошибка
     """
     try:
+        if db.is_closed():
+            db.connect()
+
         query = RegisteredPersons.update(
-            gift_bonus_claimed=True, gift_bonus_claimed_at=datetime.now()
+            gift_bonus_claimed=True,
+            gift_bonus_claimed_at=datetime.now(),
+            promo_code=promo_code,
         ).where(RegisteredPersons.id_telegram == id_telegram)
-        query.execute()
-        logger.info(f"Пользователь {id_telegram} получил подарочные бонусы 3000")
+
+        result = query.execute()
+
+        if result > 0:
+            logger.info(
+                f"Пользователь {id_telegram} получил подарочные бонусы 3000, промокод: {promo_code}"
+            )
+            return True
+        return False
     except Exception as e:
         logger.exception(
             f"Ошибка при отметке получения подарочных бонусов пользователем {id_telegram}: {e}"
         )
+        return False
+    finally:
+        if not db.is_closed():
+            db.close()
 
 
 """Таблица для учёта промокодов"""
