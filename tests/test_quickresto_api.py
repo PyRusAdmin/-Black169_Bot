@@ -42,14 +42,18 @@ class TestQuickRestoAPI:
         }
 
     @patch("services.quickresto_api.requests.get")
-    def test_get_customer_by_phone_found(self, mock_get, mock_auth, mock_headers, mock_response):
+    def test_get_customer_by_phone_found(
+        self, mock_get, mock_auth, mock_headers, mock_response
+    ):
         """Тест: поиск клиента по телефону — клиент найден"""
         mock_response_obj = MagicMock()
         mock_response_obj.status_code = 200
         mock_response_obj.json.return_value = {"customers": [mock_response]}
         mock_get.return_value = mock_response_obj
 
-        result = get_customer_by_phone("79999999999", "https://api.quickresto.ru", mock_auth, mock_headers)
+        result = get_customer_by_phone(
+            "79999999999", "https://api.quickresto.ru", mock_auth, mock_headers
+        )
 
         assert result is not None
         assert result["id"] == 12345
@@ -64,7 +68,9 @@ class TestQuickRestoAPI:
         mock_response_obj.json.return_value = {"customers": []}
         mock_get.return_value = mock_response_obj
 
-        result = get_customer_by_phone("79999999999", "https://api.quickresto.ru", mock_auth, mock_headers)
+        result = get_customer_by_phone(
+            "79999999999", "https://api.quickresto.ru", mock_auth, mock_headers
+        )
 
         assert result is None
         mock_get.assert_called_once()
@@ -76,7 +82,9 @@ class TestQuickRestoAPI:
         mock_response_obj.status_code = 500
         mock_get.return_value = mock_response_obj
 
-        result = get_customer_by_phone("79999999999", "https://api.quickresto.ru", mock_auth, mock_headers)
+        result = get_customer_by_phone(
+            "79999999999", "https://api.quickresto.ru", mock_auth, mock_headers
+        )
 
         assert result is None
         mock_get.assert_called_once()
@@ -97,7 +105,9 @@ class TestQuickRestoAPI:
             "birthday": "1995-05-20",
         }
 
-        result = create_client(client_data, "https://api.quickresto.ru", mock_auth, mock_headers)
+        result = create_client(
+            client_data, "https://api.quickresto.ru", mock_auth, mock_headers
+        )
 
         assert result is not None
         assert result["id"] == 12345
@@ -110,9 +120,15 @@ class TestQuickRestoAPI:
         mock_response_obj.status_code = 400
         mock_post.return_value = mock_response_obj
 
-        client_data = {"last_name": "Петров", "first_name": "Петр", "phone": "79998887766"}
+        client_data = {
+            "last_name": "Петров",
+            "first_name": "Петр",
+            "phone": "79998887766",
+        }
 
-        result = create_client(client_data, "https://api.quickresto.ru", mock_auth, mock_headers)
+        result = create_client(
+            client_data, "https://api.quickresto.ru", mock_auth, mock_headers
+        )
 
         assert result is None
         mock_post.assert_called_once()
@@ -148,9 +164,6 @@ class TestQuickRestoAPI:
             customer_id=12345,
             amount=1000.00,
             customer_phone="79999999999",
-            base_url="https://api.quickresto.ru",
-            auth=mock_auth,
-            headers=mock_headers,
         )
 
         assert result is False
@@ -163,7 +176,9 @@ class TestQuickRestoAPI:
         mock_response_obj.status_code = 200
         mock_delete.return_value = mock_response_obj
 
-        result = delete_customer(12345, "https://api.quickresto.ru", mock_auth, mock_headers)
+        result = delete_customer(
+            12345, "https://api.quickresto.ru", mock_auth, mock_headers
+        )
 
         assert result is True
         mock_delete.assert_called_once()
@@ -175,20 +190,26 @@ class TestQuickRestoAPI:
         mock_response_obj.status_code = 404
         mock_delete.return_value = mock_response_obj
 
-        result = delete_customer(12345, "https://api.quickresto.ru", mock_auth, mock_headers)
+        result = delete_customer(
+            12345, "https://api.quickresto.ru", mock_auth, mock_headers
+        )
 
         assert result is False
         mock_delete.assert_called_once()
 
     @patch("services.quickresto_api.requests.get")
-    def test_print_full_client_info(self, mock_get, mock_auth, mock_headers, mock_response):
+    def test_print_full_client_info(
+        self, mock_get, mock_auth, mock_headers, mock_response
+    ):
         """Тест: получение полной информации о клиенте"""
         mock_response_obj = MagicMock()
         mock_response_obj.status_code = 200
         mock_response_obj.json.return_value = mock_response
         mock_get.return_value = mock_response_obj
 
-        result = print_full_client_info(12345, "https://api.quickresto.ru", mock_auth, mock_headers)
+        result = print_full_client_info(
+            12345, "https://api.quickresto.ru", mock_auth, mock_headers
+        )
 
         assert result is not None
         assert result["id"] == 12345

@@ -1,3 +1,10 @@
+import json
+from datetime import datetime
+
+from utils.logger import logger
+from utils.phone_utils import normalize_phone_number
+
+
 """
 Сервис для управления уровнями клиентов.
 
@@ -8,11 +15,6 @@
 - Bronze: от 0 ₽
 """
 
-import json
-from datetime import datetime
-
-from utils.logger import logger
-from utils.phone_utils import normalize_phone_number
 
 # Конфигурация уровней клиентов
 LEVELS = [

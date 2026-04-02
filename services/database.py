@@ -1,5 +1,7 @@
 import json
+import random
 from datetime import datetime
+from datetime import timedelta
 
 # https://docs.peewee-orm.com/en/latest/index.html
 from peewee import (
@@ -122,7 +124,13 @@ def delete_start_person(id_telegram: int) -> bool:
 
 
 def write_to_db_registered_person(data):
-    """Запись данных о пользователе Telegram в базу данных, а так же из QuickResto"""
+    """
+    Запись данных о пользователе Telegram в базу данных, а так же из QuickResto
+
+    id_quickresto - идентификатор пользователя в QuickResto
+    birthday_user - день рождения пользователя в базе QuickResto
+    phone_telegram - номер телефона пользователя в Telegram
+    """
     id_telegram = data.get("id_telegram")  # идентификатор пользователя в Telegram
     id_quickresto = data.get("id_quickresto")  # идентификатор пользователя в QuickResto
     last_name = data.get("last_name")  # фамилия пользователя QuickResto
@@ -130,9 +138,7 @@ def write_to_db_registered_person(data):
     patronymic_name = data.get("patronymic_name")  # отчество пользователя QuickResto
     user_bonus = data.get("user_bonus")  # бонус пользователя QuickResto
     birthday_user = data.get("birthday_user")  # день рождения пользователя QuickResto
-    phone_telegram = data.get(
-        "phone_telegram"
-    )  # номер телефона пользователя в Telegram
+    phone_telegram = data.get("phone_telegram")
     client_level = data.get("client_level")  # уровень клиента
     accumulation_amount = data.get("accumulation_amount")  # накопительная сумма
 
@@ -148,25 +154,19 @@ def write_to_db_registered_person(data):
                 "patronymic_name": patronymic_name,  # отчество пользователя QuickResto
                 "user_bonus": user_bonus,  # бонус пользователя QuickResto
                 "birthday_user": birthday_user,  # день рождения пользователя QuickResto
-                "phone_telegram": phone_telegram,  # номер телефона пользователя в Telegram
+                "phone_telegram": phone_telegram,
                 "client_level": client_level,  # уровень клиента
                 "accumulation_amount": accumulation_amount,  # накопительная сумма
             },
         )
         if not created:
-            person.id_quickresto = (
-                id_quickresto  # идентификатор пользователя в QuickResto
-            )
+            person.id_quickresto = id_quickresto
             person.last_name = last_name  # фамилия пользователя QuickResto
             person.first_name = first_name  # имя пользователя QuickResto
             person.patronymic_name = patronymic_name  # отчество пользователя QuickResto
             person.user_bonus = user_bonus  # бонус пользователя QuickResto
-            person.birthday_user = (
-                birthday_user  # день рождения пользователя QuickResto
-            )
-            person.phone_telegram = (
-                phone_telegram  # номер телефона пользователя в Telegram
-            )
+            person.birthday_user = birthday_user
+            person.phone_telegram = phone_telegram
             person.client_level = client_level  # уровень клиента
             person.accumulation_amount = accumulation_amount  # накопительная сумма
             person.updated_at = (
@@ -1665,13 +1665,16 @@ def get_user_burning_bonus_info(id_telegram: int) -> dict | None:
     Получение информации о сгорающих бонусах конкретного пользователя
 
     :param id_telegram: ID пользователя в Telegram
-    :return: Словарь с информацией о сгорающих бонусах или None
+    :return: {
+            "bot_bonus_amount": user.bot_bonus_amount, # Сумма бонусов, начисленных ботом
+            "bonus_accrued_at": user.bonus_accrued_at, # Дата начисления бонусов
+            "burn_date": burn_date, # Дата сгорания бонусов
+            "days_until_burn": days_until_burn, # Количество дней до сгорания бонусов
+        }
     """
     try:
         if db.is_closed():
             db.connect()
-
-        from datetime import timedelta
 
         user = RegisteredPersons.get_or_none(
             RegisteredPersons.id_telegram == id_telegram
@@ -1784,9 +1787,22 @@ class PromoCodes(Model):
         indexes = ((("code",), True),)  # Уникальный индекс на код
 
 
-def create_promo_code(code: str, bonus_amount: float, description: str = None) -> bool:
+def generate_promo_code():
     """
-    Создание нового промокода
+    Генерирует промокод в формате BLACK169-XXXXXXXXXXXXXXX
+
+    :return: Сгенерированный промокод
+    """
+    prefix = "BLACK169-"
+    code = prefix + str(random.randint(100000000000000, 999999999999999))
+    return code
+
+
+def write_promocode_tu_databese(
+    code: str, bonus_amount: float, description: str = None
+) -> bool:
+    """
+    Создание нового промокода в виде
 
     :param code: Уникальный код промокода
     :param bonus_amount: Сумма бонусов
@@ -1798,10 +1814,10 @@ def create_promo_code(code: str, bonus_amount: float, description: str = None) -
             db.connect()
 
         PromoCodes.create(
-            code=code,
-            bonus_amount=bonus_amount,
-            description=description,
-            is_active=True,
+            code=code,  # Промокод
+            bonus_amount=bonus_amount,  # Сумма бонусов
+            description=description,  # Описание
+            is_active=True,  # Активен ли промокод
         )
         logger.info(f"Создан промокод: {code} на сумму {bonus_amount}")
         return True
@@ -2518,11 +2534,11 @@ def get_events_count() -> dict:
         if db.is_closed():
             db.connect()
 
-        total = Events.select().count()
-        active = Events.select().where(Events.is_active).count()
-        inactive = Events.select().where(not Events.is_active).count()
-
-        return {"total": total, "active": active, "inactive": inactive}
+        return {
+            "total": Events.select().count(),
+            "active": Events.select().where(Events.is_active).count(),
+            "inactive": Events.select().where(not Events.is_active).count(),
+        }
     except Exception as e:
         logger.exception(f"Ошибка при получении статистики мероприятий: {e}")
         return {"total": 0, "active": 0, "inactive": 0}

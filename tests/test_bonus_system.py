@@ -10,7 +10,7 @@ from services.bonus import random_bonus
 from services.database import (
     activate_promo_code,
     add_consent,
-    create_promo_code,
+    write_promocode_tu_databese,
     get_promo_code,
     has_consent,
     has_user_spun_today,
@@ -65,7 +65,12 @@ class TestGiftWheel:
 
     def test_random_bonus_possible_values(self):
         """Тест: случайный бонус возвращает допустимые значения"""
-        possible_values = ["Коктейль на выбор", "Кальян на выбор", "Бонус в рублях (1000)", "Попробуйте завтра"]
+        possible_values = [
+            "Коктейль на выбор",
+            "Кальян на выбор",
+            "Бонус в рублях (1000)",
+            "Попробуйте завтра",
+        ]
 
         # Запускаем 100 раз для проверки всех возможных значений
         results = set()
@@ -147,14 +152,18 @@ class TestPromoCodes:
 
     @patch("services.database.PromoCodes")
     @patch("services.database.db")
-    def test_create_promo_code_success(self, mock_db, mock_promo_codes, mock_promo_data):
+    def test_create_promo_code_success(
+        self, mock_db, mock_promo_codes, mock_promo_data
+    ):
         """Тест: создание промокода — успешно"""
         mock_db.is_closed.return_value = False
         mock_db.connect = MagicMock()
         mock_db.close = MagicMock()
 
-        result = create_promo_code(
-            mock_promo_data["code"], mock_promo_data["bonus_amount"], mock_promo_data["description"]
+        result = write_promocode_tu_databese(
+            mock_promo_data["code"],
+            mock_promo_data["bonus_amount"],
+            mock_promo_data["description"],
         )
 
         assert result is True
@@ -214,7 +223,9 @@ class TestPromoCodes:
     def test_activate_promo_code_already_used(self, mock_db, mock_promo_codes):
         """Тест: активация промокода — уже использован"""
         mock_db.is_closed.return_value = False
-        mock_promo_codes.get_or_none.return_value = None  # Уже использован или не активен
+        mock_promo_codes.get_or_none.return_value = (
+            None  # Уже использован или не активен
+        )
 
         result = activate_promo_code("USED2026", 123456789)
 

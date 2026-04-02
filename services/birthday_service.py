@@ -2,12 +2,7 @@ from loguru import logger
 
 from config import bot
 from services.database import get_birthday_users_today, update_bonus_accrual_date
-from services.quickresto_api import (
-    auth,
-    headers,
-    layer_name_quickresto,
-    update_customer_bonus,
-)
+from services.quickresto_api import update_customer_bonus
 
 
 async def send_birthday_bonus() -> dict:
@@ -40,12 +35,9 @@ async def send_birthday_bonus() -> dict:
 
             # Начисляем бонусы через QuickResto
             result = update_customer_bonus(
-                layer_name_quickresto=layer_name_quickresto,
-                customer_id=id_quickresto,
+                customer_id=id_quickresto,  # ID пользователя в QuickResto
                 amount=1500.00,  # 1500 бонусов
-                customer_phone=phone,
-                auth=auth,
-                headers=headers,
+                customer_phone=phone,  # Телефон пользователя
             )
 
             if result:

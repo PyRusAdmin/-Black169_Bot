@@ -11,6 +11,7 @@ from services.database import (
     update_bonus_accrual_date,
     write_spin_result,
     write_to_db_registered_person,
+    generate_promo_code,
 )
 from services.i18n import t
 from services.quickresto_api import (
@@ -20,6 +21,20 @@ from services.quickresto_api import (
     update_customer_bonus,
 )
 from utils.logger import logger
+
+# Формируем сообщение с уровнем клиента
+from services.client_levels import get_level_description, get_next_level_info
+
+# Формируем сообщение с информацией о бонусах пользователя
+from services.database import get_user_burning_bonus_info
+
+
+from services.database import (
+    has_user_claimed_gift_bonus,
+    mark_gift_bonus_claimed,
+    get_user_info,
+)
+
 
 router = Router(name=__name__)
 
@@ -59,9 +74,6 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
     client_level = user_info.get("client_level") if user_info else None
     accumulation_amount = user_info.get("accumulation_amount") if user_info else None
 
-    # Формируем сообщение с уровнем клиента
-    from services.client_levels import get_level_description, get_next_level_info
-
     level_text = ""
     if client_level:
         level_text = f"{get_level_description(client_level)}\n\n"
@@ -92,12 +104,6 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Забрать подарок'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Забрать подарок'")
 
-    from services.database import (
-        has_user_claimed_gift_bonus,
-        mark_gift_bonus_claimed,
-        get_user_info,
-    )
-
     # Проверяем, получал ли пользователь подарок ранее
     if has_user_claimed_gift_bonus(callback.from_user.id):
         await callback.message.answer(
@@ -121,22 +127,26 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
         await callback.answer()
         return
 
+    promo_code = generate_promo_code()
+    logger.info(
+        f"Сгенерирован промокод: {promo_code} для пользователя {callback.from_user.id}"
+    )
+
     id_quickresto = user_info.get("id_quickresto")
     phone_telegram = user_info.get("phone_telegram")
 
     # Начисляем 3000 бонусов
     update_customer_bonus(
         layer_name_quickresto=layer_name_quickresto,
-        customer_id=id_quickresto,
-        amount=3000.00,
-        customer_phone=phone_telegram,
-        auth=auth,
-        headers=headers,
+        customer_id=id_quickresto,  # ID пользователя в QuickResto
+        amount=3000.00,  # Сумма бонусов
+        customer_phone=phone_telegram,  # Телефон пользователя в Telegram
+        auth=auth,  # Токен для авторизации в QuickResto
+        headers=headers,  # Заголовки для запроса
     )
 
     # Отмечаем, что пользователь получил подарок
     mark_gift_bonus_claimed(callback.from_user.id)
-
     # Обновляем дату начисления бонусов (для отслеживания сгорания)
     update_bonus_accrual_date(callback.from_user.id, bonus_amount=3000.00)
 
@@ -157,12 +167,11 @@ async def bonuses_will_soon_burn_out_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Бонусы скоро сгорят'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Бонусы скоро сгорят'")
 
-    from services.database import get_user_burning_bonus_info
-
     # Получаем информацию о сгорающих бонусах
     burning_info = get_user_burning_bonus_info(callback.from_user.id)
 
     if burning_info:
+        # Сумма бонусов, начисленных ботом
         bot_bonus_amount = burning_info.get("bot_bonus_amount")
         burn_date = burning_info.get("burn_date")
         days_until_burn = burning_info.get("days_until_burn")
@@ -272,12 +281,9 @@ async def twist_handler(callback: CallbackQuery) -> None:
         )
         # Добавляем бонус клиенту, если выпал денежный бонус
         update_customer_bonus(
-            layer_name_quickresto=layer_name_quickresto,  # Название слоя QuickResto
             customer_id=id_quickresto,  # ID клиента в QuickResto
             amount=1000.00,  # Сумма бонуса в рублях
             customer_phone=phone_telegram,  # Телефон клиента в QuickResto
-            auth=auth,
-            headers=headers,
         )
 
         # Обновляем дату начисления бонусов (для отслеживания сгорания)
