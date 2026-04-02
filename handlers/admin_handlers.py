@@ -5,7 +5,7 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
-from config import OWNER_IDS, bot, layer_name_quickresto
+from config import OWNER_IDS, bot
 from keyboards.keyboards import (
     admin_menu_keyboard, admins_menu_keyboard, back_to_admin_menu_keyboard, back_to_admins_menu_keyboard,
     broadcast_confirm_keyboard, broadcast_type_keyboard,
@@ -693,7 +693,7 @@ async def search_user_phone_number_handler(message: Message, state: FSMContext) 
 
     try:
         # Получаем информацию о клиенте
-        data = print_client_info(layer_name_quickresto, phone_number, auth, headers)
+        data = print_client_info(phone_number)
 
         if data:
             # Формируем красивое сообщение
