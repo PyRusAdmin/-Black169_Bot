@@ -100,6 +100,18 @@ def receives_information_about_user_and_accrues_bonuses(id_telegram: int, bonus_
     )
 
 
+def updates_bonuses_in_the_database(id_telegram):
+    """
+    Функция обновляет базу данных пользователя с информацией о бонусах пользователя
+    :param id_telegram: ID пользователя в Telegram
+    :return:
+    """
+    # Получаем информацию о пользователе
+    user_info = get_user_info(id_telegram)
+    full_data = print_full_client_info(user_info.get("id_quickresto"))
+    update_bonus_accrual_date(id_telegram=id_telegram, bonus_amount=full_data.get("bonus_ledger"))
+
+
 @router.callback_query(F.data == "pick_up_gift")
 async def pick_up_gift_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Забрать подарок'"""
@@ -114,12 +126,10 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
 
         # Получает информацию о пользователе и начисляет бонусы
         receives_information_about_user_and_accrues_bonuses(id_telegram=callback.from_user.id, bonus_amount=3000.00)
-
         # Отмечаем, что пользователь получил подарок
         mark_gift_bonus_claimed(id_telegram=callback.from_user.id, promo_code=promo_code)
-
-        # Обновляем дату начисления бонусов (для отслеживания сгорания)
-        update_bonus_accrual_date(callback.from_user.id, bonus_amount=3000.00)
+        # Обновляем базу данных с бонусами
+        updates_bonuses_in_the_database(id_telegram=callback.from_user.id)
 
         await callback.message.answer(
             text=(
@@ -271,8 +281,8 @@ async def twist_handler(callback: CallbackQuery) -> None:
             customer_phone=phone_telegram,  # Телефон клиента в QuickResto
         )
 
-        # Обновляем дату начисления бонусов (для отслеживания сгорания)
-        update_bonus_accrual_date(id_telegram, bonus_amount=1000.00)
+        # Обновляем базу данных с бонусами
+        updates_bonuses_in_the_database(id_telegram=callback.from_user.id)
 
         return
     if bonus == "Попробуйте завтра":

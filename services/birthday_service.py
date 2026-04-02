@@ -2,7 +2,7 @@ from loguru import logger
 
 from config import bot
 from services.database import get_birthday_users_today, update_bonus_accrual_date
-from services.quickresto_api import update_customer_bonus
+from services.quickresto_api import update_customer_bonus, print_full_client_info
 
 
 async def send_birthday_bonus() -> dict:
@@ -46,8 +46,9 @@ async def send_birthday_bonus() -> dict:
                 )
                 success += 1
 
+                full_data = print_full_client_info(id_quickresto)
                 # Обновляем дату начисления бонусов (для отслеживания сгорания)
-                update_bonus_accrual_date(id_telegram, bonus_amount=1500.00)
+                update_bonus_accrual_date(id_telegram=id_telegram, bonus_amount=full_data.get("bonus_ledger"))
 
                 # Отправляем поздравление пользователю
                 try:

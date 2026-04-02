@@ -3,18 +3,9 @@ from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_IDS
-from keyboards.keyboards import (
-    consent_keyboard,
-    main_menu_keyboard,
-    main_menu_keyboard_admin,
-)
+from keyboards.keyboards import consent_keyboard, main_menu_keyboard, main_menu_keyboard_admin
 from keyboards.keyboards import contact_keyboard
-from services.database import (
-    add_consent,
-    has_consent,
-    is_user_registered,
-    write_to_db_start_person,
-)
+from services.database import add_consent, has_consent, is_user_registered, write_to_db_start_person
 from services.i18n import t
 from utils.logger import logger
 

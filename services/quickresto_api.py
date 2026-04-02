@@ -3,12 +3,7 @@ import json
 import requests
 from requests.auth import HTTPBasicAuth
 from collections import Counter
-from config import (
-    console,
-    layer_name_quickresto,
-    password_quickresto,
-    username_quickresto,
-)
+from config import console, layer_name_quickresto, password_quickresto, username_quickresto
 from utils.logger import logger
 import time
 
@@ -21,14 +16,11 @@ headers = {"Content-Type": "application/json"}
 """Ищет клиента по номеру телефона в QuickResto"""
 
 
-def get_customer_by_phone(layer_name_quickresto, phone_number, auth, headers):
+def get_customer_by_phone(phone_number):
     """
     Возвращает информацию о клиенте по номеру телефона
 
-    :param layer_name_quickresto: название слоя QuickResto
     :param phone_number: номер телефона
-    :param auth: авторизация в QuickResto
-    :param headers: заголовки запроса
     :return: информация о клиенте
     """
     url = f"https://{layer_name_quickresto}.quickresto.ru/platform/online/bonuses/filterCustomers"
@@ -44,12 +36,10 @@ def get_customer_by_phone(layer_name_quickresto, phone_number, auth, headers):
     return response.json()
 
 
-def print_client_info(layer_name_quickresto, phone_number, auth, headers):
+def print_client_info(phone_number):
     """Выводит информацию о клиенте по номеру телефона в формате JSON из QuickResto"""
     try:
-        result = get_customer_by_phone(
-            layer_name_quickresto, phone_number, auth, headers
-        )
+        result = get_customer_by_phone(phone_number)
 
         if result:
             console.print_json(json.dumps(result, indent=2, ensure_ascii=False))
@@ -94,7 +84,7 @@ def print_client_info(layer_name_quickresto, phone_number, auth, headers):
 """Создает клиента в QuickResto"""
 
 
-def create_client(name_customer, phone_customer, base_url, auth, headers):
+def create_client(name_customer, phone_customer):
     """Создание нового клиента в QuickResto"""
     try:
         url = f"{base_url}/create"
@@ -135,7 +125,7 @@ def create_client(name_customer, phone_customer, base_url, auth, headers):
 """Получаем информацию о клиенте по ID в QuickResto"""
 
 
-def get_full_client_info(client_id, base_url, auth, headers):
+def get_full_client_info(client_id):
     """
     Возвращает полную информацию об одном конкретном пользователе (клиенте)
 
@@ -167,9 +157,7 @@ def get_full_client_info(client_id, base_url, auth, headers):
 
 def print_full_client_info(client_id):
     """Выводит полную информацию о клиенте по ID в QuickResto"""
-    result = get_full_client_info(
-        client_id=client_id, base_url=base_url, auth=auth, headers=headers
-    )
+    result = get_full_client_info(client_id=client_id)
 
     if not result:
         logger.error("Клиент не найден")
