@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from aiogram import F, Router
@@ -7,11 +8,22 @@ from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_IDS
 from keyboards.keyboards import (
-    admin_menu_keyboard, back_to_events_menu_keyboard, event_action_keyboard, event_confirm_keyboard,
+    admin_menu_keyboard,
+    back_to_events_menu_keyboard,
+    event_action_keyboard,
+    event_confirm_keyboard,
     events_menu_keyboard,
 )
-from services.database import (
-    create_event, delete_event, get_all_events, get_events_count, is_admin_in_db, update_event_status,
+from services.database import is_admin_in_db
+from services.events_json import (
+    create_event_json,
+    deactivate_event_json,
+    delete_event_json,
+    get_active_events_json,
+    get_all_events_json,
+    get_event_json,
+    get_upcoming_events_json,
+    update_event_json,
 )
 from services.i18n import t
 from states.user_states import EventState
@@ -44,7 +56,7 @@ async def events_menu_handler(callback: CallbackQuery) -> None:
     if not await verifies_the_user_for_admin(callback):
         return
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=t("events-menu-title"), reply_markup=events_menu_keyboard()
     )
     await callback.answer()
@@ -62,7 +74,7 @@ async def event_create_handler(callback: CallbackQuery, state: FSMContext) -> No
         return
 
     await state.set_state(EventState.waiting_for_title)
-    await callback.message.answer(
+    await callback.message.edit_text(
         text=t("event-create-title"), reply_markup=back_to_events_menu_keyboard()
     )
     await callback.answer()
@@ -240,6 +252,11 @@ async def send_confirmation(message: Message, state: FSMContext) -> None:
     description = data.get("description")
     date = data.get("event_date_str")
 
+    logger.info(
+        f"Данные для подтверждения: title={title}, description={description}, date={date}"
+    )
+    logger.info(f"Все данные состояния: {data}")
+
     await state.set_state(EventState.waiting_for_confirmation)
     await message.answer(
         text=t("event-create-confirm", title=title, description=description, date=date),
@@ -265,19 +282,23 @@ async def event_confirm_yes_handler(callback: CallbackQuery, state: FSMContext) 
     reminder_text_1day = data.get("reminder_text_1day")
     reminder_text_event_day = data.get("reminder_text_event_day")
 
-    # Создаём мероприятие
-    result = create_event(
-        title=title,
-        description=description,
-        event_date=event_date,
-        created_by=callback.from_user.id,
-        photo_id=photo_id,
-        reminder_text_3days=reminder_text_3days,
-        reminder_text_1day=reminder_text_1day,
-        reminder_text_event_day=reminder_text_event_day,
-    )
+    # Генерируем уникальный ID для мероприятия
+    event_id = str(uuid.uuid4())
 
-    if result:
+    # Создаём мероприятие в JSON
+    try:
+        create_event_json(
+            event_id=event_id,
+            title=title,
+            description=description,
+            event_date=event_date,
+            created_by=callback.from_user.id,
+            photo_id=photo_id,
+            reminder_text_3days=reminder_text_3days,
+            reminder_text_1day=reminder_text_1day,
+            reminder_text_event_day=reminder_text_event_day,
+        )
+
         # Показываем информацию о напоминаниях
         reminders_info = []
         if reminder_text_3days:
@@ -294,11 +315,12 @@ async def event_confirm_yes_handler(callback: CallbackQuery, state: FSMContext) 
         )
 
         await callback.message.answer(
-            text=f"{t('event-create-success', title=title, date=data.get('event_date_str'))}\n\n🔔 <b>Напоминания:</b>\n{reminders_text}\n\n⚠️ <b>Мероприятие создано неактивным.</b>\nПерейдите в «Список мероприятий» и активируйте его.",
+            text=f"{t('event-create-success', title=title, date=data.get('event_date_str'))}\n\n🔔 <b>Напоминания:</b>\n{reminders_text}",
             reply_markup=admin_menu_keyboard(),
             parse_mode="HTML",
         )
-    else:
+    except Exception as e:
+        logger.exception(f"Ошибка при создании мероприятия: {e}")
         await callback.message.answer(
             text="❌ Ошибка при создании мероприятия. Попробуйте ещё раз.",
             reply_markup=admin_menu_keyboard(),
@@ -334,7 +356,7 @@ async def event_list_handler(callback: CallbackQuery) -> None:
     if not await verifies_the_user_for_admin(callback):
         return
 
-    events = get_all_events()
+    events = get_all_events_json()
 
     if not events:
         await callback.message.answer(
@@ -344,21 +366,24 @@ async def event_list_handler(callback: CallbackQuery) -> None:
         return
 
     # Показываем статистику
-    stats = get_events_count()
+    active_count = len([e for e in events if e.get("is_active", False)])
+    inactive_count = len(events) - active_count
+
     await callback.message.answer(
         text=t(
             "event-list-title",
-            total=stats["total"],
-            active=stats["active"],
-            inactive=stats["inactive"],
+            total=len(events),
+            active=active_count,
+            inactive=inactive_count,
         ),
         reply_markup=back_to_events_menu_keyboard(),
     )
 
     # Показываем каждое мероприятие
     for event in events:
-        status = "✅ Активно" if event["is_active"] else "⏸️ Неактивно"
-        date_str = event["event_date"].strftime("%d.%m.%Y %H:%M")
+        status = "✅ Активно" if event.get("is_active", False) else "⏸️ Неактивно"
+        event_date = datetime.fromisoformat(event["event_date"])
+        date_str = event_date.strftime("%d.%m.%Y %H:%M")
 
         text = t(
             "event-info",
@@ -388,7 +413,7 @@ async def event_activate_handler(callback: CallbackQuery) -> None:
     """
     Обработчик кнопки 'Активировать мероприятие'
     """
-    event_id = int(callback.data.split("_")[-1])
+    event_id = callback.data.split("_", 2)[-1]
     logger.info(
         f"Администратор {callback.from_user.id} активировал мероприятие {event_id}"
     )
@@ -397,7 +422,7 @@ async def event_activate_handler(callback: CallbackQuery) -> None:
     if not await verifies_the_user_for_admin(callback):
         return
 
-    result = update_event_status(event_id, is_active=True)
+    result = update_event_json(event_id, is_active=True)
 
     if result:
         await callback.answer(t("event-activated", id=event_id), show_alert=True)
@@ -410,7 +435,7 @@ async def event_deactivate_handler(callback: CallbackQuery) -> None:
     """
     Обработчик кнопки 'Деактивировать мероприятие'
     """
-    event_id = int(callback.data.split("_")[-1])
+    event_id = callback.data.split("_", 2)[-1]
     logger.info(
         f"Администратор {callback.from_user.id} деактивировал мероприятие {event_id}"
     )
@@ -419,7 +444,7 @@ async def event_deactivate_handler(callback: CallbackQuery) -> None:
     if not await verifies_the_user_for_admin(callback):
         return
 
-    result = update_event_status(event_id, is_active=False)
+    result = update_event_json(event_id, is_active=False)
 
     if result:
         await callback.answer(t("event-deactivated", id=event_id), show_alert=True)
@@ -452,13 +477,9 @@ async def event_delete_handler(message: Message, state: FSMContext) -> None:
     """
     logger.info(f"Администратор {message.from_user.id} удаляет мероприятие")
 
-    try:
-        event_id = int(message.text.strip())
-    except ValueError:
-        await message.answer(text="❌ Введите корректный ID мероприятия (число):")
-        return
+    event_id = message.text.strip()
 
-    result = delete_event(event_id)
+    result = delete_event_json(event_id)
 
     if result:
         await message.answer(
@@ -479,14 +500,14 @@ async def event_delete_direct_handler(callback: CallbackQuery) -> None:
     """
     Удаление мероприятия напрямую из списка
     """
-    event_id = int(callback.data.split("_")[-1])
+    event_id = callback.data.split("_", 2)[-1]
     logger.info(f"Администратор {callback.from_user.id} удаляет мероприятие {event_id}")
 
     # Проверяет пользователя на права администратора
     if not await verifies_the_user_for_admin(callback):
         return
 
-    result = delete_event(event_id)
+    result = delete_event_json(event_id)
 
     if result:
         await callback.answer(f"✅ Мероприятие {event_id} удалено", show_alert=True)

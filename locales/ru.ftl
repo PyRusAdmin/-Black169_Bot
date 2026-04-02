@@ -468,9 +468,9 @@ event-create-reminder-event-day =
 event-create-confirm =
     ✅ <b>Подтверждение создания мероприятия</b>
 
-    Название: {$title}
-    Описание: {$description}
-    Дата: {$date}
+    <b>Название:</b> {$title}
+    <b>Описание:</b> {$description}
+    <b>Дата:</b> {$date}
 
     Вы уверены, что хотите создать мероприятие?
 

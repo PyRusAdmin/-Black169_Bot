@@ -24,7 +24,4 @@ def t(key: str, **kwargs) -> str:
     :return: Переведённая строка
     """
     l10n = get_l10n()
-    # Fluent Format использует $variable вместо {variable}
-    # Преобразуем kwargs для Fluent Format
-    fluent_kwargs = {f"${k}": v for k, v in kwargs.items()}
-    return l10n.format_value(key, fluent_kwargs)
+    return l10n.format_value(key, kwargs)

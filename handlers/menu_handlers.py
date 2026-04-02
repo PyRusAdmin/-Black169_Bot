@@ -2,17 +2,33 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
 from keyboards.keyboards import back_to_main_menu_keyboard, twist_keyboard
-from services.bonus_operations import random_bonus, generate_promo_code, \
-    receives_information_about_user_and_accrues_bonuses, updates_bonuses_in_the_database
+from services.bonus_operations import (
+    random_bonus,
+    generate_promo_code,
+    receives_information_about_user_and_accrues_bonuses,
+    updates_bonuses_in_the_database,
+)
+
 # Формируем сообщение с уровнем клиента
 from services.client_levels import get_level_description, get_next_level_info
-from services.database import get_user_bonus, has_user_spun_today, write_spin_result, write_to_db_registered_person
+from services.database import (
+    get_user_bonus,
+    has_user_spun_today,
+    write_spin_result,
+    write_to_db_registered_person,
+)
+
 # Формируем сообщение с информацией о бонусах пользователя
 from services.database import get_user_burning_bonus_info
-from services.database import has_user_claimed_gift_bonus, mark_gift_bonus_claimed, get_user_info
+from services.database import (
+    has_user_claimed_gift_bonus,
+    mark_gift_bonus_claimed,
+    get_user_info,
+)
 from services.i18n import t
 from services.quickresto_api import (
-    print_full_client_info, update_customer_bonus,
+    print_full_client_info,
+    update_customer_bonus,
 )
 from utils.logger import logger
 
@@ -42,7 +58,9 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
             "user_bonus": data.get("bonus_ledger"),
             "phone_telegram": phone_telegram,
             "client_level": data.get("level"),  # Уровень клиента
-            "accumulation_amount": data.get("accumulation_balance", {}).get("ledger", 0),  # Накопительная сумма
+            "accumulation_amount": data.get("accumulation_balance", {}).get(
+                "ledger", 0
+            ),  # Накопительная сумма
         }
     )
 
@@ -87,12 +105,18 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
 
     if not is_claimed:
         promo_code = generate_promo_code()
-        logger.info(f"Сгенерирован промокод: {promo_code} для пользователя {callback.from_user.id}")
+        logger.info(
+            f"Сгенерирован промокод: {promo_code} для пользователя {callback.from_user.id}"
+        )
 
         # Получает информацию о пользователе и начисляет бонусы
-        receives_information_about_user_and_accrues_bonuses(id_telegram=callback.from_user.id, bonus_amount=3000.00)
+        receives_information_about_user_and_accrues_bonuses(
+            id_telegram=callback.from_user.id, bonus_amount=3000.00
+        )
         # Отмечаем, что пользователь получил подарок
-        mark_gift_bonus_claimed(id_telegram=callback.from_user.id, promo_code=promo_code)
+        mark_gift_bonus_claimed(
+            id_telegram=callback.from_user.id, promo_code=promo_code
+        )
         # Обновляем базу данных с бонусами
         updates_bonuses_in_the_database(id_telegram=callback.from_user.id)
 
@@ -272,9 +296,41 @@ async def promotions_handler(callback: CallbackQuery) -> None:
 async def events_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Мероприятия'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Мероприятия'")
+
+    # Импортируем функции для работы с мероприятиями
+    from datetime import datetime
+    from services.events_json import get_upcoming_events_json
+
+    # Получаем предстоящие активные мероприятия
+    events = get_upcoming_events_json()
+
+    if not events:
+        await callback.message.answer(
+            text="📅 <b>Мероприятия</b>\n\nНа данный момент нет запланированных мероприятий.\nСледите за обновлениями!",
+            reply_markup=back_to_main_menu_keyboard(),
+            parse_mode="HTML",
+        )
+        await callback.answer()
+        return
+
+    # Формируем текст со всеми мероприятиями
+    text = f"📅 <b>Предстоящие мероприятия</b>\n\nВсего мероприятий: {len(events)}\n\n"
+
+    for i, event in enumerate(events, 1):
+        event_date = datetime.fromisoformat(event["event_date"])
+        date_str = event_date.strftime("%d.%m.%Y %H:%M")
+
+        text += f"{'─' * 30}\n\n"
+        text += f"🎉 <b>{event['title']}</b>\n\n"
+        text += f"📝 {event['description']}\n\n"
+        text += f"📅 <b>Дата:</b> {date_str}\n\n"
+
+    text += f"{'─' * 30}"
+
     await callback.message.answer(
-        text=t("menu-events"), reply_markup=back_to_main_menu_keyboard()
+        text=text, reply_markup=back_to_main_menu_keyboard(), parse_mode="HTML"
     )
+
     await callback.answer()
 
 
