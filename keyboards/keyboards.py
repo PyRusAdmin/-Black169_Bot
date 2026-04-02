@@ -234,7 +234,7 @@ def back_to_admin_menu_keyboard():
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🔧 В меню администратора", callback_data="admin_back"
+                    text="🔧 В меню администратора", callback_data="admin_back", style="danger"
                 ),
             ],
         ]
@@ -256,7 +256,7 @@ def broadcast_type_keyboard():
             ],
             [
                 InlineKeyboardButton(
-                    text="❌ Отмена", callback_data="broadcast_cancel"
+                    text="❌ Отмена", callback_data="broadcast_cancel", style="danger"
                 ),
             ],
         ]
@@ -269,10 +269,10 @@ def broadcast_confirm_keyboard():
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="✅ Отправить", callback_data="broadcast_confirm_send"
+                    text="✅ Отправить", callback_data="broadcast_confirm_send", style="success"
                 ),
                 InlineKeyboardButton(
-                    text="❌ Отмена", callback_data="broadcast_cancel"
+                    text="❌ Отмена", callback_data="broadcast_cancel", style="danger"
                 ),
             ],
         ]
@@ -300,7 +300,7 @@ def promo_codes_menu_keyboard():
             ],
             [
                 InlineKeyboardButton(
-                    text="🔧 В меню администратора", callback_data="admin_back"
+                    text="🔧 В меню администратора", callback_data="admin_back", style="danger"
                 ),
             ],
         ]
@@ -313,7 +313,7 @@ def back_to_promo_menu_keyboard():
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🔙 В меню промокодов", callback_data="promo_menu"
+                    text="🔙 В меню промокодов", callback_data="promo_menu", style="danger"
                 ),
             ],
         ]
@@ -363,7 +363,7 @@ def events_menu_keyboard():
             ],
             [
                 InlineKeyboardButton(
-                    text="🔧 В меню администратора", callback_data="admin_back"
+                    text="🔧 В меню администратора", callback_data="admin_back", style="danger"
                 ),
             ],
         ]
@@ -376,7 +376,7 @@ def back_to_events_menu_keyboard():
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🔙 В меню мероприятий", callback_data="events_menu"
+                    text="🔙 В меню мероприятий", callback_data="events_menu", style="danger"
                 ),
             ],
         ]
@@ -403,7 +403,7 @@ def event_action_keyboard(event_id: int):
             ],
             [
                 InlineKeyboardButton(
-                    text="🔙 В список мероприятий", callback_data="event_list"
+                    text="🔙 В список мероприятий", callback_data="event_list", style="secondary"
                 ),
             ],
         ]
