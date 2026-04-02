@@ -23,42 +23,46 @@ db = SqliteDatabase("data/database.db")
 """
 Запись в базу данных о пользователях, которые зарегистрировались в боте, передав свой номер телефона. Часть данных 
 о пользователях будет браться из QuickResto https://quickresto.ru/api/ и записываться в базу данных database.db
+
+id_telegram - id пользователя в Telegram
+id_quickresto - id пользователя в QuickResto
+phone_telegram - номер телефона пользователя в Telegram
+last_name - фамилия пользователя QuickResto
+first_name - имя пользователя QuickResto
+patronymic_name - отчество пользователя QuickResto
+birthday_user - день рождения пользователя QuickResto
+user_bonus - бонус пользователя QuickResto
+date_of_visit - дата последнего посещения QuickResto
+updated_at - дата обновления данных
+bonus_accrued_at - дата начисления бонуса
+bot_bonus_amount - Сумма бонусов, начисленных ботом
+client_level - Уровень клиента (Bronze, Silver, Gold, Black)
+accumulation_amount - Сумма накопления бонусов
+gift_bonus_claimed - Получил ли пользователь подарочные бонусы 3000
+gift_bonus_claimed_at - Дата получения подарка
+
 """
 
 
 class RegisteredPersons(Model):
     """База данных для хранения данных о пользователях Telegram и QuickResto"""
 
-    id_telegram = IntegerField(unique=True)  # ✅ id пользователя в Telegram
-    id_quickresto = IntegerField(null=True)  # ✅ id пользователя в QuickResto
-    phone_telegram = CharField(null=True)  # ✅ Номер телефона пользователя в Telegram
-    last_name = CharField(null=True)  # ✅ Фамилия пользователя QuickResto
-    first_name = CharField(null=True)  # ✅ Имя пользователя QuickResto
-    patronymic_name = CharField(null=True)  # ✅ Отчество пользователя QuickResto
-    birthday_user = CharField(null=True)  # ✅ День рождения пользователя QuickResto
-    user_bonus = CharField(null=True)  # ✅ Бонус пользователя QuickResto
-    date_of_visit = DateTimeField(
-        default=datetime.now
-    )  # Дата и время последнего посещения QuickResto
-    updated_at = DateTimeField(default=datetime.now)  # Дата обновления данных
-    bonus_accrued_at = DateTimeField(
-        null=True
-    )  # ✅ Дата начисления бонусов ботом (для отслеживания сгорания)
-    bot_bonus_amount = DecimalField(
-        null=True, max_digits=10, decimal_places=2
-    )  # ✅ Сумма бонусов, начисленных ботом
-    client_level = CharField(
-        null=True
-    )  # ✅ Уровень клиента (Bronze, Silver, Gold, Black)
-    accumulation_amount = DecimalField(
-        null=True, max_digits=12, decimal_places=2
-    )  # ✅ Накопительная сумма для уровня
-    gift_bonus_claimed = BooleanField(
-        default=False
-    )  # ✅ Получил ли пользователь подарочные бонусы 3000
-    gift_bonus_claimed_at = DateTimeField(
-        null=True
-    )  # ✅ Дата получения подарочных бонусов
+    id_telegram = IntegerField(unique=True)
+    id_quickresto = IntegerField(null=True)
+    phone_telegram = CharField(null=True)
+    last_name = CharField(null=True)
+    first_name = CharField(null=True)
+    patronymic_name = CharField(null=True)
+    birthday_user = CharField(null=True)
+    user_bonus = CharField(null=True)
+    date_of_visit = DateTimeField(default=datetime.now)
+    updated_at = DateTimeField(default=datetime.now)
+    bonus_accrued_at = DateTimeField(null=True)
+    bot_bonus_amount = DecimalField(null=True, max_digits=10, decimal_places=2)
+    client_level = CharField(null=True)
+    accumulation_amount = DecimalField(null=True, max_digits=12, decimal_places=2)
+    gift_bonus_claimed = BooleanField(default=False)
+    gift_bonus_claimed_at = DateTimeField(null=True)
 
     class Meta:
         database = db  # база данных
@@ -1616,7 +1620,7 @@ def get_bonus_burning_users(days_until_burn: int = 7) -> list:
             db.close()
 
 
-def update_bonus_accrual_date(id_telegram: int, bonus_amount: float = None) -> bool:
+def update_bonus_accrual_date(id_telegram: int, bonus_amount: float = None) -> None:
     """
     Обновление даты начисления бонусов ботом для пользователя
 
@@ -1712,7 +1716,7 @@ def has_user_claimed_gift_bonus(id_telegram: int) -> bool:
             db.close()
 
 
-def mark_gift_bonus_claimed(id_telegram: int) -> bool:
+def mark_gift_bonus_claimed(id_telegram: int) -> None:
     """
     Отметить, что пользователь получил подарочные бонусы 3000
 
@@ -1720,27 +1724,15 @@ def mark_gift_bonus_claimed(id_telegram: int) -> bool:
     :return: True если успешно, False если ошибка
     """
     try:
-        # if db.is_closed():
-        #     db.connect()
-
         query = RegisteredPersons.update(
             gift_bonus_claimed=True, gift_bonus_claimed_at=datetime.now()
         ).where(RegisteredPersons.id_telegram == id_telegram)
-
-        result = query.execute()
-
-        if result > 0:
-            logger.info(f"Пользователь {id_telegram} получил подарочные бонусы 3000")
-            return True
-        return False
+        query.execute()
+        logger.info(f"Пользователь {id_telegram} получил подарочные бонусы 3000")
     except Exception as e:
         logger.exception(
             f"Ошибка при отметке получения подарочных бонусов пользователем {id_telegram}: {e}"
         )
-        return False
-    finally:
-        if not db.is_closed():
-            db.close()
 
 
 """Таблица для учёта промокодов"""
