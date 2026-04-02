@@ -26,7 +26,10 @@ router = Router(name=__name__)
 
 @router.callback_query(F.data == "my_bonuses")
 async def my_bonuses_handler(callback: CallbackQuery) -> None:
-    """Обработчик кнопки 'Мои бонусы'"""
+    """
+    Обработчик кнопки '💰 Мои бонусы'
+    :param callback: CallbackQuery
+    """
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Мои бонусы'")
 
     # Получаем баланс бонусов пользователя
@@ -73,6 +76,7 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
 
     await callback.message.answer(
         text=(
+            f"<b>Ваш ID: {id_quickresto}</b>\n"
             f"💰 <b>Ваши бонусы: {user_bonus}</b>\n\n"
             f"{level_text}"
             f"Используйте их при следующем посещении!"
