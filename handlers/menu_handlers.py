@@ -82,6 +82,26 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
+def receives_information_about_user_and_accrues_bonuses(id_telegram: int, bonus_amount: float):
+    """
+    Функция получает информацию о пользователе из базы данных зарегистрированных пользователей, находит пользователя по
+    ID Telegram, извлекает ID пользователя в QuickResto и номер телефона, затем использует API QuickResto для начисления
+    бонусов.
+
+    :param id_telegram: ID пользователя в Telegram
+    :param bonus_amount: Количество бонусов
+    """
+
+    # Получаем информацию о пользователе
+    user_info = get_user_info(id_telegram)
+    # Начисляем например 3000 бонусов пользователю по ID пользователя в QuickResto и номеру телефона
+    update_customer_bonus(
+        customer_id=user_info.get("id_quickresto"),  # ID пользователя в QuickResto
+        amount=bonus_amount,  # Количество бонусов
+        customer_phone=user_info.get("phone_telegram"),  # Телефон пользователя в Telegram
+    )
+
+
 @router.callback_query(F.data == "pick_up_gift")
 async def pick_up_gift_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Забрать подарок'"""
@@ -93,18 +113,15 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
     if is_claimed == False:
         promo_code = generate_promo_code()
         logger.info(f"Сгенерирован промокод: {promo_code} для пользователя {callback.from_user.id}")
-        # Получаем информацию о пользователе
-        user_info = get_user_info(callback.from_user.id)
-        # Начисляем 3000 бонусов
-        update_customer_bonus(
-            customer_id=user_info.get("id_quickresto"),
-            amount=3000.00,
-            customer_phone=user_info.get("phone_telegram"),
-        )
+
+        # Получает информацию о пользователе и начисляет бонусы
+        receives_information_about_user_and_accrues_bonuses(id_telegram=callback.from_user.id, bonus_amount=3000.00)
+
         # Отмечаем, что пользователь получил подарок
         mark_gift_bonus_claimed(id_telegram=callback.from_user.id, promo_code=promo_code)
         # Обновляем дату начисления бонусов (для отслеживания сгорания)
         update_bonus_accrual_date(callback.from_user.id, bonus_amount=3000.00)
+
         await callback.message.answer(
             text=(
                 "🎁 <b>Поздравляем!</b>\n\n"
@@ -119,8 +136,7 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
         await callback.answer()
 
     elif is_claimed == True:
-        # if has_user_claimed_gift_bonus(callback.from_user.id):
-        await callback.message.answer(
+        await callback.message.edit_text(
             text=(
                 "❌ <b>Вы уже получили подарочные бонусы</b>\n\n"
                 "Подарочные бонусы можно получить только один раз.\n\n"
