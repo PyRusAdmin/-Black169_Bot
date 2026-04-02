@@ -5,17 +5,16 @@
 Использование:
     python migrate_clients_to_db.py
 """
-
 import json
 import sys
 from pathlib import Path
 
-# Добавляем корень проекта в путь
-sys.path.insert(0, str(Path(__file__).parent))
-
-from services.database import RegisteredPersons, update_client_level, db
+from services.database import RegisteredPersons, db
 from utils.phone_utils import normalize_phone_number
 from utils.logger import logger
+
+# Добавляем корень проекта в путь
+sys.path.insert(0, str(Path(__file__).parent))
 
 
 def migrate_clients_to_db(json_filepath: str = "data/clients_levels.json") -> dict:
@@ -31,7 +30,7 @@ def migrate_clients_to_db(json_filepath: str = "data/clients_levels.json") -> di
         "not_found": 0,
         "errors": 0,
     }
-    
+
     # Загружаем данные из JSON
     try:
         with open(json_filepath, "r", encoding="utf-8") as f:
@@ -43,13 +42,13 @@ def migrate_clients_to_db(json_filepath: str = "data/clients_levels.json") -> di
     except Exception as e:
         logger.exception(f"Ошибка при загрузке JSON: {e}")
         return stats
-    
+
     stats["total"] = len(clients_data)
-    
+
     try:
         if db.is_closed():
             db.connect()
-        
+
         for i, client in enumerate(clients_data, 1):
             try:
                 # Нормализуем телефон
@@ -57,50 +56,50 @@ def migrate_clients_to_db(json_filepath: str = "data/clients_levels.json") -> di
                 client_id = client.get("id")
                 level = client.get("level")
                 accumulation = client.get("accumulation", 0)
-                
+
                 if not phone:
                     logger.warning(f"Клиент {client_id} не имеет телефона, пропускаем")
                     stats["not_found"] += 1
                     continue
-                
+
                 # Ищем пользователя по телефону в БД
                 user = RegisteredPersons.get_or_none(RegisteredPersons.phone_telegram == phone)
-                
+
                 if not user and client_id:
                     # Пробуем найти по ID QuickResto
                     user = RegisteredPersons.get_or_none(RegisteredPersons.id_quickresto == client_id)
-                
+
                 if user:
                     # Обновляем данные пользователя
                     user.client_level = level
                     user.accumulation_amount = accumulation
                     user.phone_telegram = phone  # Обновляем нормализованный телефон
                     user.save()
-                    
+
                     stats["updated"] += 1
-                    
+
                     if i % 100 == 0:
                         logger.info(f"Обработано: {i}/{len(clients_data)}")
                 else:
                     stats["not_found"] += 1
-                    
+
             except Exception as e:
                 logger.warning(f"Ошибка при обработке клиента {client.get('id')}: {e}")
                 stats["errors"] += 1
-        
+
         logger.info(
             f"Миграция завершена: всего={stats['total']}, "
             f"обновлено={stats['updated']}, не найдено={stats['not_found']}, "
             f"ошибок={stats['errors']}"
         )
-        
+
     except Exception as e:
         logger.exception(f"Ошибка при миграции данных: {e}")
         stats["errors"] += len(clients_data)
     finally:
         if not db.is_closed():
             db.close()
-    
+
     return stats
 
 
@@ -114,7 +113,7 @@ def print_report(stats: dict):
     print(f"❌ Не найдено в БД: {stats['not_found']}")
     print(f"⚠️  Ошибок: {stats['errors']}")
     print("=" * 60)
-    
+
     if stats['total'] > 0:
         percent = stats['updated'] / stats['total'] * 100
         print(f"📈 Процент успешных: {percent:.1f}%")
@@ -125,7 +124,7 @@ if __name__ == "__main__":
     print("🚀 Запуск миграции данных из clients_levels.json в БД...")
     result = migrate_clients_to_db()
     print_report(result)
-    
+
     if result['updated'] > 0:
         print("✅ Миграция успешно завершена!")
     else:

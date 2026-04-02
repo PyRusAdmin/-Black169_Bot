@@ -3,7 +3,12 @@ import json
 import requests
 from requests.auth import HTTPBasicAuth
 from collections import Counter
-from config import console, layer_name_quickresto, password_quickresto, username_quickresto
+from config import (
+    console,
+    layer_name_quickresto,
+    password_quickresto,
+    username_quickresto,
+)
 from utils.logger import logger
 import time
 
@@ -28,7 +33,12 @@ def get_customer_by_phone(layer_name_quickresto, phone_number, auth, headers):
     """
     url = f"https://{layer_name_quickresto}.quickresto.ru/platform/online/bonuses/filterCustomers"
 
-    payload = {"search": phone_number, "typeList": ["customer"], "limit": 10, "offset": 0}
+    payload = {
+        "search": phone_number,
+        "typeList": ["customer"],
+        "limit": 10,
+        "offset": 0,
+    }
     response = requests.post(url, json=payload, auth=auth, headers=headers, timeout=30)
     response.raise_for_status()
     return response.json()
@@ -37,7 +47,9 @@ def get_customer_by_phone(layer_name_quickresto, phone_number, auth, headers):
 def print_client_info(layer_name_quickresto, phone_number, auth, headers):
     """Выводит информацию о клиенте по номеру телефона в формате JSON из QuickResto"""
     try:
-        result = get_customer_by_phone(layer_name_quickresto, phone_number, auth, headers)
+        result = get_customer_by_phone(
+            layer_name_quickresto, phone_number, auth, headers
+        )
 
         if result:
             console.print_json(json.dumps(result, indent=2, ensure_ascii=False))
@@ -62,7 +74,13 @@ def print_client_info(layer_name_quickresto, phone_number, auth, headers):
             console.log(f"Телефон: {phone}")
             console.log(f"GUID:    {guid}")
 
-            data = {"client_id": client_id, "firstName": name, "lastName": surname, "phone": phone, "guid": guid}
+            data = {
+                "client_id": client_id,
+                "firstName": name,
+                "lastName": surname,
+                "phone": phone,
+                "guid": guid,
+            }
 
             return data
 
@@ -86,16 +104,27 @@ def create_client(name_customer, phone_customer, base_url, auth, headers):
             "className": "ru.edgex.quickresto.modules.crm.customer.CrmCustomer",
         }
 
-        body = {"firstName": name_customer, "contactMethods": [{"type": "phoneNumber", "value": phone_customer}]}
+        body = {
+            "firstName": name_customer,
+            "contactMethods": [{"type": "phoneNumber", "value": phone_customer}],
+        }
 
-        response = requests.post(url, params=query_params, json=body, auth=auth, headers=headers, timeout=30)
+        response = requests.post(
+            url, params=query_params, json=body, auth=auth, headers=headers, timeout=30
+        )
         response.raise_for_status()
         result = response.json()
 
         # Возвращаем данные созданного клиента
-        client_data = {"id": result.get("id"), "firstName": name_customer, "phone": phone_customer}
+        client_data = {
+            "id": result.get("id"),
+            "firstName": name_customer,
+            "phone": phone_customer,
+        }
 
-        logger.info(f"Клиент создан: id={client_data['id']}, имя={name_customer}, телефон={phone_customer}")
+        logger.info(
+            f"Клиент создан: id={client_data['id']}, имя={name_customer}, телефон={phone_customer}"
+        )
         return client_data
 
     except Exception as e:
@@ -125,7 +154,9 @@ def get_full_client_info(client_id, base_url, auth, headers):
     }
 
     try:
-        response = requests.get(url, params=query_params, auth=auth, headers=headers, timeout=30)
+        response = requests.get(
+            url, params=query_params, auth=auth, headers=headers, timeout=30
+        )
         response.raise_for_status()
         return response.json()
 
@@ -136,7 +167,9 @@ def get_full_client_info(client_id, base_url, auth, headers):
 
 def print_full_client_info(client_id):
     """Выводит полную информацию о клиенте по ID в QuickResto"""
-    result = get_full_client_info(client_id=client_id, base_url=base_url, auth=auth, headers=headers)
+    result = get_full_client_info(
+        client_id=client_id, base_url=base_url, auth=auth, headers=headers
+    )
 
     if not result:
         logger.error("Клиент не найден")
@@ -198,7 +231,12 @@ def print_full_client_info(client_id):
 
 
 def update_customer_bonus(
-        layer_name_quickresto: str, customer_id: int, amount: float, customer_phone: str, auth, headers
+    layer_name_quickresto: str,
+    customer_id: int,
+    amount: float,
+    customer_phone: str,
+    auth,
+    headers,
 ):
     """
     Редактирование бонусных балов для клиента. Для изменения бонусных балов, требуется ID клиента в QuickResto и номер
@@ -224,7 +262,9 @@ def update_customer_bonus(
                 "entry": "manual",  # ← способ ввода: вручную
                 "key": customer_phone,  # ← сам номер телефона
             },
-            "accountType": {"accountGuid": "bonus_account_type-1"},  # ← из данных клиента
+            "accountType": {
+                "accountGuid": "bonus_account_type-1"
+            },  # ← из данных клиента
             "amount": amount,
         }
 
@@ -303,10 +343,12 @@ def get_all_clients_full() -> list:
             f"{BASE_URL}/list",
             params={
                 "moduleName": "crm.customer",
-                "className": "ru.edgex.quickresto.modules.crm.customer.CrmCustomer"
+                "className": "ru.edgex.quickresto.modules.crm.customer.CrmCustomer",
             },
             json={"limit": limit, "offset": offset},
-            auth=auth, headers=headers, timeout=30
+            auth=auth,
+            headers=headers,
+            timeout=30,
         )
         response.raise_for_status()
         batch = response.json()
@@ -330,9 +372,11 @@ def get_all_clients_full() -> list:
                 params={
                     "moduleName": "crm.customer",
                     "className": "ru.edgex.quickresto.modules.crm.customer.CrmCustomer",
-                    "objectId": client_id
+                    "objectId": client_id,
                 },
-                auth=auth, headers=headers, timeout=30
+                auth=auth,
+                headers=headers,
+                timeout=30,
             )
             response.raise_for_status()
             full_clients.append(response.json())
@@ -365,12 +409,12 @@ def get_all_clients() -> list:
             f"{BASE_URL}/list",
             params={
                 "moduleName": "crm.customer",
-                "className": "ru.edgex.quickresto.modules.crm.customer.CrmCustomer"
+                "className": "ru.edgex.quickresto.modules.crm.customer.CrmCustomer",
             },
             json={"limit": limit, "offset": offset},
             auth=auth,
             headers=headers,
-            timeout=30
+            timeout=30,
         )
         response.raise_for_status()
         batch = response.json()
@@ -390,10 +434,11 @@ def get_all_clients() -> list:
 
 # ── Обработка ─────────────────────────────────────────────────────────────────
 
+
 def analyze_clients():
     """
     Анализ всех клиентов QuickResto с определением уровней.
-    
+
     :return: Список данных о клиентах с уровнями
     """
     clients = get_all_clients_full()
@@ -413,23 +458,29 @@ def analyze_clients():
 
         # Накопительный баланс — основа для уровня
         accumulation = client.get("accumulationBalance", {})
-        accum_amount = accumulation.get("ledger", 0) if isinstance(accumulation, dict) else 0
+        accum_amount = (
+            accumulation.get("ledger", 0) if isinstance(accumulation, dict) else 0
+        )
 
         # Бонусный счёт
         accounts = client.get("accounts", [])
-        bonus = accounts[0].get("accountBalance", {}).get("ledger", 0) if accounts else 0
+        bonus = (
+            accounts[0].get("accountBalance", {}).get("ledger", 0) if accounts else 0
+        )
 
         # Уровень
         level = get_level(accum_amount)
 
-        result.append({
-            "id": client_id,
-            "name": f"{first_name} {last_name}".strip(),
-            "phone": phone,
-            "accumulation": accum_amount,
-            "bonus": bonus,
-            "level": level,
-        })
+        result.append(
+            {
+                "id": client_id,
+                "name": f"{first_name} {last_name}".strip(),
+                "phone": phone,
+                "accumulation": accum_amount,
+                "bonus": bonus,
+                "level": level,
+            }
+        )
 
     # Сортируем по накопленной сумме — лучшие клиенты вверху
     result.sort(key=lambda x: x["accumulation"], reverse=True)
@@ -441,10 +492,13 @@ def analyze_clients():
 def analyze_and_sync_clients():
     """
     Полный цикл анализа, нормализации, сохранения в JSON и синхронизации с БД.
-    
+
     :return: Статистика обработки
     """
-    from services.client_levels import analyze_and_save_clients, normalize_clients_phone_numbers
+    from services.client_levels import (
+        analyze_and_save_clients,
+        normalize_clients_phone_numbers,
+    )
 
     # Получаем данные из API
     clients_data = analyze_clients()
@@ -457,9 +511,12 @@ def analyze_and_sync_clients():
 
 # ── Вывод ─────────────────────────────────────────────────────────────────────
 
+
 def print_report(data: list):
     print("\n" + "=" * 75)
-    print(f"{'ID':<7} | {'Имя':<25} | {'Телефон':<15} | {'Накоп.':<10} | {'Бонусы':<8} | Уровень")
+    print(
+        f"{'ID':<7} | {'Имя':<25} | {'Телефон':<15} | {'Накоп.':<10} | {'Бонусы':<8} | Уровень"
+    )
     print("-" * 75)
 
     for c in data:

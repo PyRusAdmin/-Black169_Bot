@@ -129,5 +129,7 @@ def write_registered_users_to_excel(data: list) -> io.BytesIO:
     buffer = io.BytesIO()  # буфер для Excel-файла
     wb.save(buffer)  # сохраняем Excel-файл в буфер
     buffer.seek(0)  # сдвигаем указатель в начало буфера
-    logger.success("Excel-файл с зарегистрированными пользователями сформирован в памяти")
+    logger.success(
+        "Excel-файл с зарегистрированными пользователями сформирован в памяти"
+    )
     return buffer  # возвращаем буфер с Excel-файлом

@@ -2415,9 +2415,11 @@ def get_events_for_reminder(days_until: int) -> list:
                     "photo_id": event.photo_id,
                     "reminder_text": getattr(
                         event,
-                        f"reminder_text_{days_until}days"
-                        if days_until > 0
-                        else "reminder_text_event_day",
+                        (
+                            f"reminder_text_{days_until}days"
+                            if days_until > 0
+                            else "reminder_text_event_day"
+                        ),
                     ),
                 }
             )

@@ -4,9 +4,9 @@ import re
 def normalize_phone_number(phone: str) -> str:
     """
     Нормализация номера телефона к единому виду.
-    
+
     Приводит номер к формату: 79999999999 (11 цифр, начиная с 7)
-    
+
     :param phone: Исходный номер телефона
     :return: Нормализованный номер телефона
     """
@@ -14,14 +14,14 @@ def normalize_phone_number(phone: str) -> str:
         return ""
 
     # Удаляем все нецифровые символы
-    digits = re.sub(r'\D', '', phone)
+    digits = re.sub(r"\D", "", phone)
 
     # Если номер начинается с 8 и имеет 11 цифр, заменяем на 7
-    if len(digits) == 11 and digits.startswith('8'):
-        digits = '7' + digits[1:]
+    if len(digits) == 11 and digits.startswith("8"):
+        digits = "7" + digits[1:]
 
     # Если номер начинается с 7 и имеет 11 цифр — оставляем как есть
-    if len(digits) == 11 and digits.startswith('7'):
+    if len(digits) == 11 and digits.startswith("7"):
         return digits
 
     # Если номер начинается с 7 и имеет 12 цифр (например, 79991234567), оставляем
@@ -35,13 +35,13 @@ def normalize_phone_number(phone: str) -> str:
 def format_phone_display(phone: str) -> str:
     """
     Форматирование номера телефона для отображения.
-    
+
     Формат: +7 (999) 123-45-67
-    
+
     :param phone: Нормализованный номер телефона (79999999999)
     :return: Отформатированный номер для отображения
     """
-    if not phone or len(phone) != 11 or not phone.startswith('7'):
+    if not phone or len(phone) != 11 or not phone.startswith("7"):
         return phone
 
     return f"+7 ({phone[1:4]}) {phone[4:7]}-{phone[7:9]}-{phone[9:11]}"
@@ -50,9 +50,9 @@ def format_phone_display(phone: str) -> str:
 def is_valid_phone(phone: str) -> bool:
     """
     Проверка валидности номера телефона.
-    
+
     :param phone: Номер телефона для проверки
     :return: True если номер валидный, False если нет
     """
     normalized = normalize_phone_number(phone)
-    return len(normalized) == 11 and normalized.startswith('7')
+    return len(normalized) == 11 and normalized.startswith("7")

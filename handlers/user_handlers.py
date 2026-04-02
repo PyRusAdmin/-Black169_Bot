@@ -27,7 +27,9 @@ async def message_handler(message: Message) -> None:
     try:
         id_telegram = message.from_user.id  # получаем id пользователя
         name_telegram = message.from_user.first_name  # получаем имя пользователя
-        first_name_telegram = message.from_user.last_name  # получаем фамилию пользователя
+        first_name_telegram = (
+            message.from_user.last_name
+        )  # получаем фамилию пользователя
         phone_telegram = message.contact.phone_number  # получаем контакт пользователя
         logger.info(f"Пользователь отправил контакт: {phone_telegram}")
 
@@ -36,7 +38,10 @@ async def message_handler(message: Message) -> None:
 
         # Проверяем контакт в базе QuickResto
         data_customer = print_client_info(
-            layer_name_quickresto=layer_name_quickresto, phone_number=phone_telegram, auth=auth, headers=headers
+            layer_name_quickresto=layer_name_quickresto,
+            phone_number=phone_telegram,
+            auth=auth,
+            headers=headers,
         )
 
         # Если клиент не найден — создаём нового и присваиваем ему 1000 бонусных балов
@@ -131,7 +136,9 @@ async def message_handler(message: Message) -> None:
                 reply_markup=main_menu_keyboard(),
             )
         else:
-            logger.warning(f"Пользователь не найден в базе QuickResto: {phone_telegram}")
+            logger.warning(
+                f"Пользователь не найден в базе QuickResto: {phone_telegram}"
+            )
             await message.answer(text=t("user-not-found"))
 
     except Exception as e:

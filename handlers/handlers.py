@@ -3,9 +3,18 @@ from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_IDS
-from keyboards.inline import consent_keyboard, main_menu_keyboard, main_menu_keyboard_admin
+from keyboards.inline import (
+    consent_keyboard,
+    main_menu_keyboard,
+    main_menu_keyboard_admin,
+)
 from keyboards.keyboards import contact_keyboard
-from services.database import add_consent, has_consent, is_user_registered, write_to_db_start_person
+from services.database import (
+    add_consent,
+    has_consent,
+    is_user_registered,
+    write_to_db_start_person,
+)
 from services.i18n import t
 from utils.logger import logger
 
@@ -44,16 +53,22 @@ async def command_start_handler(message: Message) -> None:
         "first_name_telegram": first_name_telegram,
         "username_telegram": username_telegram,
     }
-    write_to_db_start_person(data)  # Записываем данные в базу данных (пользователь который запустил бота)
+    write_to_db_start_person(
+        data
+    )  # Записываем данные в базу данных (пользователь который запустил бота)
 
     # Проверяем, давал ли пользователь согласие на обработку персональных данных
     if has_consent(id_telegram):
-        logger.info(f"Пользователь {id_telegram} уже дал согласие на обработку персональных данных")
+        logger.info(
+            f"Пользователь {id_telegram} уже дал согласие на обработку персональных данных"
+        )
 
         # Проверяем, был ли уже зарегистрирован пользователь
         if is_user_registered(id_telegram):
             # Пользователь уже зарегистрирован — показываем главное меню
-            logger.info(f"Пользователь {id_telegram} уже зарегистрирован, показываем главное меню")
+            logger.info(
+                f"Пользователь {id_telegram} уже зарегистрирован, показываем главное меню"
+            )
             await message.answer(
                 text=t("main-menu"),
                 reply_markup=main_menu_keyboard(),
@@ -61,12 +76,16 @@ async def command_start_handler(message: Message) -> None:
             return
 
         # Пользователь дал согласие, но ещё не зарегистрирован — просим номер телефона
-        logger.info(f"Отправка запроса номера телефона пользователю {message.from_user.id}")
+        logger.info(
+            f"Отправка запроса номера телефона пользователю {message.from_user.id}"
+        )
         await message.answer(text=t("greet-message"), reply_markup=contact_keyboard())
         return
 
     # Пользователь не давал согласие — запрашиваем его
-    logger.info(f"Запрос согласия на обработку персональных данных у пользователя {message.from_user.id}")
+    logger.info(
+        f"Запрос согласия на обработку персональных данных у пользователя {message.from_user.id}"
+    )
     await message.answer(
         text=t("consent-title"),
         reply_markup=consent_keyboard(),
@@ -79,14 +98,18 @@ async def consent_given_handler(callback: CallbackQuery) -> None:
     """
     Обработчик кнопки «Даю согласие на обработку персональных данных»
     """
-    logger.info(f"Пользователь {callback.from_user.id} дал согласие на обработку персональных данных")
+    logger.info(
+        f"Пользователь {callback.from_user.id} дал согласие на обработку персональных данных"
+    )
 
     id_telegram = callback.from_user.id
 
     # Добавляем согласие в базу данных
     add_consent(id_telegram)
 
-    await callback.message.answer(text=t("consent-given"), reply_markup=contact_keyboard(), parse_mode="HTML")
+    await callback.message.answer(
+        text=t("consent-given"), reply_markup=contact_keyboard(), parse_mode="HTML"
+    )
     await callback.answer()
 
 
@@ -95,7 +118,9 @@ async def consent_declined_handler(callback: CallbackQuery) -> None:
     """
     Обработчик кнопки «Не даю согласие»
     """
-    logger.info(f"Пользователь {callback.from_user.id} отказался от обработки персональных данных")
+    logger.info(
+        f"Пользователь {callback.from_user.id} отказался от обработки персональных данных"
+    )
 
     await callback.message.answer(text=t("consent-declined"), parse_mode="HTML")
     await callback.answer()
@@ -131,14 +156,18 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
         "first_name_telegram": first_name_telegram,
         "username_telegram": username_telegram,
     }
-    write_to_db_start_person(data)  # Записываем данные в базу данных (пользователь который запустил бота)
+    write_to_db_start_person(
+        data
+    )  # Записываем данные в базу данных (пользователь который запустил бота)
 
     # Проверяем, давал ли пользователь согласие на обработку персональных данных
     if has_consent(id_telegram):
         # Проверяем, был ли уже зарегистрирован пользователь
         if is_user_registered(id_telegram):
             # Пользователь уже зарегистрирован — показываем главное меню
-            logger.info(f"Пользователь {id_telegram} уже зарегистрирован, показываем главное меню")
+            logger.info(
+                f"Пользователь {id_telegram} уже зарегистрирован, показываем главное меню"
+            )
             # Пробуем отредактировать сообщение, а если не получится (документ) — отправляем новое
             try:
                 await callback.message.edit_text(
@@ -154,7 +183,9 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
             return
 
         # Пользователь дал согласие, но ещё не зарегистрирован — просим номер телефона
-        logger.info(f"Отправка запроса номера телефона пользователю {callback.from_user.id}")
+        logger.info(
+            f"Отправка запроса номера телефона пользователю {callback.from_user.id}"
+        )
         try:
             await callback.message.edit_text(
                 text=t("greet-message"),
@@ -169,7 +200,9 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
         return
 
     # Пользователь не давал согласие — запрашиваем его
-    logger.info(f"Запрос согласия на обработку персональных данных у пользователя {callback.from_user.id}")
+    logger.info(
+        f"Запрос согласия на обработку персональных данных у пользователя {callback.from_user.id}"
+    )
     try:
         await callback.message.edit_text(
             text=t("consent-title"),

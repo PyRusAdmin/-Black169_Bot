@@ -13,6 +13,5 @@ def contact_keyboard():
     )
     builder.adjust(1)  # Кнопка на всю ширину
     return builder.as_markup(
-        resize_keyboard=True,
-        one_time_keyboard=True  # Скрыть после использования
+        resize_keyboard=True, one_time_keyboard=True  # Скрыть после использования
     )

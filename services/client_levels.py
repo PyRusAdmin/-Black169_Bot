@@ -26,7 +26,7 @@ LEVELS = [
 def get_level(accumulation: float) -> str:
     """
     Определение уровня клиента по накопительной сумме.
-    
+
     :param accumulation: Накопительная сумма клиента
     :return: Название уровня (Black, Gold, Silver, Bronze)
     """
@@ -39,7 +39,7 @@ def get_level(accumulation: float) -> str:
 def get_level_description(level: str) -> str:
     """
     Получение описания уровня клиента.
-    
+
     :param level: Название уровня
     :return: Описание уровня с условиями
     """
@@ -55,20 +55,20 @@ def get_level_description(level: str) -> str:
 def get_level_privileges(level: str) -> list:
     """
     Получение списка привилегий для уровня из базы данных.
-    
+
     :param level: Название уровня (Bronze, Silver, Gold, Black)
     :return: Список привилегий
     """
     from services.database import get_client_level_info
-    
+
     level_info = get_client_level_info(level)
-    
+
     if level_info and level_info.get("privileges"):
         try:
             return json.loads(level_info["privileges"])
         except json.JSONDecodeError:
             return [level_info["privileges"]]
-    
+
     # Привилегии по умолчанию, если БД недоступна
     default_privileges = {
         "Bronze": [
@@ -99,23 +99,30 @@ def get_level_privileges(level: str) -> list:
 def get_level_full_info(level: str) -> dict:
     """
     Получение полной информации об уровне из БД.
-    
+
     :param level: Название уровня
     :return: Полная информация об уровне
     """
     from services.database import get_client_level_info
-    
+
     level_info = get_client_level_info(level)
-    
+
     if level_info:
         level_info["privileges_list"] = get_level_privileges(level)
         return level_info
-    
+
     # Информация по умолчанию
     return {
         "level_name": level,
-        "min_accumulation": {"Bronze": 0, "Silver": 10000, "Gold": 30000, "Black": 60000}.get(level, 0),
-        "emoji": {"Bronze": "🥉", "Silver": "🥈", "Gold": "🥇", "Black": "💎"}.get(level, "📊"),
+        "min_accumulation": {
+            "Bronze": 0,
+            "Silver": 10000,
+            "Gold": 30000,
+            "Black": 60000,
+        }.get(level, 0),
+        "emoji": {"Bronze": "🥉", "Silver": "🥈", "Gold": "🥇", "Black": "💎"}.get(
+            level, "📊"
+        ),
         "privileges_list": get_level_privileges(level),
     }
 
@@ -123,18 +130,18 @@ def get_level_full_info(level: str) -> dict:
 def get_all_levels_with_privileges() -> list:
     """
     Получение всех уровней с привилегиями.
-    
+
     :return: Список уровней с полной информацией
     """
     from services.database import get_all_client_levels
-    
+
     levels = get_all_client_levels()
-    
+
     if levels:
         for level in levels:
             level["privileges_list"] = json.loads(level.get("privileges", "[]"))
         return levels
-    
+
     # Возвращаем значения по умолчанию
     return [
         {
@@ -220,10 +227,12 @@ def get_next_level_info(current_level: str, current_accumulation: float) -> dict
     }
 
 
-def save_clients_to_json(clients_data: list, filepath: str = "data/clients_levels.json") -> bool:
+def save_clients_to_json(
+    clients_data: list, filepath: str = "data/clients_levels.json"
+) -> bool:
     """
     Сохранение данных о клиентах в JSON файл.
-    
+
     :param clients_data: Список данных о клиентах
     :param filepath: Путь к файлу
     :return: True если успешно, False если нет
@@ -231,7 +240,9 @@ def save_clients_to_json(clients_data: list, filepath: str = "data/clients_level
     try:
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(clients_data, f, ensure_ascii=False, indent=2)
-        logger.info(f"Данные о клиентах сохранены в {filepath} ({len(clients_data)} клиентов)")
+        logger.info(
+            f"Данные о клиентах сохранены в {filepath} ({len(clients_data)} клиентов)"
+        )
         return True
     except Exception as e:
         logger.exception(f"Ошибка при сохранении данных о клиентах в JSON: {e}")
@@ -241,7 +252,7 @@ def save_clients_to_json(clients_data: list, filepath: str = "data/clients_level
 def load_clients_from_json(filepath: str = "data/clients_levels.json") -> list:
     """
     Загрузка данных о клиентах из JSON файла.
-    
+
     :param filepath: Путь к файлу
     :return: Список данных о клиентах
     """
@@ -261,7 +272,7 @@ def load_clients_from_json(filepath: str = "data/clients_levels.json") -> list:
 def normalize_clients_phone_numbers(clients_data: list) -> list:
     """
     Нормализация телефонных номеров в данных о клиентах.
-    
+
     :param clients_data: Список данных о клиентах
     :return: Обновленный список с нормализованными номерами
     """
@@ -279,14 +290,16 @@ def normalize_clients_phone_numbers(clients_data: list) -> list:
         client["phone"] = normalized_phone
         updated_clients.append(client)
 
-    logger.info(f"Нормализовано телефонных номеров: {normalized_count} из {len(clients_data)}")
+    logger.info(
+        f"Нормализовано телефонных номеров: {normalized_count} из {len(clients_data)}"
+    )
     return updated_clients
 
 
 def sync_clients_with_database(clients_data: list) -> dict:
     """
     Синхронизация данных о клиентах с базой данных.
-    
+
     :param clients_data: Список данных о клиентах
     :return: Статистика синхронизации
     """
@@ -311,7 +324,9 @@ def sync_clients_with_database(clients_data: list) -> dict:
                     continue
 
                 # Ищем пользователя по телефону в базе данных
-                user = RegisteredPersons.get_or_none(RegisteredPersons.phone_telegram == phone)
+                user = RegisteredPersons.get_or_none(
+                    RegisteredPersons.phone_telegram == phone
+                )
 
                 if user:
                     # Обновляем уровень клиента
@@ -338,7 +353,9 @@ def sync_clients_with_database(clients_data: list) -> dict:
                         stats["not_found"] += 1
 
             except Exception as e:
-                logger.warning(f"Ошибка при синхронизации клиента {client.get('id')}: {e}")
+                logger.warning(
+                    f"Ошибка при синхронизации клиента {client.get('id')}: {e}"
+                )
                 stats["errors"] += 1
 
         logger.info(
@@ -360,7 +377,7 @@ def sync_clients_with_database(clients_data: list) -> dict:
 def analyze_and_save_clients(clients_from_api: list) -> dict:
     """
     Полный цикл анализа, нормализации и сохранения данных о клиентах.
-    
+
     :param clients_from_api: Данные о клиентах из QuickResto API
     :return: Статистика обработки
     """
@@ -370,7 +387,9 @@ def analyze_and_save_clients(clients_from_api: list) -> dict:
     normalized_clients = normalize_clients_phone_numbers(clients_from_api)
 
     # Шаг 2: Сортировка по накопительной сумме (лучшие клиенты вверху)
-    sorted_clients = sorted(normalized_clients, key=lambda x: x.get("accumulation", 0), reverse=True)
+    sorted_clients = sorted(
+        normalized_clients, key=lambda x: x.get("accumulation", 0), reverse=True
+    )
 
     # Шаг 3: Сохранение в JSON
     json_saved = save_clients_to_json(sorted_clients)

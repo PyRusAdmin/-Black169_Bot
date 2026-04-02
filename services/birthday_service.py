@@ -2,7 +2,12 @@ from loguru import logger
 
 from config import bot
 from services.database import get_birthday_users_today, update_bonus_accrual_date
-from services.quickresto_api import auth, headers, layer_name_quickresto, update_customer_bonus
+from services.quickresto_api import (
+    auth,
+    headers,
+    layer_name_quickresto,
+    update_customer_bonus,
+)
 
 
 async def send_birthday_bonus() -> dict:
@@ -44,7 +49,9 @@ async def send_birthday_bonus() -> dict:
             )
 
             if result:
-                logger.success(f"Начислено 1500 бонусов имениннику {first_name} {last_name} (ID: {id_telegram})")
+                logger.success(
+                    f"Начислено 1500 бонусов имениннику {first_name} {last_name} (ID: {id_telegram})"
+                )
                 success += 1
 
                 # Обновляем дату начисления бонусов (для отслеживания сгорания)
@@ -64,15 +71,22 @@ async def send_birthday_bonus() -> dict:
                     )
                     logger.info(f"Поздравление отправлено пользователю {id_telegram}")
                 except Exception as e:
-                    logger.warning(f"Не удалось отправить поздравление {id_telegram}: {e}")
+                    logger.warning(
+                        f"Не удалось отправить поздравление {id_telegram}: {e}"
+                    )
             else:
                 logger.error(f"Ошибка начисления бонусов {id_telegram}")
                 failed += 1
 
         except Exception as e:
-            logger.exception(f"Ошибка обработки именинника {user.get('id_telegram')}: {e}")
+            logger.exception(
+                f"Ошибка обработки именинника {user.get('id_telegram')}: {e}"
+            )
             failed += 1
 
-    logger.info(f"Проверка дней рождения завершена. " f"Всего: {total}, Успешно: {success}, Ошибок: {failed}")
+    logger.info(
+        f"Проверка дней рождения завершена. "
+        f"Всего: {total}, Успешно: {success}, Ошибок: {failed}"
+    )
 
     return {"total": total, "success": success, "failed": failed}

@@ -6,10 +6,15 @@
 - За 1 день до мероприятия
 - В день мероприятия
 """
+
 import asyncio
 
 from config import OWNER_IDS, bot
-from services.database import get_all_user_ids, get_events_for_reminder, update_reminder_sent
+from services.database import (
+    get_all_user_ids,
+    get_events_for_reminder,
+    update_reminder_sent,
+)
 from utils.logger import logger
 
 
@@ -72,14 +77,20 @@ async def send_event_reminders(days_until: int, reminder_type: str) -> dict:
                 if "bot was blocked" in str(e).lower():
                     logger.warning(f"Пользователь {user_id} заблокировал бота")
                 else:
-                    logger.error(f"Ошибка при отправке напоминания пользователю {user_id}: {e}")
+                    logger.error(
+                        f"Ошибка при отправке напоминания пользователю {user_id}: {e}"
+                    )
                 total_failed += 1
 
         # Обновляем статус отправленного напоминания
         update_reminder_sent(event["id"], reminder_type)
-        logger.info(f"Отправлено напоминание за {days_until} дн. для мероприятия {event['id']}")
+        logger.info(
+            f"Отправлено напоминание за {days_until} дн. для мероприятия {event['id']}"
+        )
 
-    logger.info(f"Рассылка напоминаний завершена: отправлено {total_sent}, ошибок {total_failed}")
+    logger.info(
+        f"Рассылка напоминаний завершена: отправлено {total_sent}, ошибок {total_failed}"
+    )
     return {"sent": total_sent, "failed": total_failed}
 
 
@@ -98,7 +109,9 @@ async def check_and_send_reminders():
         result_1day = await send_event_reminders(days_until=1, reminder_type="1day")
 
         # Напоминание в день мероприятия
-        result_event_day = await send_event_reminders(days_until=0, reminder_type="event_day")
+        result_event_day = await send_event_reminders(
+            days_until=0, reminder_type="event_day"
+        )
 
         logger.info(
             f"Итоги рассылки напоминаний:\n"

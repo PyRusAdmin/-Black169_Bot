@@ -16,7 +16,9 @@ async def send_bonus_burn_warning(days_until_burn: int = 7) -> dict:
     burning_users = get_bonus_burning_users(days_until_burn)
 
     if not burning_users:
-        logger.info(f"Нет пользователей с бонусами, сгорающими через {days_until_burn} дн.")
+        logger.info(
+            f"Нет пользователей с бонусами, сгорающими через {days_until_burn} дн."
+        )
         return {"total": 0, "success": 0, "failed": 0}
 
     logger.info(f"Найдено пользователей с горящими бонусами: {len(burning_users)}")
@@ -43,7 +45,9 @@ async def send_bonus_burn_warning(days_until_burn: int = 7) -> dict:
         try:
             id_telegram = user.get("id_telegram")
             first_name = user.get("first_name", "Пользователь")
-            bot_bonus_amount = user.get("bot_bonus_amount", "0")  # Бонусы, начисленные ботом
+            bot_bonus_amount = user.get(
+                "bot_bonus_amount", "0"
+            )  # Бонусы, начисленные ботом
             burn_date = user.get("burn_date")
 
             # Форматируем дату сгорания
@@ -78,7 +82,9 @@ async def send_bonus_burn_warning(days_until_burn: int = 7) -> dict:
                 failed += 1
 
         except Exception as e:
-            logger.exception(f"Ошибка обработки пользователя {user.get('id_telegram')}: {e}")
+            logger.exception(
+                f"Ошибка обработки пользователя {user.get('id_telegram')}: {e}"
+            )
             failed += 1
 
     logger.info(
