@@ -1,40 +1,33 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
-from config import layer_name_quickresto
 from keyboards.inline import back_to_main_menu_keyboard, twist_keyboard
 from services.bonus import random_bonus
+
+# Формируем сообщение с уровнем клиента
+from services.client_levels import get_level_description, get_next_level_info
 from services.database import (
     get_user_bonus,
-    get_user_info,
     has_user_spun_today,
     update_bonus_accrual_date,
     write_spin_result,
     write_to_db_registered_person,
     generate_promo_code,
 )
-from services.i18n import t
-from services.quickresto_api import (
-    auth,
-    headers,
-    print_full_client_info,
-    update_customer_bonus,
-)
-from utils.logger import logger
-
-# Формируем сообщение с уровнем клиента
-from services.client_levels import get_level_description, get_next_level_info
 
 # Формируем сообщение с информацией о бонусах пользователя
 from services.database import get_user_burning_bonus_info
-
-
 from services.database import (
     has_user_claimed_gift_bonus,
     mark_gift_bonus_claimed,
     get_user_info,
 )
-
+from services.i18n import t
+from services.quickresto_api import (
+    print_full_client_info,
+    update_customer_bonus,
+)
+from utils.logger import logger
 
 router = Router(name=__name__)
 
@@ -137,12 +130,9 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
 
     # Начисляем 3000 бонусов
     update_customer_bonus(
-        layer_name_quickresto=layer_name_quickresto,
         customer_id=id_quickresto,  # ID пользователя в QuickResto
         amount=3000.00,  # Сумма бонусов
         customer_phone=phone_telegram,  # Телефон пользователя в Telegram
-        auth=auth,  # Токен для авторизации в QuickResto
-        headers=headers,  # Заголовки для запроса
     )
 
     # Отмечаем, что пользователь получил подарок
@@ -154,6 +144,8 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
         text=(
             "🎁 <b>Поздравляем!</b>\n\n"
             "Вам начислено <b>3000 бонусов</b>!\n\n"
+            f"Ваш промокод: <code>{promo_code}</code>\n"
+            f"Для получения бонусов, покажите промокод администратору\n\n"
             "Используйте их при следующем посещении The Black 169.\n\n"
             "Спасибо, что вы с нами! 🖤"
         ),
@@ -296,9 +288,6 @@ async def twist_handler(callback: CallbackQuery) -> None:
             reply_markup=back_to_main_menu_keyboard(),
         )
         return
-
-
-"""Акции и мероприятия"""
 
 
 @router.callback_query(F.data == "promotions")

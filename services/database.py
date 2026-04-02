@@ -1616,48 +1616,24 @@ def get_bonus_burning_users(days_until_burn: int = 7) -> list:
             db.close()
 
 
-def update_bonus_accrual_date(
-    id_telegram: int, accrued_at: datetime = None, bonus_amount: float = None
-) -> bool:
+def update_bonus_accrual_date(id_telegram: int, bonus_amount: float = None) -> bool:
     """
     Обновление даты начисления бонусов ботом для пользователя
 
     :param id_telegram: ID пользователя в Telegram
-    :param accrued_at: Дата начисления (по умолчанию - сейчас)
     :param bonus_amount: Сумма начисленных бонусов (для отслеживания)
     :return: True если обновлено, False если нет
     """
     try:
-        if db.is_closed():
-            db.connect()
-
-        if accrued_at is None:
-            accrued_at = datetime.now()
-
-        # Если передана сумма бонуса, обновляем и её
-        if bonus_amount is not None:
-            query = RegisteredPersons.update(
-                bonus_accrued_at=accrued_at, bot_bonus_amount=bonus_amount
-            ).where(RegisteredPersons.id_telegram == id_telegram)
-        else:
-            query = RegisteredPersons.update(bonus_accrued_at=accrued_at).where(
-                RegisteredPersons.id_telegram == id_telegram
-            )
-
-        result = query.execute()
-
-        if result > 0:
-            logger.info(
-                f"Дата начисления бонусов ботом обновлена для пользователя {id_telegram}"
-            )
-            return True
-        return False
+        query = RegisteredPersons.update(
+            bonus_accrued_at=datetime.now(), bot_bonus_amount=bonus_amount
+        ).where(RegisteredPersons.id_telegram == id_telegram)
+        query.execute()
+        logger.info(
+            f"Дата начисления бонусов ботом обновлена для пользователя {id_telegram}"
+        )
     except Exception as e:
         logger.exception(f"Ошибка при обновлении даты начисления бонусов ботом: {e}")
-        return False
-    finally:
-        if not db.is_closed():
-            db.close()
 
 
 def get_user_burning_bonus_info(id_telegram: int) -> dict | None:
@@ -1744,8 +1720,8 @@ def mark_gift_bonus_claimed(id_telegram: int) -> bool:
     :return: True если успешно, False если ошибка
     """
     try:
-        if db.is_closed():
-            db.connect()
+        # if db.is_closed():
+        #     db.connect()
 
         query = RegisteredPersons.update(
             gift_bonus_claimed=True, gift_bonus_claimed_at=datetime.now()
