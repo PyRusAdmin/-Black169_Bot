@@ -20,9 +20,7 @@ from services.excel_service import (
     write_registered_users_to_excel, write_users_to_excel, write_winners_to_excel,
 )
 from services.i18n import t
-from services.quickresto_api import (
-    auth, base_url, delete_customer, headers, print_client_info,
-)
+from services.quickresto_api import delete_customer, print_client_info
 from states.user_states import (
     AdminManagementState, BroadcastState, DeleteUserState, SearchUserState,
 )

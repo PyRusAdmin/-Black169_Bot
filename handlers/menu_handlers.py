@@ -2,7 +2,10 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
 from keyboards.keyboards import back_to_main_menu_keyboard, twist_keyboard
-from services.bonus_operations import random_bonus, generate_promo_code, receives_information_about_user_and_accrues_bonuses, updates_bonuses_in_the_database
+from services.bonus_operations import (
+    random_bonus, generate_promo_code, receives_information_about_user_and_accrues_bonuses,
+    updates_bonuses_in_the_database
+)
 
 # Формируем сообщение с уровнем клиента
 from services.client_levels import get_level_description, get_next_level_info

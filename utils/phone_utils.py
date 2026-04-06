@@ -13,7 +13,7 @@ def normalize_phone_number(phone: str) -> str:
     if not phone or phone.strip() in ["", "—", "-", "None", "null"]:
         return ""
 
-    # Удаляем все нецифровые символы
+    # Удаляем все не цифровые символы
     digits = re.sub(r"\D", "", phone)
 
     # Если номер начинается с 8 и имеет 11 цифр, заменяем на 7
