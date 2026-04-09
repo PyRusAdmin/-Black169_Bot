@@ -45,12 +45,12 @@ async def back_today_handler(callback: CallbackQuery) -> None:
     try:
         await callback.message.edit_text(
             text=t("menu-back-today"),
-            reply_markup=new_section_keyboard(),
+            reply_markup=back_to_main_menu_keyboard(),
         )
     except Exception:
         await callback.message.answer(
             text=t("menu-back-today"),
-            reply_markup=new_section_keyboard(),
+            reply_markup=back_to_main_menu_keyboard(),
         )
     await callback.answer()
 
@@ -118,6 +118,7 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
                 level_text += f"🏆 {next_level_info['message']}\n"
 
     try:
+
         await callback.message.edit_text(
             text=(
                 f"<b>Ваш ID: {id_quickresto}</b>\n"
@@ -125,7 +126,7 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
                 f"{level_text}"
                 f"Используйте их при следующем посещении!"
             ),
-            reply_markup=new_section_keyboard(),
+            reply_markup=back_to_main_menu_keyboard(),
         )
     except Exception:
         await callback.message.answer(
@@ -186,9 +187,9 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
             "Спасибо, что вы с нами! 🖤"
         )
         try:
-            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
         except Exception:
-            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
+            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
         await callback.answer()
 
     elif is_claimed:
@@ -198,9 +199,9 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
             "Спасибо, что вы с нами! 🖤"
         )
         try:
-            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
         except Exception:
-            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
+            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
         await callback.answer()
 
 
@@ -249,11 +250,11 @@ async def bonuses_will_soon_burn_out_handler(callback: CallbackQuery) -> None:
 
     try:
         await callback.message.edit_text(
-            text=message_text, reply_markup=new_section_keyboard()
+            text=message_text, reply_markup=back_to_main_menu_keyboard()
         )
     except Exception:
         await callback.message.answer(
-            text=message_text, reply_markup=new_section_keyboard()
+            text=message_text, reply_markup=back_to_main_menu_keyboard()
         )
     await callback.answer()
 
@@ -285,9 +286,9 @@ async def twist_handler(callback: CallbackQuery) -> None:
             "Приходите завтра — у вас будет новая попытка выиграть подарок! 🍀"
         )
         try:
-            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
         except Exception:
-            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
+            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
         await callback.answer()
         return
 
@@ -324,23 +325,23 @@ async def twist_handler(callback: CallbackQuery) -> None:
     if bonus == "Коктейль на выбор":
         text = t("cocktail-winning-message")
         try:
-            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
         except Exception:
-            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
+            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
         return
     if bonus == "Кальян на выбор":
         text = t("hookah-winning-message")
         try:
-            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
         except Exception:
-            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
+            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
         return
     if bonus == "Бонус в рублях (1000)":
         text = t("bonus-winning-message")
         try:
-            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
         except Exception:
-            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
+            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
         # Добавляем бонус клиенту, если выпал денежный бонус
         update_customer_bonus(
             customer_id=id_quickresto,  # ID клиента в QuickResto
@@ -355,9 +356,9 @@ async def twist_handler(callback: CallbackQuery) -> None:
     if bonus == "Попробуйте завтра":
         text = t("try-tomorrow-winning-message")
         try:
-            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
         except Exception:
-            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
+            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
         return
 
 

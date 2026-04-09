@@ -1,5 +1,5 @@
 from aiogram import F, Router
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message
 
 from handlers.menu_handlers import updates_bonuses_in_the_database
 from keyboards.keyboards import main_menu_keyboard
@@ -57,14 +57,9 @@ async def message_handler(message: Message) -> None:
                 # Обновляем базу данных с бонусами
                 updates_bonuses_in_the_database(id_telegram=message.from_user.id)
 
-                # Сначала удаляем реплай-клавиатуру
+                # Объединяем сообщение о регистрации с главным меню
                 await message.answer(
-                    text=t("registration-completed"),
-                    reply_markup=ReplyKeyboardRemove(remove_keyboard=True),
-                )
-                # Затем показываем главное меню
-                await message.answer(
-                    text=t("main-menu"),
+                    text=t("registration-completed") + "\n\n" + t("main-menu"),
                     reply_markup=main_menu_keyboard(),
                 )
             else:
@@ -78,7 +73,7 @@ async def message_handler(message: Message) -> None:
             logger.success(f"Пользователь найден в базе QuickResto: {phone_telegram}")
 
             """
-            Если пользователь найден в базе QuickResto, то записываем его в базу данных. Так как QuickResto не 
+            Если пользователь найден в базе QuickResto, то записываем его в базу данных. Так как QuickResto не
             выдает полную информацию о пользователе по номеру телефона, то запрашиваем его данные из базы
             QuickResto по его ID
             """
@@ -99,14 +94,9 @@ async def message_handler(message: Message) -> None:
 
             write_to_db_registered_person(data)
 
-            # Сначала удаляем реплай-клавиатуру
+            # Объединяем сообщение о регистрации с главным меню
             await message.answer(
-                text=t("registration-completed"),
-                reply_markup=ReplyKeyboardRemove(remove_keyboard=True),
-            )
-            # Затем показываем главное меню
-            await message.answer(
-                text=t("main-menu"),
+                text=t("registration-completed") + "\n\n" + t("main-menu"),
                 reply_markup=main_menu_keyboard(),
             )
         else:
