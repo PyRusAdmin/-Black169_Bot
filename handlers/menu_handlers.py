@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
-from keyboards.keyboards import back_to_main_menu_keyboard, twist_keyboard
+from keyboards.keyboards import back_to_main_menu_keyboard, twist_keyboard, new_section_keyboard
 from services.bonus_operations import (
     random_bonus, generate_promo_code, receives_information_about_user_and_accrues_bonuses,
     updates_bonuses_in_the_database
@@ -19,6 +19,17 @@ from services.quickresto_api import print_full_client_info, update_customer_bonu
 from utils.logger import logger
 
 router = Router(name=__name__)
+
+
+@router.callback_query(F.data == "special_offers")
+async def special_offers_handler(callback: CallbackQuery) -> None:
+    """Обработчик кнопки '💫 Специальные предложения'"""
+    logger.info(f"Пользователь {callback.from_user.id} нажал 'Специальные предложения'")
+    await callback.message.edit_text(
+        text="💫 <b>Специальные предложения</b>\n\nВыберите интересующий вас раздел:",
+        reply_markup=new_section_keyboard(),
+    )
+    await callback.answer()
 
 
 @router.callback_query(F.data == "my_bonuses")

@@ -19,7 +19,7 @@ def contact_keyboard():
 
 
 def new_section_keyboard():
-    """Клавиатура для новой секции"""
+    """Клавиатура специальных предложений"""
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -58,30 +58,17 @@ def main_menu_keyboard():
             # Бонусы и подарки
             [
                 InlineKeyboardButton(text="💰 Мои бонусы", callback_data="my_bonuses"),
-                # InlineKeyboardButton(
-                #     text="🎁 Забрать подарок", callback_data="pick_up_gift"
-                # ),
-            ],
-            [
-                # InlineKeyboardButton(
-                #     text="1 🔥 Бонусы скоро сгорят",
-                #     callback_data="bonuses_will_soon_burn_out",
-                # ),
-                InlineKeyboardButton(
-                    text="🎡 Колесо подарков", callback_data="gift_wheel"
-                ),
+                InlineKeyboardButton(text="🎡 Колесо подарков", callback_data="gift_wheel"),
             ],
             # Акции и мероприятия
             [
                 InlineKeyboardButton(text="🎉 Акции", callback_data="promotions"),
                 InlineKeyboardButton(text="📅 Мероприятия", callback_data="events"),
             ],
-            # Маркетинг
-            # [
-            #     InlineKeyboardButton(
-            #         text="1 🔥 Вернуться сегодня", callback_data="back_today"
-            #     ),
-            # ],
+            # Специальные предложения
+            [
+                InlineKeyboardButton(text="💫 Специальные предложения", callback_data="special_offers"),
+            ],
             # Информация
             [
                 InlineKeyboardButton(text="📍 Контакты", callback_data="contacts"),
@@ -146,30 +133,17 @@ def main_menu_keyboard_admin():
             # Бонусы и подарки
             [
                 InlineKeyboardButton(text="💰 Мои бонусы", callback_data="my_bonuses"),
-                # InlineKeyboardButton(
-                #     text="🎁 Забрать подарок", callback_data="pick_up_gift"
-                # ),
-            ],
-            [
-                # InlineKeyboardButton(
-                #     text="🔥 Бонусы скоро сгорят",
-                #     callback_data="bonuses_will_soon_burn_out",
-                # ),
-                InlineKeyboardButton(
-                    text="🎡 Колесо подарков", callback_data="gift_wheel"
-                ),
+                InlineKeyboardButton(text="🎡 Колесо подарков", callback_data="gift_wheel"),
             ],
             # Акции и мероприятия
             [
                 InlineKeyboardButton(text="🎉 Акции", callback_data="promotions"),
                 InlineKeyboardButton(text="📅 Мероприятия", callback_data="events"),
             ],
-            # Маркетинг
-            # [
-            #     InlineKeyboardButton(
-            #         text="🔥 Вернуться сегодня", callback_data="back_today"
-            #     ),
-            # ],
+            # Специальные предложения
+            [
+                InlineKeyboardButton(text="💫 Специальные предложения", callback_data="special_offers"),
+            ],
             # Информация
             [
                 InlineKeyboardButton(text="📍 Контакты", callback_data="contacts"),
