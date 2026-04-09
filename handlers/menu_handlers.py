@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
-from keyboards.keyboards import back_to_main_menu_keyboard, twist_keyboard, new_section_keyboard
+from keyboards.keyboards import twist_keyboard, new_section_keyboard
 from services.bonus_operations import (
     random_bonus, generate_promo_code, receives_information_about_user_and_accrues_bonuses,
     updates_bonuses_in_the_database
@@ -64,7 +64,22 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Мои бонусы'")
 
     # Получаем баланс бонусов пользователя
-    id_quickresto, phone_telegram = get_user_bonus(callback.from_user.id)
+    bonus_result = get_user_bonus(callback.from_user.id)
+    if bonus_result is None:
+        try:
+            await callback.message.edit_text(
+                text="❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации.",
+                reply_markup=new_section_keyboard(),
+            )
+        except Exception:
+            await callback.message.answer(
+                text="❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации.",
+                reply_markup=new_section_keyboard(),
+            )
+        await callback.answer()
+        return
+
+    id_quickresto, phone_telegram = bonus_result
     data = print_full_client_info(client_id=id_quickresto)
 
     write_to_db_registered_person(
@@ -130,6 +145,17 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
 async def pick_up_gift_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Забрать подарок'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Забрать подарок'")
+
+    user_info = get_user_info(callback.from_user.id)
+    if user_info is None or user_info.get("phone_telegram") is None:
+        text = "❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации."
+        try:
+            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+        except Exception:
+            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
+        await callback.answer()
+        return
+
     # Проверяем, получал ли пользователь подарок ранее
     is_claimed = has_user_claimed_gift_bonus(callback.from_user.id)
     logger.info(is_claimed)
@@ -151,30 +177,31 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
         # Обновляем базу данных с бонусами
         updates_bonuses_in_the_database(id_telegram=callback.from_user.id)
 
-        await callback.message.answer(
-            text=(
-                "🎁 <b>Поздравляем!</b>\n\n"
-                "Вам начислено <b>3000 бонусов</b>!\n\n"
-                f"Ваш промокод: <code>{promo_code}</code>\n"
-                f"Для получения бонусов, назовите свой ID администратору и он проверит на наличие промокод\n\n"
-                "Используйте их при следующем посещении БЛЭК 169.\n\n"
-                "Спасибо, что вы с нами! 🖤"
-            ),
-            reply_markup=back_to_main_menu_keyboard(),
+        text = (
+            "🎁 <b>Поздравляем!</b>\n\n"
+            "Вам начислено <b>3000 бонусов</b>!\n\n"
+            f"Ваш промокод: <code>{promo_code}</code>\n"
+            f"Для получения бонусов, назовите свой ID администратору и он проверит на наличие промокод\n\n"
+            "Используйте их при следующем посещении БЛЭК 169.\n\n"
+            "Спасибо, что вы с нами! 🖤"
         )
+        try:
+            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+        except Exception:
+            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
         await callback.answer()
 
     elif is_claimed:
-        await callback.message.edit_text(
-            text=(
-                "❌ <b>Вы уже получили подарочные бонусы</b>\n\n"
-                "Подарочные бонусы можно получить только один раз.\n\n"
-                "Спасибо, что вы с нами! 🖤"
-            ),
-            reply_markup=back_to_main_menu_keyboard(),
+        text = (
+            "❌ <b>Вы уже получили подарочные бонусы</b>\n\n"
+            "Подарочные бонусы можно получить только один раз.\n\n"
+            "Спасибо, что вы с нами! 🖤"
         )
+        try:
+            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+        except Exception:
+            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
         await callback.answer()
-        return
 
 
 @router.callback_query(F.data == "bonuses_will_soon_burn_out")
@@ -220,9 +247,14 @@ async def bonuses_will_soon_burn_out_handler(callback: CallbackQuery) -> None:
             "Все ваши бонусы в безопасности! 🖤"
         )
 
-    await callback.message.answer(
-        text=message_text, reply_markup=back_to_main_menu_keyboard()
-    )
+    try:
+        await callback.message.edit_text(
+            text=message_text, reply_markup=new_section_keyboard()
+        )
+    except Exception:
+        await callback.message.answer(
+            text=message_text, reply_markup=new_section_keyboard()
+        )
     await callback.answer()
 
 
@@ -248,20 +280,30 @@ async def twist_handler(callback: CallbackQuery) -> None:
 
     # Проверяем, участвовал ли пользователь сегодня
     if has_user_spun_today(id_telegram):
-        await callback.message.answer(
-            text=(
-                "⛔️ Вы уже участвовали в розыгрыше сегодня.\n\n"
-                "Приходите завтра — у вас будет новая попытка выиграть подарок! 🍀"
-            ),
-            reply_markup=back_to_main_menu_keyboard(),
+        text = (
+            "⛔️ Вы уже участвовали в розыгрыше сегодня.\n\n"
+            "Приходите завтра — у вас будет новая попытка выиграть подарок! 🍀"
         )
+        try:
+            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+        except Exception:
+            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
         await callback.answer()
         return
 
     # Получаем ID пользователя в QuickResto
     user_info = get_user_info(id_telegram)
-    id_quickresto = user_info.get("id_quickresto") if user_info else None
-    phone_telegram = user_info.get("phone_telegram") if user_info else None
+    if user_info is None:
+        text = "❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности."
+        try:
+            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+        except Exception:
+            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
+        await callback.answer()
+        return
+
+    id_quickresto = user_info.get("id_quickresto")
+    phone_telegram = user_info.get("phone_telegram")
 
     bonus = random_bonus()  # получаем случайный бонус из списка бонусов
     logger.info(f"Пользователь {id_telegram} выиграл бонус {bonus}")
@@ -280,20 +322,25 @@ async def twist_handler(callback: CallbackQuery) -> None:
     )
 
     if bonus == "Коктейль на выбор":
-        await callback.message.answer(
-            text=t("cocktail-winning-message"),
-            reply_markup=back_to_main_menu_keyboard(),
-        )
+        text = t("cocktail-winning-message")
+        try:
+            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+        except Exception:
+            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
         return
     if bonus == "Кальян на выбор":
-        await callback.message.answer(
-            text=t("hookah-winning-message"), reply_markup=back_to_main_menu_keyboard()
-        )
+        text = t("hookah-winning-message")
+        try:
+            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+        except Exception:
+            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
         return
     if bonus == "Бонус в рублях (1000)":
-        await callback.message.answer(
-            text=t("bonus-winning-message"), reply_markup=back_to_main_menu_keyboard()
-        )
+        text = t("bonus-winning-message")
+        try:
+            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+        except Exception:
+            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
         # Добавляем бонус клиенту, если выпал денежный бонус
         update_customer_bonus(
             customer_id=id_quickresto,  # ID клиента в QuickResto
@@ -306,10 +353,11 @@ async def twist_handler(callback: CallbackQuery) -> None:
 
         return
     if bonus == "Попробуйте завтра":
-        await callback.message.answer(
-            text=t("try-tomorrow-winning-message"),
-            reply_markup=back_to_main_menu_keyboard(),
-        )
+        text = t("try-tomorrow-winning-message")
+        try:
+            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+        except Exception:
+            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
         return
 
 
@@ -362,16 +410,6 @@ async def events_handler(callback: CallbackQuery) -> None:
         text=text, reply_markup=back_to_main_menu_keyboard(), parse_mode="HTML"
     )
 
-    await callback.answer()
-
-
-@router.callback_query(F.data == "back_today")
-async def back_today_handler(callback: CallbackQuery) -> None:
-    """Обработчик кнопки 'Вернуться сегодня'"""
-    logger.info(f"Пользователь {callback.from_user.id} нажал 'Вернуться сегодня'")
-    await callback.message.answer(
-        text=t("menu-back-today"), reply_markup=back_to_main_menu_keyboard()
-    )
     await callback.answer()
 
 

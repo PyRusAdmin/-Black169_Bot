@@ -48,11 +48,9 @@ class EventState(StatesGroup):
 
 class SearchUserState(StatesGroup):
     """Состояния для поиска пользователя"""
-
     waiting_for_phone_number = State()  # Ожидание номера телефона
 
 
 class AdminManagementState(StatesGroup):
     """Состояния для управления администраторами"""
-
     waiting_for_admin_id = State()  # Ожидание ID нового администратора
