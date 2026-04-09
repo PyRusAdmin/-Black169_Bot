@@ -136,7 +136,7 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
                 f"{level_text}"
                 f"Используйте их при следующем посещении!"
             ),
-            reply_markup=new_section_keyboard(),
+            reply_markup=back_to_main_menu_keyboard(),
         )
 
     await callback.answer()
