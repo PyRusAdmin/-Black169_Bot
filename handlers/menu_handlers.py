@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
-from keyboards.keyboards import twist_keyboard, new_section_keyboard
+from keyboards.keyboards import twist_keyboard, new_section_keyboard, contact_keyboard, back_to_main_menu_keyboard
 from services.bonus_operations import (
     random_bonus, generate_promo_code, receives_information_about_user_and_accrues_bonuses,
     updates_bonuses_in_the_database
@@ -69,12 +69,12 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
         try:
             await callback.message.edit_text(
                 text="❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации.",
-                reply_markup=new_section_keyboard(),
+                reply_markup=contact_keyboard(),
             )
         except Exception:
             await callback.message.answer(
                 text="❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации.",
-                reply_markup=new_section_keyboard(),
+                reply_markup=contact_keyboard(),
             )
         await callback.answer()
         return
@@ -150,9 +150,9 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
     if user_info is None or user_info.get("phone_telegram") is None:
         text = "❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации."
         try:
-            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+            await callback.message.edit_text(text=text, reply_markup=contact_keyboard())
         except Exception:
-            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
+            await callback.message.answer(text=text, reply_markup=contact_keyboard())
         await callback.answer()
         return
 
@@ -294,11 +294,11 @@ async def twist_handler(callback: CallbackQuery) -> None:
     # Получаем ID пользователя в QuickResto
     user_info = get_user_info(id_telegram)
     if user_info is None:
-        text = "❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности."
+        text = "❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации."
         try:
-            await callback.message.edit_text(text=text, reply_markup=new_section_keyboard())
+            await callback.message.edit_text(text=text, reply_markup=contact_keyboard())
         except Exception:
-            await callback.message.answer(text=text, reply_markup=new_section_keyboard())
+            await callback.message.answer(text=text, reply_markup=contact_keyboard())
         await callback.answer()
         return
 

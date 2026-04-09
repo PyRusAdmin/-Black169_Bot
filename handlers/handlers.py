@@ -130,10 +130,17 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
     # Проверяем, является ли пользователь владельцем бота. ID пользователя должен быть в списке OWNER_IDS в файле .env
     if id_telegram in OWNER_IDS:
         logger.info(f"Пользователь {id_telegram} является владельцем бота")
-        await callback.message.answer(
-            text=t("main-menu"),
-            reply_markup=main_menu_keyboard_admin(),
-        )
+        try:
+            await callback.message.edit_text(
+                text=t("main-menu"),
+                reply_markup=main_menu_keyboard_admin(),
+            )
+        except Exception:
+            await callback.message.answer(
+                text=t("main-menu"),
+                reply_markup=main_menu_keyboard_admin(),
+            )
+        await callback.answer()
         return
 
     data = {
