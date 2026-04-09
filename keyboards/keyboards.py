@@ -80,6 +80,26 @@ def main_menu_keyboard():
     )
 
 
+def contacts_keyboard():
+    """Клавиатура для контактов"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📞 Позвонить", url="tel:+79147911911"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🏠 В главное меню",
+                    callback_data="back_to_main_menu",
+                    style="danger",
+                ),
+            ],
+        ]
+    )
+
+
 def back_to_main_menu_keyboard():
     """Клавиатура для возврата в главное меню"""
     return InlineKeyboardMarkup(

@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
-from keyboards.keyboards import twist_keyboard, new_section_keyboard, contact_keyboard, back_to_main_menu_keyboard
+from keyboards.keyboards import twist_keyboard, new_section_keyboard, contact_keyboard, contacts_keyboard, back_to_main_menu_keyboard
 from services.bonus_operations import (
     random_bonus, generate_promo_code, receives_information_about_user_and_accrues_bonuses,
     updates_bonuses_in_the_database
@@ -418,8 +418,9 @@ async def events_handler(callback: CallbackQuery) -> None:
 async def contacts_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки '📍 Контакты'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал '📍 Контакты'")
-    await callback.message.answer(
-        text=t("menu-contacts"), reply_markup=back_to_main_menu_keyboard()
+    await callback.message.edit_text(
+        text=t("menu-contacts"),
+        reply_markup=contacts_keyboard(),
     )
     await callback.answer()
 
