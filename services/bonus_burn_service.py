@@ -67,7 +67,7 @@ async def send_bonus_burn_warning(days_until_burn: int = 7) -> dict:
                         f"💰 Сумма бонусов: <b>{bot_bonus_amount} бонусов</b>\n"
                         f"📅 Дата сгорания: <b>{burn_date_str}</b>\n\n"
                         f"Успейте использовать бонусы до этой даты!\n\n"
-                        f"Ждём Вас в The Black 169! 🖤"
+                        f"Ждём Вас в БЛЭК 169! 🖤"
                     ),
                 )
                 logger.success(

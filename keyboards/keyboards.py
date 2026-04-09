@@ -18,6 +18,36 @@ def contact_keyboard():
     )
 
 
+def new_section_keyboard():
+    """Клавиатура для новой секции"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🎁 Забрать подарок", callback_data="pick_up_gift"
+
+                ),
+                InlineKeyboardButton(
+                    text="🔥 Бонусы скоро сгорят",
+                    callback_data="bonuses_will_soon_burn_out",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔥 Вернуться сегодня", callback_data="back_today"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🏠 В главное меню",
+                    callback_data="back_to_main_menu",
+                    style="danger",
+                ),
+            ],
+        ]
+    )
+
+
 """Клавиатура для обычного пользователя"""
 
 
@@ -28,15 +58,15 @@ def main_menu_keyboard():
             # Бонусы и подарки
             [
                 InlineKeyboardButton(text="💰 Мои бонусы", callback_data="my_bonuses"),
-                InlineKeyboardButton(
-                    text="🎁 Забрать подарок", callback_data="pick_up_gift"
-                ),
+                # InlineKeyboardButton(
+                #     text="🎁 Забрать подарок", callback_data="pick_up_gift"
+                # ),
             ],
             [
-                InlineKeyboardButton(
-                    text="🔥 Бонусы скоро сгорят",
-                    callback_data="bonuses_will_soon_burn_out",
-                ),
+                # InlineKeyboardButton(
+                #     text="1 🔥 Бонусы скоро сгорят",
+                #     callback_data="bonuses_will_soon_burn_out",
+                # ),
                 InlineKeyboardButton(
                     text="🎡 Колесо подарков", callback_data="gift_wheel"
                 ),
@@ -47,11 +77,11 @@ def main_menu_keyboard():
                 InlineKeyboardButton(text="📅 Мероприятия", callback_data="events"),
             ],
             # Маркетинг
-            [
-                InlineKeyboardButton(
-                    text="🔥 Вернуться сегодня", callback_data="back_today"
-                ),
-            ],
+            # [
+            #     InlineKeyboardButton(
+            #         text="1 🔥 Вернуться сегодня", callback_data="back_today"
+            #     ),
+            # ],
             # Информация
             [
                 InlineKeyboardButton(text="📍 Контакты", callback_data="contacts"),
@@ -116,15 +146,15 @@ def main_menu_keyboard_admin():
             # Бонусы и подарки
             [
                 InlineKeyboardButton(text="💰 Мои бонусы", callback_data="my_bonuses"),
-                InlineKeyboardButton(
-                    text="🎁 Забрать подарок", callback_data="pick_up_gift"
-                ),
+                # InlineKeyboardButton(
+                #     text="🎁 Забрать подарок", callback_data="pick_up_gift"
+                # ),
             ],
             [
-                InlineKeyboardButton(
-                    text="🔥 Бонусы скоро сгорят",
-                    callback_data="bonuses_will_soon_burn_out",
-                ),
+                # InlineKeyboardButton(
+                #     text="🔥 Бонусы скоро сгорят",
+                #     callback_data="bonuses_will_soon_burn_out",
+                # ),
                 InlineKeyboardButton(
                     text="🎡 Колесо подарков", callback_data="gift_wheel"
                 ),
@@ -135,11 +165,11 @@ def main_menu_keyboard_admin():
                 InlineKeyboardButton(text="📅 Мероприятия", callback_data="events"),
             ],
             # Маркетинг
-            [
-                InlineKeyboardButton(
-                    text="🔥 Вернуться сегодня", callback_data="back_today"
-                ),
-            ],
+            # [
+            #     InlineKeyboardButton(
+            #         text="🔥 Вернуться сегодня", callback_data="back_today"
+            #     ),
+            # ],
             # Информация
             [
                 InlineKeyboardButton(text="📍 Контакты", callback_data="contacts"),

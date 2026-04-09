@@ -112,7 +112,7 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
                 "Вам начислено <b>3000 бонусов</b>!\n\n"
                 f"Ваш промокод: <code>{promo_code}</code>\n"
                 f"Для получения бонусов, назовите свой ID администратору и он проверит на наличие промокод\n\n"
-                "Используйте их при следующем посещении The Black 169.\n\n"
+                "Используйте их при следующем посещении БЛЭК 169.\n\n"
                 "Спасибо, что вы с нами! 🖤"
             ),
             reply_markup=back_to_main_menu_keyboard(),
@@ -167,7 +167,7 @@ async def bonuses_will_soon_burn_out_handler(callback: CallbackQuery) -> None:
             f"💰 Сумма бонусов: <b>{bot_bonus_amount} бонусов</b>\n"
             f"📅 Дата сгорания: <b>{burn_date_str}</b>\n\n"
             f"Успейте использовать бонусы до этой даты!\n\n"
-            f"Ждём Вас в The Black 169! 🖤"
+            f"Ждём Вас в БЛЭК 169! 🖤"
         )
     else:
         message_text = (
