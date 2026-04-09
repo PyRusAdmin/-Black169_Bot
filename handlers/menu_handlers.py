@@ -25,10 +25,33 @@ router = Router(name=__name__)
 async def special_offers_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки '💫 Специальные предложения'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Специальные предложения'")
-    await callback.message.edit_text(
-        text="💫 <b>Специальные предложения</b>\n\nВыберите интересующий вас раздел:",
-        reply_markup=new_section_keyboard(),
-    )
+    try:
+        await callback.message.edit_text(
+            text="💫 <b>Специальные предложения</b>\n\nВыберите интересующий вас раздел:",
+            reply_markup=new_section_keyboard(),
+        )
+    except Exception:
+        await callback.message.answer(
+            text="💫 <b>Специальные предложения</b>\n\nВыберите интересующий вас раздел:",
+            reply_markup=new_section_keyboard(),
+        )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "back_today")
+async def back_today_handler(callback: CallbackQuery) -> None:
+    """Обработчик кнопки 'Вернуться сегодня'"""
+    logger.info(f"Пользователь {callback.from_user.id} нажал 'Вернуться сегодня'")
+    try:
+        await callback.message.edit_text(
+            text=t("menu-back-today"),
+            reply_markup=new_section_keyboard(),
+        )
+    except Exception:
+        await callback.message.answer(
+            text=t("menu-back-today"),
+            reply_markup=new_section_keyboard(),
+        )
     await callback.answer()
 
 
@@ -79,15 +102,26 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
             else:
                 level_text += f"🏆 {next_level_info['message']}\n"
 
-    await callback.message.answer(
-        text=(
-            f"<b>Ваш ID: {id_quickresto}</b>\n"
-            f"💰 <b>Ваши бонусы: {user_bonus}</b>\n\n"
-            f"{level_text}"
-            f"Используйте их при следующем посещении!"
-        ),
-        reply_markup=back_to_main_menu_keyboard(),
-    )
+    try:
+        await callback.message.edit_text(
+            text=(
+                f"<b>Ваш ID: {id_quickresto}</b>\n"
+                f"💰 <b>Ваши бонусы: {user_bonus}</b>\n\n"
+                f"{level_text}"
+                f"Используйте их при следующем посещении!"
+            ),
+            reply_markup=new_section_keyboard(),
+        )
+    except Exception:
+        await callback.message.answer(
+            text=(
+                f"<b>Ваш ID: {id_quickresto}</b>\n"
+                f"💰 <b>Ваши бонусы: {user_bonus}</b>\n\n"
+                f"{level_text}"
+                f"Используйте их при следующем посещении!"
+            ),
+            reply_markup=new_section_keyboard(),
+        )
 
     await callback.answer()
 
