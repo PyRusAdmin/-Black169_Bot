@@ -1,7 +1,7 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
-from keyboards.keyboards import twist_keyboard, new_section_keyboard, contact_keyboard, contacts_keyboard, back_to_main_menu_keyboard
+from keyboards.keyboards import twist_keyboard, new_section_keyboard, contact_keyboard, contacts_keyboard, back_to_main_menu_keyboard, privacy_policy_keyboard
 from services.bonus_operations import (
     random_bonus, generate_promo_code, receives_information_about_user_and_accrues_bonuses,
     updates_bonuses_in_the_database
@@ -429,7 +429,43 @@ async def contacts_handler(callback: CallbackQuery) -> None:
 async def about_institution_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'ℹ️ О заведении'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'ℹ️ О заведении'")
-    await callback.message.answer(
-        text=t("menu-about-institution"), reply_markup=back_to_main_menu_keyboard()
-    )
+    try:
+        await callback.message.edit_text(
+            text=t("menu-about-institution"),
+            reply_markup=back_to_main_menu_keyboard(),
+        )
+    except Exception:
+        await callback.message.answer(
+            text=t("menu-about-institution"),
+            reply_markup=back_to_main_menu_keyboard(),
+        )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "privacy_policy")
+async def privacy_policy_handler(callback: CallbackQuery) -> None:
+    """Обработчик кнопки '🔒 Политика и правила'"""
+    logger.info(f"Пользователь {callback.from_user.id} нажал 'Политика и правила'")
+    try:
+        await callback.message.edit_text(
+            text=(
+                "🔒 <b>Политика конфиденциальности и правила системы лояльности</b>\n\n"
+                "Уважаемые гости!\n\n"
+                "Вы можете ознакомиться с политикой конфиденциальности и правилами программы лояльности, "
+                "нажав на кнопку ниже.\n\n"
+                "Документ откроется в браузере."
+            ),
+            reply_markup=privacy_policy_keyboard(),
+        )
+    except Exception:
+        await callback.message.answer(
+            text=(
+                "🔒 <b>Политика конфиденциальности и правила системы лояльности</b>\n\n"
+                "Уважаемые гости!\n\n"
+                "Вы можете ознакомиться с политикой конфиденциальности и правилами программы лояльности, "
+                "нажав на кнопку ниже.\n\n"
+                "Документ откроется в браузере."
+            ),
+            reply_markup=privacy_policy_keyboard(),
+        )
     await callback.answer()

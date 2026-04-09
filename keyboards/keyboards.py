@@ -76,6 +76,12 @@ def main_menu_keyboard():
                     text="ℹ️ О заведении", callback_data="about_institution"
                 ),
             ],
+            # Политика конфиденциальности
+            [
+                InlineKeyboardButton(
+                    text="🔒 Политика и правила", callback_data="privacy_policy"
+                ),
+            ],
         ]
     )
 
@@ -86,7 +92,29 @@ def contacts_keyboard():
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="📞 Позвонить", url="tel:+79147911911"
+                    text="📞 Позвонить +79147911911",
+                    url="https://pyrusadmin.github.io/call-redirect/"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🏠 В главное меню",
+                    callback_data="back_to_main_menu",
+                    style="danger",
+                ),
+            ],
+        ]
+    )
+
+
+def privacy_policy_keyboard():
+    """Клавиатура для политики конфиденциальности"""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📄 Открыть документ",
+                    url="https://disk.yandex.ru/d/tPALMeEQ0H_4lA",
                 ),
             ],
             [
@@ -169,6 +197,12 @@ def main_menu_keyboard_admin():
                 InlineKeyboardButton(text="📍 Контакты", callback_data="contacts"),
                 InlineKeyboardButton(
                     text="ℹ️ О заведении", callback_data="about_institution"
+                ),
+            ],
+            # Политика конфиденциальности
+            [
+                InlineKeyboardButton(
+                    text="🔒 Политика и правила", callback_data="privacy_policy"
                 ),
             ],
             # Администратор
