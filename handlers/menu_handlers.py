@@ -1,7 +1,8 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
-from keyboards.keyboards import twist_keyboard, new_section_keyboard, contact_keyboard, contacts_keyboard, back_to_main_menu_keyboard, privacy_policy_keyboard
+from keyboards.keyboards import twist_keyboard, new_section_keyboard, contact_keyboard, contacts_keyboard, \
+    back_to_main_menu_keyboard, privacy_policy_keyboard
 from services.bonus_operations import (
     random_bonus, generate_promo_code, receives_information_about_user_and_accrues_bonuses,
     updates_bonuses_in_the_database
@@ -118,7 +119,6 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
                 level_text += f"🏆 {next_level_info['message']}\n"
 
     try:
-
         await callback.message.edit_text(
             text=(
                 f"<b>Ваш ID: {id_quickresto}</b>\n"
