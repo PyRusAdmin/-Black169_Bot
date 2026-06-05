@@ -65,7 +65,10 @@ async def command_start_handler(message: Message) -> None:
         logger.info(
             f"Отправка запроса номера телефона пользователю {message.from_user.id}"
         )
-        await message.answer(text=t("greet-message"), reply_markup=contact_keyboard())
+        await message.answer(
+            text=t("greet-message"),
+            reply_markup=contact_keyboard()
+        )
         return
 
     # Пользователь не давал согласие — запрашиваем его
@@ -94,7 +97,9 @@ async def consent_given_handler(callback: CallbackQuery) -> None:
     add_consent(id_telegram)
 
     await callback.message.answer(
-        text=t("consent-given"), reply_markup=contact_keyboard(), parse_mode="HTML"
+        text=t("consent-given"),
+        reply_markup=contact_keyboard(),
+        parse_mode="HTML"
     )
     await callback.answer()
 
@@ -108,7 +113,10 @@ async def consent_declined_handler(callback: CallbackQuery) -> None:
         f"Пользователь {callback.from_user.id} отказался от обработки персональных данных"
     )
 
-    await callback.message.answer(text=t("consent-declined"), parse_mode="HTML")
+    await callback.message.answer(
+        text=t("consent-declined"),
+        parse_mode="HTML"
+    )
     await callback.answer()
 
 
@@ -135,11 +143,12 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
                 text=t("main-menu"),
                 reply_markup=main_menu_keyboard_admin(),
             )
-        except Exception:
+        except Exception as e:
             await callback.message.answer(
                 text=t("main-menu"),
                 reply_markup=main_menu_keyboard_admin(),
             )
+            logger.exception(e)
         await callback.answer()
         return
 
@@ -167,11 +176,12 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
                     text=t("main-menu"),
                     reply_markup=main_menu_keyboard(),
                 )
-            except Exception:
+            except Exception as e:
                 await callback.message.answer(
                     text=t("main-menu"),
                     reply_markup=main_menu_keyboard(),
                 )
+                logger.exception(e)
             await callback.answer()
             return
 
@@ -184,11 +194,12 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
                 text=t("greet-message"),
                 reply_markup=contact_keyboard(),
             )
-        except Exception:
+        except Exception as e:
             await callback.message.answer(
                 text=t("greet-message"),
                 reply_markup=contact_keyboard(),
             )
+            logger.exception(e)
         await callback.answer()
         return
 
@@ -202,10 +213,11 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
             reply_markup=consent_keyboard(),
             parse_mode="HTML",
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text=t("consent-title"),
             reply_markup=consent_keyboard(),
             parse_mode="HTML",
         )
+        logger.exception(e)
     await callback.answer()
