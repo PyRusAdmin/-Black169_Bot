@@ -357,8 +357,9 @@ async def twist_handler(callback: CallbackQuery) -> None:
         text = t("try-tomorrow-winning-message")
         try:
             await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
-        except Exception:
+        except Exception as e:
             await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
+            logger.exception(e)
         return
 
 

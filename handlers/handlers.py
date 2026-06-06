@@ -1,12 +1,12 @@
 from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
-
+from aiogram.fsm.context import FSMContext
 from config import OWNER_IDS
 from keyboards.keyboards import consent_keyboard, main_menu_keyboard, main_menu_keyboard_admin, contact_keyboard
-
 from services.database import add_consent, has_consent, is_user_registered, write_to_db_start_person
 from services.i18n import t
+from states.user_states import EventState, ConsentState
 from utils.logger import logger
 
 router = Router(name=__name__)
@@ -18,7 +18,7 @@ router = Router(name=__name__)
 
 
 @router.message(CommandStart())
-async def command_start_handler(message: Message) -> None:
+async def command_start_handler(message: Message, state: FSMContext) -> None:
     """
     Этот обработчик получает сообщения с командой '/start'
     """
@@ -61,15 +61,20 @@ async def command_start_handler(message: Message) -> None:
             )
             return
 
+        """
+        Отправляем пользователю сообщение, о том, чно ему нужно отправить свой контакт, методом ввода номера 
+        телефона (ввода текста).
+        """
+
         # Пользователь дал согласие, но ещё не зарегистрирован — просим номер телефона
         logger.info(
             f"Отправка запроса номера телефона пользователю {message.from_user.id}"
         )
         await message.answer(
             text=t("greet-message"),
-            reply_markup=contact_keyboard()
         )
-        return
+        await state.set_state(ConsentState.waiting_to_phone_user)
+        # return
 
     # Пользователь не давал согласие — запрашиваем его
     logger.info(
