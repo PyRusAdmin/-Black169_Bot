@@ -1,20 +1,37 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
-from keyboards.keyboards import twist_keyboard, new_section_keyboard, contact_keyboard, contacts_keyboard, \
-    back_to_main_menu_keyboard, privacy_policy_keyboard
+from keyboards.keyboards import (
+    twist_keyboard,
+    new_section_keyboard,
+    contact_keyboard,
+    contacts_keyboard,
+    back_to_main_menu_keyboard,
+    privacy_policy_keyboard,
+)
 from services.bonus_operations import (
-    random_bonus, generate_promo_code, receives_information_about_user_and_accrues_bonuses,
-    updates_bonuses_in_the_database
+    random_bonus,
+    generate_promo_code,
+    receives_information_about_user_and_accrues_bonuses,
+    updates_bonuses_in_the_database,
 )
 
 # Формируем сообщение с уровнем клиента
 from services.client_levels import get_level_description, get_next_level_info
-from services.database import get_user_bonus, has_user_spun_today, write_spin_result, write_to_db_registered_person
+from services.database import (
+    get_user_bonus,
+    has_user_spun_today,
+    write_spin_result,
+    write_to_db_registered_person,
+)
 
 # Формируем сообщение с информацией о бонусах пользователя
 from services.database import get_user_burning_bonus_info
-from services.database import has_user_claimed_gift_bonus, mark_gift_bonus_claimed, get_user_info
+from services.database import (
+    has_user_claimed_gift_bonus,
+    mark_gift_bonus_claimed,
+    get_user_info,
+)
 from services.i18n import t
 from services.quickresto_api import print_full_client_info, update_customer_bonus
 from utils.logger import logger
@@ -187,9 +204,13 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
             "Спасибо, что вы с нами! 🖤"
         )
         try:
-            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.edit_text(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         except Exception:
-            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.answer(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         await callback.answer()
 
     elif is_claimed:
@@ -199,9 +220,13 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
             "Спасибо, что вы с нами! 🖤"
         )
         try:
-            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.edit_text(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         except Exception:
-            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.answer(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         await callback.answer()
 
 
@@ -286,9 +311,13 @@ async def twist_handler(callback: CallbackQuery) -> None:
             "Приходите завтра — у вас будет новая попытка выиграть подарок! 🍀"
         )
         try:
-            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.edit_text(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         except Exception:
-            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.answer(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         await callback.answer()
         return
 
@@ -325,23 +354,35 @@ async def twist_handler(callback: CallbackQuery) -> None:
     if bonus == "Коктейль на выбор":
         text = t("cocktail-winning-message")
         try:
-            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.edit_text(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         except Exception:
-            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.answer(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         return
     if bonus == "Кальян на выбор":
         text = t("hookah-winning-message")
         try:
-            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.edit_text(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         except Exception:
-            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.answer(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         return
     if bonus == "Бонус в рублях (1000)":
         text = t("bonus-winning-message")
         try:
-            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.edit_text(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         except Exception:
-            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.answer(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         # Добавляем бонус клиенту, если выпал денежный бонус
         update_customer_bonus(
             customer_id=id_quickresto,  # ID клиента в QuickResto
@@ -356,9 +397,13 @@ async def twist_handler(callback: CallbackQuery) -> None:
     if bonus == "Попробуйте завтра":
         text = t("try-tomorrow-winning-message")
         try:
-            await callback.message.edit_text(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.edit_text(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
         except Exception as e:
-            await callback.message.answer(text=text, reply_markup=back_to_main_menu_keyboard())
+            await callback.message.answer(
+                text=text, reply_markup=back_to_main_menu_keyboard()
+            )
             logger.exception(e)
         return
 

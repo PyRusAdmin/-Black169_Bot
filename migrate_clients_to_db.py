@@ -5,6 +5,7 @@
 Использование:
     python migrate_clients_to_db.py
 """
+
 import json
 import sys
 from pathlib import Path
@@ -20,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 def migrate_clients_to_db(json_filepath: str = "data/clients_levels.json") -> dict:
     """
     Перенос данных о клиентах из JSON файла в базу данных.
-    
+
     :param json_filepath: Путь к JSON файлу
     :return: Статистика миграции
     """
@@ -63,11 +64,15 @@ def migrate_clients_to_db(json_filepath: str = "data/clients_levels.json") -> di
                     continue
 
                 # Ищем пользователя по телефону в БД
-                user = RegisteredPersons.get_or_none(RegisteredPersons.phone_telegram == phone)
+                user = RegisteredPersons.get_or_none(
+                    RegisteredPersons.phone_telegram == phone
+                )
 
                 if not user and client_id:
                     # Пробуем найти по ID QuickResto
-                    user = RegisteredPersons.get_or_none(RegisteredPersons.id_quickresto == client_id)
+                    user = RegisteredPersons.get_or_none(
+                        RegisteredPersons.id_quickresto == client_id
+                    )
 
                 if user:
                     # Обновляем данные пользователя
@@ -114,8 +119,8 @@ def print_report(stats: dict):
     print(f"⚠️  Ошибок: {stats['errors']}")
     print("=" * 60)
 
-    if stats['total'] > 0:
-        percent = stats['updated'] / stats['total'] * 100
+    if stats["total"] > 0:
+        percent = stats["updated"] / stats["total"] * 100
         print(f"📈 Процент успешных: {percent:.1f}%")
     print("=" * 60 + "\n")
 
@@ -125,7 +130,7 @@ if __name__ == "__main__":
     result = migrate_clients_to_db()
     print_report(result)
 
-    if result['updated'] > 0:
+    if result["updated"] > 0:
         print("✅ Миграция успешно завершена!")
     else:
         print("⚠️  Миграция завершена, но данные не были обновлены.")

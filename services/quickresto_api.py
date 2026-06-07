@@ -5,7 +5,12 @@ from collections import Counter
 import requests
 from requests.auth import HTTPBasicAuth
 
-from config import console, layer_name_quickresto, password_quickresto, username_quickresto
+from config import (
+    console,
+    layer_name_quickresto,
+    password_quickresto,
+    username_quickresto,
+)
 from services.client_levels import analyze_and_save_clients
 from utils.logger import logger
 

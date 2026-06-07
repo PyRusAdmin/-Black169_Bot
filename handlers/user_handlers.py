@@ -1,11 +1,14 @@
 from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from handlers.menu_handlers import updates_bonuses_in_the_database
 from keyboards.keyboards import main_menu_keyboard
 from services.database import write_to_db_registered_person
 from services.i18n import t
-from services.quickresto_api import create_client, print_client_info, print_full_client_info, update_customer_bonus
+from services.quickresto_api import (
+    create_client, print_client_info, print_full_client_info, update_customer_bonus,
+)
 from states.user_states import ConsentState
 from utils.logger import logger
 
@@ -13,14 +16,13 @@ router = Router(name=__name__)
 
 
 @router.message(ConsentState.waiting_to_phone_user, F.text)
-async def message_handler(message: Message) -> None:
+async def message_handler(message: Message, state: FSMContext) -> None:
     """
     Принимает контакт пользователя (отправленный номер телефона) и проверяет его в базе QuickResto
     """
     try:
-        logger.info(f"Пользователь отправил контакт: {message.contact.phone_number}")
-
-        phone_telegram = message.contact.phone_number.replace("+", "")
+        phone_telegram = message.text.strip()
+        logger.info(f"Пользователь отправил контакт: {phone_telegram}")
         logger.info(f"Проверяем контакт: {phone_telegram} в базе QuickResto")
 
         # Проверяем контакт в базе QuickResto
@@ -36,7 +38,9 @@ async def message_handler(message: Message) -> None:
             )
 
             if created_client:
-                logger.success(f"Клиент создан в QuickResto: id={created_client.get("id")}")
+                logger.success(
+                    f"Клиент создан в QuickResto: id={created_client.get('id')}"
+                )
 
                 data = {
                     "id_telegram": message.from_user.id,

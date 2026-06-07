@@ -3,10 +3,20 @@ from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from config import OWNER_IDS
-from keyboards.keyboards import consent_keyboard, main_menu_keyboard, main_menu_keyboard_admin, contact_keyboard
-from services.database import add_consent, has_consent, is_user_registered, write_to_db_start_person
+from keyboards.keyboards import (
+    consent_keyboard,
+    main_menu_keyboard,
+    main_menu_keyboard_admin,
+    contact_keyboard,
+)
+from services.database import (
+    add_consent,
+    has_consent,
+    is_user_registered,
+    write_to_db_start_person,
+)
 from services.i18n import t
-from states.user_states import EventState, ConsentState
+from states.user_states import ConsentState
 from utils.logger import logger
 
 router = Router(name=__name__)
@@ -102,9 +112,7 @@ async def consent_given_handler(callback: CallbackQuery) -> None:
     add_consent(id_telegram)
 
     await callback.message.answer(
-        text=t("consent-given"),
-        reply_markup=contact_keyboard(),
-        parse_mode="HTML"
+        text=t("consent-given"), reply_markup=contact_keyboard(), parse_mode="HTML"
     )
     await callback.answer()
 
@@ -118,10 +126,7 @@ async def consent_declined_handler(callback: CallbackQuery) -> None:
         f"Пользователь {callback.from_user.id} отказался от обработки персональных данных"
     )
 
-    await callback.message.answer(
-        text=t("consent-declined"),
-        parse_mode="HTML"
-    )
+    await callback.message.answer(text=t("consent-declined"), parse_mode="HTML")
     await callback.answer()
 
 

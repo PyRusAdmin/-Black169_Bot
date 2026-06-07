@@ -14,7 +14,8 @@ def contact_keyboard():
     )
     builder.adjust(1)  # Кнопка на всю ширину
     return builder.as_markup(
-        resize_keyboard=True, one_time_keyboard=True  # Скрыть после использования
+        resize_keyboard=True,
+        one_time_keyboard=True,  # Скрыть после использования
     )
 
 
@@ -25,7 +26,6 @@ def new_section_keyboard():
             [
                 InlineKeyboardButton(
                     text="🎁 Забрать подарок", callback_data="pick_up_gift"
-
                 ),
                 InlineKeyboardButton(
                     text="🔥 Бонусы скоро сгорят",
@@ -58,7 +58,9 @@ def main_menu_keyboard():
             # Бонусы и подарки
             [
                 InlineKeyboardButton(text="💰 Мои бонусы", callback_data="my_bonuses"),
-                InlineKeyboardButton(text="🎡 Колесо подарков", callback_data="gift_wheel"),
+                InlineKeyboardButton(
+                    text="🎡 Колесо подарков", callback_data="gift_wheel"
+                ),
             ],
             # Акции и мероприятия
             [
@@ -67,7 +69,9 @@ def main_menu_keyboard():
             ],
             # Специальные предложения
             [
-                InlineKeyboardButton(text="💫 Специальные предложения", callback_data="special_offers"),
+                InlineKeyboardButton(
+                    text="💫 Специальные предложения", callback_data="special_offers"
+                ),
             ],
             # Информация
             [
@@ -93,7 +97,7 @@ def contacts_keyboard():
             [
                 InlineKeyboardButton(
                     text="📞 Позвонить +79147911911",
-                    url="https://pyrusadmin.github.io/call-redirect/"
+                    url="https://pyrusadmin.github.io/call-redirect/",
                 )
             ],
             [
@@ -181,7 +185,9 @@ def main_menu_keyboard_admin():
             # Бонусы и подарки
             [
                 InlineKeyboardButton(text="💰 Мои бонусы", callback_data="my_bonuses"),
-                InlineKeyboardButton(text="🎡 Колесо подарков", callback_data="gift_wheel"),
+                InlineKeyboardButton(
+                    text="🎡 Колесо подарков", callback_data="gift_wheel"
+                ),
             ],
             # Акции и мероприятия
             [
@@ -190,7 +196,9 @@ def main_menu_keyboard_admin():
             ],
             # Специальные предложения
             [
-                InlineKeyboardButton(text="💫 Специальные предложения", callback_data="special_offers"),
+                InlineKeyboardButton(
+                    text="💫 Специальные предложения", callback_data="special_offers"
+                ),
             ],
             # Информация
             [
@@ -292,7 +300,9 @@ def back_to_admin_menu_keyboard():
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🔧 В меню администратора", callback_data="admin_back", style="danger"
+                    text="🔧 В меню администратора",
+                    callback_data="admin_back",
+                    style="danger",
                 ),
             ],
         ]
@@ -327,7 +337,9 @@ def broadcast_confirm_keyboard():
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="✅ Отправить", callback_data="broadcast_confirm_send", style="success"
+                    text="✅ Отправить",
+                    callback_data="broadcast_confirm_send",
+                    style="success",
                 ),
                 InlineKeyboardButton(
                     text="❌ Отмена", callback_data="broadcast_cancel", style="danger"
@@ -358,7 +370,9 @@ def promo_codes_menu_keyboard():
             ],
             [
                 InlineKeyboardButton(
-                    text="🔧 В меню администратора", callback_data="admin_back", style="danger"
+                    text="🔧 В меню администратора",
+                    callback_data="admin_back",
+                    style="danger",
                 ),
             ],
         ]
@@ -371,7 +385,9 @@ def back_to_promo_menu_keyboard():
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🔙 В меню промокодов", callback_data="promo_menu", style="danger"
+                    text="🔙 В меню промокодов",
+                    callback_data="promo_menu",
+                    style="danger",
                 ),
             ],
         ]
@@ -421,7 +437,9 @@ def events_menu_keyboard():
             ],
             [
                 InlineKeyboardButton(
-                    text="🔧 В меню администратора", callback_data="admin_back", style="danger"
+                    text="🔧 В меню администратора",
+                    callback_data="admin_back",
+                    style="danger",
                 ),
             ],
         ]
@@ -434,7 +452,9 @@ def back_to_events_menu_keyboard():
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="🔙 В меню мероприятий", callback_data="events_menu", style="danger"
+                    text="🔙 В меню мероприятий",
+                    callback_data="events_menu",
+                    style="danger",
                 ),
             ],
         ]
@@ -461,7 +481,9 @@ def event_action_keyboard(event_id: int):
             ],
             [
                 InlineKeyboardButton(
-                    text="🔙 В список мероприятий", callback_data="event_list", style="secondary"
+                    text="🔙 В список мероприятий",
+                    callback_data="event_list",
+                    style="secondary",
                 ),
             ],
         ]

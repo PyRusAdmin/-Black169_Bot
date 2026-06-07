@@ -228,7 +228,7 @@ def get_next_level_info(current_level: str, current_accumulation: float) -> dict
 
 
 def save_clients_to_json(
-        clients_data: list, filepath: str = "data/clients_levels.json"
+    clients_data: list, filepath: str = "data/clients_levels.json"
 ) -> bool:
     """
     Сохранение данных о клиентах в JSON файл.

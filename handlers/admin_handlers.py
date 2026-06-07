@@ -310,7 +310,9 @@ async def broadcast_receive_video(message: Message, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == "broadcast_confirm_send")
-async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMContext) -> None:
+async def broadcast_confirm_send_handler(
+        callback: CallbackQuery, state: FSMContext
+) -> None:
     """
     Подтверждение и отправка рассылки
     """
@@ -577,10 +579,14 @@ async def delete_user_id_handler(message: Message, state: FSMContext) -> None:
     """
     id_user = message.text
 
-    logger.info(f"Администратор {message.from_user.id} ввел ID клиента QuickResto: {id_user}")
+    logger.info(
+        f"Администратор {message.from_user.id} ввел ID клиента QuickResto: {id_user}"
+    )
 
     # Получаем ID пользователя в Telegram по ID QuickResto
-    user = RegisteredPersons.get_or_none(RegisteredPersons.id_quickresto == int(id_user))
+    user = RegisteredPersons.get_or_none(
+        RegisteredPersons.id_quickresto == int(id_user)
+    )
     id_telegram = user.id_telegram if user else None
 
     # Удаляем клиента QuickResto

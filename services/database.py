@@ -4,7 +4,15 @@ from datetime import timedelta
 
 # https://docs.peewee-orm.com/en/latest/index.html
 from peewee import (
-    BooleanField, CharField, DateTimeField, DecimalField, IntegerField, Model, SqliteDatabase, TextField, fn,
+    BooleanField,
+    CharField,
+    DateTimeField,
+    DecimalField,
+    IntegerField,
+    Model,
+    SqliteDatabase,
+    TextField,
+    fn,
 )
 
 from utils.logger import logger
@@ -72,7 +80,9 @@ def delete_registered_person(id_telegram: int) -> bool:
         if db.is_closed():
             db.connect()
 
-        query = RegisteredPersons.delete().where(RegisteredPersons.id_telegram == id_telegram)
+        query = RegisteredPersons.delete().where(
+            RegisteredPersons.id_telegram == id_telegram
+        )
         result = query.execute()
 
         if result > 0:
@@ -130,28 +140,43 @@ def write_to_db_registered_person(data):
             db.connect()
         person, created = RegisteredPersons.get_or_create(
             id_telegram=data.get("id_telegram"),
-            defaults={"id_quickresto": data.get("id_quickresto"),  # идентификатор пользователя в QuickResto
-                      "last_name": data.get("last_name"),  # фамилия пользователя QuickResto
-                      "first_name": data.get("first_name"),  # имя пользователя QuickResto
-                      "patronymic_name": data.get("patronymic_name"),  # отчество пользователя QuickResto
-                      "user_bonus": data.get("user_bonus"),  # бонус пользователя QuickResto
-                      "birthday_user": data.get("birthday_user"),  # день рождения пользователя QuickResto
-                      "phone_telegram": data.get("phone_telegram"),
-                      "client_level": data.get("client_level"),  # уровень клиента
-                      "accumulation_amount": data.get("accumulation_amount"),  # накопительная сумма
-                      },
+            defaults={
+                "id_quickresto": data.get(
+                    "id_quickresto"
+                ),  # идентификатор пользователя в QuickResto
+                "last_name": data.get("last_name"),  # фамилия пользователя QuickResto
+                "first_name": data.get("first_name"),  # имя пользователя QuickResto
+                "patronymic_name": data.get(
+                    "patronymic_name"
+                ),  # отчество пользователя QuickResto
+                "user_bonus": data.get("user_bonus"),  # бонус пользователя QuickResto
+                "birthday_user": data.get(
+                    "birthday_user"
+                ),  # день рождения пользователя QuickResto
+                "phone_telegram": data.get("phone_telegram"),
+                "client_level": data.get("client_level"),  # уровень клиента
+                "accumulation_amount": data.get(
+                    "accumulation_amount"
+                ),  # накопительная сумма
+            },
         )
         if not created:
             person.id_quickresto = data.get("id_quickresto")
             person.last_name = data.get("last_name")  # фамилия пользователя QuickResto
             person.first_name = data.get("first_name")  # имя пользователя QuickResto
-            person.patronymic_name = data.get("patronymic_name")  # отчество пользователя QuickResto
+            person.patronymic_name = data.get(
+                "patronymic_name"
+            )  # отчество пользователя QuickResto
             person.user_bonus = data.get("user_bonus")  # бонус пользователя QuickResto
             person.birthday_user = data.get("birthday_user")
             person.phone_telegram = data.get("phone_telegram")
             person.client_level = data.get("client_level")  # уровень клиента
-            person.accumulation_amount = data.get("accumulation_amount")  # накопительная сумма
-            person.updated_at = (datetime.now())  # дата и время обновления данных о пользователе
+            person.accumulation_amount = data.get(
+                "accumulation_amount"
+            )  # накопительная сумма
+            person.updated_at = (
+                datetime.now()
+            )  # дата и время обновления данных о пользователе
         person.save()
     except Exception as e:
         logger.exception(e)
@@ -221,10 +246,14 @@ def is_user_registered(id_telegram: int) -> bool:
     try:
         if db.is_closed():
             db.connect()
-        exists = RegisteredPersons.get_or_none(RegisteredPersons.id_telegram == id_telegram)
+        exists = RegisteredPersons.get_or_none(
+            RegisteredPersons.id_telegram == id_telegram
+        )
         return exists is not None
     except Exception as e:
-        logger.exception(f"Ошибка при проверке регистрации пользователя {id_telegram}: {e}")
+        logger.exception(
+            f"Ошибка при проверке регистрации пользователя {id_telegram}: {e}"
+        )
         return False
     finally:
         if not db.is_closed():
@@ -278,7 +307,9 @@ def get_user_bonus(id_telegram: int):
     try:
         if db.is_closed():
             db.connect()
-        user = RegisteredPersons.get_or_none(RegisteredPersons.id_telegram == id_telegram)
+        user = RegisteredPersons.get_or_none(
+            RegisteredPersons.id_telegram == id_telegram
+        )
         if user:
             return user.id_quickresto, user.phone_telegram
         return None
@@ -304,13 +335,17 @@ class GiftWheelSpins(Model):
     id_telegram = IntegerField()  # ID пользователя в Telegram
     id_quickresto = IntegerField(null=True)  # ID пользователя в QuickResto
     bonus_name = CharField()  # Название выигранного бонуса
-    is_winner = BooleanField(default=False)  # True если выиграл, False если 'Попробуйте завтра'
+    is_winner = BooleanField(
+        default=False
+    )  # True если выиграл, False если 'Попробуйте завтра'
     spun_at = DateTimeField(default=datetime.now)  # Дата и время розыгрыша
 
     class Meta:
         database = db
         table_name = "gift_wheel_spins"
-        indexes = ((("id_telegram", "spun_at"), False),)  # Индекс для быстрого поиска по дате
+        indexes = (
+            (("id_telegram", "spun_at"), False),
+        )  # Индекс для быстрого поиска по дате
 
 
 def write_spin_result(data):
@@ -335,7 +370,8 @@ def write_spin_result(data):
             spun_at=datetime.now(),
         )
         logger.info(
-            f"Записан результат розыгрыша: пользователь {id_telegram}, бонус '{bonus_name}', победитель: {is_winner}")
+            f"Записан результат розыгрыша: пользователь {id_telegram}, бонус '{bonus_name}', победитель: {is_winner}"
+        )
         return spin
     except Exception as e:
         logger.exception(f"Ошибка при записи результата розыгрыша: {e}")
@@ -361,7 +397,9 @@ def has_user_spun_today(id_telegram: int) -> bool:
 
         # Ищем записи за сегодня
         spin = GiftWheelSpins.get_or_none(
-            (GiftWheelSpins.id_telegram == id_telegram) & (GiftWheelSpins.spun_at >= today_start))
+            (GiftWheelSpins.id_telegram == id_telegram)
+            & (GiftWheelSpins.spun_at >= today_start)
+        )
         return spin is not None
     except Exception as e:
         logger.exception(
@@ -383,7 +421,11 @@ def get_all_winners() -> list:
         if db.is_closed():
             db.connect()
 
-        winners = (GiftWheelSpins.select().where(GiftWheelSpins.is_winner).order_by(GiftWheelSpins.spun_at.desc()))
+        winners = (
+            GiftWheelSpins.select()
+            .where(GiftWheelSpins.is_winner)
+            .order_by(GiftWheelSpins.spun_at.desc())
+        )
 
         result = []
         for winner in winners:
@@ -498,7 +540,11 @@ def get_client_levels_stats() -> dict:
         # Количество по уровням
         levels = {}
         for level in ["Black", "Gold", "Silver", "Bronze"]:
-            count = (RegisteredPersons.select().where(RegisteredPersons.client_level == level).count())
+            count = (
+                RegisteredPersons.select()
+                .where(RegisteredPersons.client_level == level)
+                .count()
+            )
             levels[level] = {
                 "count": count,
                 "percent": round(count / total * 100, 1) if total > 0 else 0,
@@ -506,7 +552,8 @@ def get_client_levels_stats() -> dict:
 
         # Клиенты без определенного уровня
         no_level = (
-            RegisteredPersons.select().where(
+            RegisteredPersons.select()
+            .where(
                 (RegisteredPersons.client_level.is_null())
                 | (RegisteredPersons.client_level == "")
             )
@@ -535,7 +582,9 @@ def get_client_levels_stats() -> dict:
             db.close()
 
 
-def update_client_level(id_telegram: int, client_level: str, accumulation_amount: float = None) -> bool:
+def update_client_level(
+    id_telegram: int, client_level: str, accumulation_amount: float = None
+) -> bool:
     """
     Обновление уровня клиента в базе данных
 
@@ -875,11 +924,11 @@ class Admins(Model):
 
 
 def add_admin(
-        id_telegram: int,
-        added_by: int,
-        username: str = None,
-        full_name: str = None,
-        role: str = "admin",
+    id_telegram: int,
+    added_by: int,
+    username: str = None,
+    full_name: str = None,
+    role: str = "admin",
 ) -> dict:
     """
     Добавление администратора
@@ -1136,7 +1185,7 @@ class MarketingMessages(Model):
 
 
 def log_marketing_message(
-        id_telegram: int, message_text: str, message_type: str = "text"
+    id_telegram: int, message_text: str, message_type: str = "text"
 ) -> None:
     """
     Логирование отправки маркетингового сообщения
@@ -1354,7 +1403,7 @@ def get_bonus_burning_users(days_until_burn: int = 7) -> list:
 
         # Дата начисления должна быть: сегодня - (90 - days_until_burn) дней
         target_accrual_date = (
-                datetime.now() - timedelta(days=90 - days_until_burn)
+            datetime.now() - timedelta(days=90 - days_until_burn)
         ).date()
 
         # Получаем только тех пользователей, у которых есть дата начисления бонусов ботом
@@ -1468,8 +1517,11 @@ def has_user_claimed_gift_bonus(id_telegram: int):
     :param id_telegram: ID пользователя в Telegram
     :return: True если получил, False если нет
     """
-    return RegisteredPersons.select(RegisteredPersons.gift_bonus_claimed).where(
-        RegisteredPersons.id_telegram == id_telegram).scalar()
+    return (
+        RegisteredPersons.select(RegisteredPersons.gift_bonus_claimed)
+        .where(RegisteredPersons.id_telegram == id_telegram)
+        .scalar()
+    )
 
 
 def mark_gift_bonus_claimed(id_telegram: int, promo_code: str):
@@ -1661,7 +1713,7 @@ class Consents(Model):
 
 
 def add_consent(
-        id_telegram: int, ip_address: str = None, user_agent: str = None
+    id_telegram: int, ip_address: str = None, user_agent: str = None
 ) -> bool:
     """
     Добавление согласия на обработку персональных данных
@@ -1675,20 +1727,33 @@ def add_consent(
         if db.is_closed():
             db.connect()
 
-        Consents.create(
-            id_telegram=id_telegram,
-            is_consent=True,
-            consented_at=datetime.now(),
-            ip_address=ip_address,
-            user_agent=user_agent,
-        )
-        logger.info(
-            f"Пользователь {id_telegram} дал согласие на обработку персональных данных"
-        )
+        consent = Consents.get_or_none(Consents.id_telegram == id_telegram)
+        if consent:
+            consent.is_consent = True
+            consent.consented_at = datetime.now()
+            if ip_address:
+                consent.ip_address = ip_address
+            if user_agent:
+                consent.user_agent = user_agent
+            consent.save()
+            logger.info(
+                f"Согласие пользователя {id_telegram} на обработку персональных данных обновлено"
+            )
+        else:
+            Consents.create(
+                id_telegram=id_telegram,
+                is_consent=True,
+                consented_at=datetime.now(),
+                ip_address=ip_address,
+                user_agent=user_agent,
+            )
+            logger.info(
+                f"Пользователь {id_telegram} дал согласие на обработку персональных данных"
+            )
         return True
     except Exception as e:
         logger.exception(
-            f"Ошибка при добавлении согласия пользователя {id_telegram}: {e}"
+            f"Ошибка при добавлении/обновлении согласия пользователя {id_telegram}: {e}"
         )
         return False
     finally:
@@ -1761,14 +1826,14 @@ class Events(Model):
 
 
 def create_event(
-        title: str,
-        description: str,
-        event_date: datetime,
-        created_by: int,
-        photo_id: str = None,
-        reminder_text_3days: str = None,
-        reminder_text_1day: str = None,
-        reminder_text_event_day: str = None,
+    title: str,
+    description: str,
+    event_date: datetime,
+    created_by: int,
+    photo_id: str = None,
+    reminder_text_3days: str = None,
+    reminder_text_1day: str = None,
+    reminder_text_event_day: str = None,
 ) -> bool:
     """
     Создание нового мероприятия
