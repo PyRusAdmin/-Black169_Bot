@@ -1,10 +1,10 @@
 from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from keyboards.keyboards import (
     twist_keyboard,
     new_section_keyboard,
-    contact_keyboard,
     contacts_keyboard,
     back_to_main_menu_keyboard,
     privacy_policy_keyboard,
@@ -34,6 +34,7 @@ from services.database import (
 )
 from services.i18n import t
 from services.quickresto_api import print_full_client_info, update_customer_bonus
+from states.user_states import ConsentState
 from utils.logger import logger
 
 router = Router(name=__name__)
@@ -74,7 +75,7 @@ async def back_today_handler(callback: CallbackQuery) -> None:
 
 
 @router.callback_query(F.data == "my_bonuses")
-async def my_bonuses_handler(callback: CallbackQuery) -> None:
+async def my_bonuses_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """
     Обработчик кнопки '💰 Мои бонусы'
     :param callback: CallbackQuery
@@ -87,13 +88,15 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
         try:
             await callback.message.edit_text(
                 text="❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации.",
-                reply_markup=contact_keyboard(),
+                # reply_markup=contact_keyboard(),
             )
-        except Exception:
+            await state.set_state(ConsentState.waiting_to_phone_user)
+        except Exception as e:
             await callback.message.answer(
                 text="❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации.",
-                reply_markup=contact_keyboard(),
+                # reply_markup=contact_keyboard(),
             )
+            logger.exception(e)
         await callback.answer()
         return
 
@@ -160,7 +163,7 @@ async def my_bonuses_handler(callback: CallbackQuery) -> None:
 
 
 @router.callback_query(F.data == "pick_up_gift")
-async def pick_up_gift_handler(callback: CallbackQuery) -> None:
+async def pick_up_gift_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """Обработчик кнопки 'Забрать подарок'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Забрать подарок'")
 
@@ -168,9 +171,17 @@ async def pick_up_gift_handler(callback: CallbackQuery) -> None:
     if user_info is None or user_info.get("phone_telegram") is None:
         text = "❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации."
         try:
-            await callback.message.edit_text(text=text, reply_markup=contact_keyboard())
-        except Exception:
-            await callback.message.answer(text=text, reply_markup=contact_keyboard())
+            await callback.message.edit_text(
+                text=text,
+                # reply_markup=contact_keyboard()
+            )
+            await state.set_state(ConsentState.waiting_to_phone_user)
+        except Exception as e:
+            await callback.message.answer(
+                text=text,
+                # reply_markup=contact_keyboard()
+            )
+            logger.exception(e)
         await callback.answer()
         return
 
@@ -298,7 +309,7 @@ async def gift_wheel_handler(callback: CallbackQuery) -> None:
 
 
 @router.callback_query(F.data == "twist")
-async def twist_handler(callback: CallbackQuery) -> None:
+async def twist_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """Обработчик кнопки 'Крутить'. Шанс выпадения бонуса 5 процентов"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Крутить'")
 
@@ -326,9 +337,17 @@ async def twist_handler(callback: CallbackQuery) -> None:
     if user_info is None:
         text = "❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации."
         try:
-            await callback.message.edit_text(text=text, reply_markup=contact_keyboard())
-        except Exception:
-            await callback.message.answer(text=text, reply_markup=contact_keyboard())
+            await callback.message.edit_text(
+                text=text,
+                # reply_markup=contact_keyboard()
+            )
+            await state.set_state(ConsentState.waiting_to_phone_user)
+        except Exception as e:
+            await callback.message.answer(
+                text=text,
+                # reply_markup=contact_keyboard()
+            )
+            logger.exception(e)
         await callback.answer()
         return
 
@@ -368,10 +387,11 @@ async def twist_handler(callback: CallbackQuery) -> None:
             await callback.message.edit_text(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
-        except Exception:
+        except Exception as e:
             await callback.message.answer(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
+            logger.exception(e)
         return
     if bonus == "Бонус в рублях (1000)":
         text = t("bonus-winning-message")
