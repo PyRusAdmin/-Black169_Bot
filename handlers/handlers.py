@@ -4,10 +4,16 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from config import OWNER_IDS
 from keyboards.keyboards import (
-    consent_keyboard, main_menu_keyboard, main_menu_keyboard_admin, contact_keyboard,
+    consent_keyboard,
+    main_menu_keyboard,
+    main_menu_keyboard_admin,
+    contact_keyboard,
 )
 from services.database import (
-    add_consent, has_consent, is_user_registered, write_to_db_start_person,
+    add_consent,
+    has_consent,
+    is_user_registered,
+    write_to_db_start_person,
 )
 from services.i18n import t
 from states.user_states import ConsentState
@@ -76,9 +82,10 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
         )
         await message.answer(
             text=t("greet-message"),
+            reply_markup=contact_keyboard(),
         )
         await state.set_state(ConsentState.waiting_to_phone_user)
-        # return
+        return
 
     # Пользователь не давал согласие — запрашиваем его
     logger.info(
@@ -92,7 +99,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == "consent_given")
-async def consent_given_handler(callback: CallbackQuery) -> None:
+async def consent_given_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """
     Обработчик кнопки «Даю согласие на обработку персональных данных»
     """
@@ -104,6 +111,8 @@ async def consent_given_handler(callback: CallbackQuery) -> None:
 
     # Добавляем согласие в базу данных
     add_consent(id_telegram)
+
+    await state.set_state(ConsentState.waiting_to_phone_user)
 
     await callback.message.answer(
         text=t("consent-given"), reply_markup=contact_keyboard(), parse_mode="HTML"
@@ -128,7 +137,7 @@ async def consent_declined_handler(callback: CallbackQuery) -> None:
 
 
 @router.callback_query(F.data == "back_to_main_menu")
-async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
+async def back_to_main_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """
     Обработчик кнопки "В главное меню"
     """
@@ -193,6 +202,7 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
         logger.info(
             f"Отправка запроса номера телефона пользователю {callback.from_user.id}"
         )
+        await state.set_state(ConsentState.waiting_to_phone_user)
         try:
             await callback.message.edit_text(
                 text=t("greet-message"),

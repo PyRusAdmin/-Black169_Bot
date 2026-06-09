@@ -3,23 +3,35 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from keyboards.keyboards import (
-    twist_keyboard, new_section_keyboard, contacts_keyboard, back_to_main_menu_keyboard, privacy_policy_keyboard,
+    twist_keyboard,
+    new_section_keyboard,
+    contacts_keyboard,
+    back_to_main_menu_keyboard,
+    privacy_policy_keyboard,
+    contact_keyboard,
 )
 from services.bonus_operations import (
-    random_bonus, generate_promo_code, receives_information_about_user_and_accrues_bonuses,
+    random_bonus,
+    generate_promo_code,
+    receives_information_about_user_and_accrues_bonuses,
     updates_bonuses_in_the_database,
 )
 
 # Формируем сообщение с уровнем клиента
 from services.client_levels import get_level_description, get_next_level_info
 from services.database import (
-    get_user_bonus, has_user_spun_today, write_spin_result, write_to_db_registered_person,
+    get_user_bonus,
+    has_user_spun_today,
+    write_spin_result,
+    write_to_db_registered_person,
 )
 
 # Формируем сообщение с информацией о бонусах пользователя
 from services.database import get_user_burning_bonus_info
 from services.database import (
-    has_user_claimed_gift_bonus, mark_gift_bonus_claimed, get_user_info,
+    has_user_claimed_gift_bonus,
+    mark_gift_bonus_claimed,
+    get_user_info,
 )
 from services.i18n import t
 from services.quickresto_api import print_full_client_info, update_customer_bonus
@@ -77,13 +89,13 @@ async def my_bonuses_handler(callback: CallbackQuery, state: FSMContext) -> None
         try:
             await callback.message.edit_text(
                 text="❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации.",
-                # reply_markup=contact_keyboard(),
+                reply_markup=contact_keyboard(),
             )
             await state.set_state(ConsentState.waiting_to_phone_user)
         except Exception as e:
             await callback.message.answer(
                 text="❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации.",
-                # reply_markup=contact_keyboard(),
+                reply_markup=contact_keyboard(),
             )
             logger.exception(e)
         await callback.answer()
@@ -162,13 +174,13 @@ async def pick_up_gift_handler(callback: CallbackQuery, state: FSMContext) -> No
         try:
             await callback.message.edit_text(
                 text=text,
-                # reply_markup=contact_keyboard()
+                reply_markup=contact_keyboard(),
             )
             await state.set_state(ConsentState.waiting_to_phone_user)
         except Exception as e:
             await callback.message.answer(
                 text=text,
-                # reply_markup=contact_keyboard()
+                reply_markup=contact_keyboard(),
             )
             logger.exception(e)
         await callback.answer()
@@ -328,13 +340,13 @@ async def twist_handler(callback: CallbackQuery, state: FSMContext) -> None:
         try:
             await callback.message.edit_text(
                 text=text,
-                # reply_markup=contact_keyboard()
+                reply_markup=contact_keyboard(),
             )
             await state.set_state(ConsentState.waiting_to_phone_user)
         except Exception as e:
             await callback.message.answer(
                 text=text,
-                # reply_markup=contact_keyboard()
+                reply_markup=contact_keyboard(),
             )
             logger.exception(e)
         await callback.answer()
