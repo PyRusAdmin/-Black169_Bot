@@ -94,7 +94,7 @@ async def message_handler(message: Message, state: FSMContext) -> None:
             return
 
         # Клиент найден в базе QuickResto
-        phone_quickresto = data_customer.get("phone")
+        phone_quickresto = normalize_phone_number(data_customer.get("phone"))
         if phone_telegram == phone_quickresto:
             logger.success(f"Пользователь найден в базе QuickResto: {phone_telegram}")
 
