@@ -4,15 +4,7 @@ from datetime import timedelta
 
 # https://docs.peewee-orm.com/en/latest/index.html
 from peewee import (
-    BooleanField,
-    CharField,
-    DateTimeField,
-    DecimalField,
-    IntegerField,
-    Model,
-    SqliteDatabase,
-    TextField,
-    fn,
+    BooleanField, CharField, DateTimeField, DecimalField, IntegerField, Model, SqliteDatabase, TextField, fn,
 )
 
 from utils.logger import logger

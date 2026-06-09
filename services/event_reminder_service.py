@@ -11,9 +11,7 @@ import asyncio
 
 from config import OWNER_IDS, bot
 from services.database import (
-    get_all_user_ids,
-    get_events_for_reminder,
-    update_reminder_sent,
+    get_all_user_ids, get_events_for_reminder, update_reminder_sent,
 )
 from utils.logger import logger
 
