@@ -1,6 +1,6 @@
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 
 from keyboards.keyboards import (
     twist_keyboard,
@@ -8,7 +8,6 @@ from keyboards.keyboards import (
     contacts_keyboard,
     back_to_main_menu_keyboard,
     privacy_policy_keyboard,
-    contact_keyboard,
 )
 from services.bonus_operations import (
     random_bonus,
@@ -89,13 +88,12 @@ async def my_bonuses_handler(callback: CallbackQuery, state: FSMContext) -> None
         try:
             await callback.message.edit_text(
                 text="❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации.",
-                reply_markup=contact_keyboard(),
             )
             await state.set_state(ConsentState.waiting_to_phone_user)
         except Exception as e:
             await callback.message.answer(
                 text="❌ <b>Пользователь не найден</b>\n\nВы ещё не зарегистрированы в программе лояльности.\n\nОтправьте номер телефона для регистрации.",
-                reply_markup=contact_keyboard(),
+                reply_markup=ReplyKeyboardRemove(),
             )
             logger.exception(e)
         await callback.answer()
@@ -174,13 +172,12 @@ async def pick_up_gift_handler(callback: CallbackQuery, state: FSMContext) -> No
         try:
             await callback.message.edit_text(
                 text=text,
-                reply_markup=contact_keyboard(),
             )
             await state.set_state(ConsentState.waiting_to_phone_user)
         except Exception as e:
             await callback.message.answer(
                 text=text,
-                reply_markup=contact_keyboard(),
+                reply_markup=ReplyKeyboardRemove(),
             )
             logger.exception(e)
         await callback.answer()
@@ -340,13 +337,12 @@ async def twist_handler(callback: CallbackQuery, state: FSMContext) -> None:
         try:
             await callback.message.edit_text(
                 text=text,
-                reply_markup=contact_keyboard(),
             )
             await state.set_state(ConsentState.waiting_to_phone_user)
         except Exception as e:
             await callback.message.answer(
                 text=text,
-                reply_markup=contact_keyboard(),
+                reply_markup=ReplyKeyboardRemove(),
             )
             logger.exception(e)
         await callback.answer()

@@ -1,13 +1,12 @@
 from aiogram import F, Router
 from aiogram.filters import CommandStart
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 from config import OWNER_IDS
 from keyboards.keyboards import (
     consent_keyboard,
     main_menu_keyboard,
     main_menu_keyboard_admin,
-    contact_keyboard,
 )
 from services.database import (
     add_consent,
@@ -82,7 +81,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
         )
         await message.answer(
             text=t("greet-message"),
-            reply_markup=contact_keyboard(),
+            reply_markup=ReplyKeyboardRemove(),
         )
         await state.set_state(ConsentState.waiting_to_phone_user)
         return
@@ -115,7 +114,9 @@ async def consent_given_handler(callback: CallbackQuery, state: FSMContext) -> N
     await state.set_state(ConsentState.waiting_to_phone_user)
 
     await callback.message.answer(
-        text=t("consent-given"), reply_markup=contact_keyboard(), parse_mode="HTML"
+        text=t("consent-given"),
+        reply_markup=ReplyKeyboardRemove(),
+        parse_mode="HTML",
     )
     await callback.answer()
 
@@ -206,12 +207,11 @@ async def back_to_main_menu_handler(callback: CallbackQuery, state: FSMContext) 
         try:
             await callback.message.edit_text(
                 text=t("greet-message"),
-                reply_markup=contact_keyboard(),
             )
         except Exception as e:
             await callback.message.answer(
                 text=t("greet-message"),
-                reply_markup=contact_keyboard(),
+                reply_markup=ReplyKeyboardRemove(),
             )
             logger.exception(e)
         await callback.answer()

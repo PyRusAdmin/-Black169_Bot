@@ -31,7 +31,7 @@ async def message_handler(message: Message, state: FSMContext) -> None:
             raw_phone = message.text.strip()
         else:
             await message.answer(
-                "Пожалуйста, отправьте контакт с помощью кнопки или введите номер телефона текстом."
+                "Пожалуйста, введите ваш номер телефона в формате 79999999999."
             )
             return
 
@@ -39,7 +39,7 @@ async def message_handler(message: Message, state: FSMContext) -> None:
 
         if not is_valid_phone(phone_telegram):
             await message.answer(
-                "Некорректный формат номера телефона. Пожалуйста, введите номер в формате 79999999999 или нажмите кнопку «Отправить номер телефона»."
+                "Некорректный формат номера телефона. Пожалуйста, введите номер в формате 79999999999."
             )
             return
         logger.info(f"Пользователь отправил контакт: {phone_telegram}")
