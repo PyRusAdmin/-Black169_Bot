@@ -167,7 +167,7 @@ async def registered_users_handler(callback: CallbackQuery) -> None:
             buffer.read(), filename="Зарегистрированные_пользователи.xlsx"
         ),
         caption=f"✅ Зарегистрированные пользователи ({len(result)} чел.)\n\n"
-        f"Полная информация из QuickResto",
+                f"Полная информация из QuickResto",
     )
     await callback.answer()
 
@@ -333,7 +333,7 @@ async def broadcast_receive_video(message: Message, state: FSMContext) -> None:
 
 @router.callback_query(F.data == "broadcast_confirm_send")
 async def broadcast_confirm_send_handler(
-    callback: CallbackQuery, state: FSMContext
+        callback: CallbackQuery, state: FSMContext
 ) -> None:
     """
     Подтверждение и отправка рассылки
@@ -697,9 +697,9 @@ async def search_user_phone_number_handler(message: Message, state: FSMContext) 
 
     # Проверяем формат номера (должен быть 79999999999)
     if (
-        not phone_number.isdigit()
-        or len(phone_number) != 11
-        or not phone_number.startswith("7")
+            not phone_number.isdigit()
+            or len(phone_number) != 11
+            or not phone_number.startswith("7")
     ):
         await message.answer(
             text=(
