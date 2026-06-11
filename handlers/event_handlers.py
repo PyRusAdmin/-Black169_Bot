@@ -510,7 +510,8 @@ async def event_delete_direct_handler(callback: CallbackQuery) -> None:
         # Редактируем сообщение, убирая клавиатуру
         try:
             await callback.message.edit_reply_markup(reply_markup=None)
-        except Exception:
+        except Exception as e:
+            logger.exception(e)
             pass
     else:
         await callback.answer("❌ Ошибка при удалении мероприятия", show_alert=True)
@@ -535,9 +536,10 @@ async def events_back_handler(callback: CallbackQuery, state: FSMContext) -> Non
         await callback.message.edit_text(
             text=t("events-menu-title"), reply_markup=events_menu_keyboard()
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text=t("events-menu-title"), reply_markup=events_menu_keyboard()
         )
+        logger.exception(e)
 
     await callback.answer()

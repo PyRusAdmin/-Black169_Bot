@@ -169,4 +169,4 @@ cython_debug/
 /TODO.md
 .vscode
 /data/clients_levels.json
-!/data/events/
+/data/events/

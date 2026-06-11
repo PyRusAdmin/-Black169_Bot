@@ -24,15 +24,15 @@ def get_event_file_path(event_id: str) -> Path:
 
 
 def create_event_json(
-    event_id: str,
-    title: str,
-    description: str,
-    event_date: datetime,
-    created_by: int,
-    photo_id: str | None = None,
-    reminder_text_3days: str | None = None,
-    reminder_text_1day: str | None = None,
-    reminder_text_event_day: str | None = None,
+        event_id: str,
+        title: str,
+        description: str,
+        event_date: datetime,
+        created_by: int,
+        photo_id: str | None = None,
+        reminder_text_3days: str | None = None,
+        reminder_text_1day: str | None = None,
+        reminder_text_event_day: str | None = None,
 ) -> dict[str, Any]:
     """
     Создать мероприятие в JSON файле

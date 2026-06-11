@@ -52,7 +52,7 @@ def generate_promo_code():
 
 
 def receives_information_about_user_and_accrues_bonuses(
-    id_telegram: int, bonus_amount: float
+        id_telegram: int, bonus_amount: float
 ):
     """
     Функция получает информацию о пользователе из базы данных зарегистрированных пользователей, находит пользователя по
