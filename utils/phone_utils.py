@@ -32,21 +32,6 @@ def normalize_phone_number(phone: str) -> str:
     return digits
 
 
-def format_phone_display(phone: str) -> str:
-    """
-    Форматирование номера телефона для отображения.
-
-    Формат: +7 (999) 123-45-67
-
-    :param phone: Нормализованный номер телефона (79999999999)
-    :return: Отформатированный номер для отображения
-    """
-    if not phone or len(phone) != 11 or not phone.startswith("7"):
-        return phone
-
-    return f"+7 ({phone[1:4]}) {phone[4:7]}-{phone[7:9]}-{phone[9:11]}"
-
-
 def is_valid_phone(phone: str) -> bool:
     """
     Проверка валидности номера телефона.

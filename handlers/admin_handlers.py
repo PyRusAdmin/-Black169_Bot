@@ -250,7 +250,8 @@ async def broadcast_cancel_handler(callback: CallbackQuery, state: FSMContext) -
 
     await state.clear()
     await callback.message.answer(
-        text=t("broadcast-cancelled"), reply_markup=back_to_admin_menu_keyboard()
+        text=t("broadcast-cancelled"),
+        reply_markup=back_to_admin_menu_keyboard()
     )
     await callback.answer()
 
@@ -269,7 +270,8 @@ async def broadcast_cancel_command_handler(message: Message, state: FSMContext) 
 
     await state.clear()
     await message.answer(
-        text="❌ Операция отменена.", reply_markup=back_to_admin_menu_keyboard()
+        text="❌ Операция отменена.",
+        reply_markup=back_to_admin_menu_keyboard()
     )
 
 
@@ -284,7 +286,12 @@ async def broadcast_receive_text(message: Message, state: FSMContext) -> None:
     await state.update_data(message_text=text, message_type="text")
 
     await message.answer(
-        text=t("broadcast-confirm-title", text=text, count=len(get_all_user_ids())),
+        text=t("broadcast-confirm-title",
+               text=text,
+               count=len(
+                   get_all_user_ids()
+               )
+               ),
         reply_markup=broadcast_confirm_keyboard(),
     )
 
@@ -384,7 +391,9 @@ async def broadcast_confirm_send_handler(
             if "bot was blocked" in str(e).lower():
                 total_blocked += 1
                 log_marketing_message(
-                    id_telegram=user_id, message_text="Blocked", message_type="blocked"
+                    id_telegram=user_id,
+                    message_text="Blocked",
+                    message_type="blocked"
                 )
             logger.error(f"Не удалось отправить сообщение пользователю {user_id}: {e}")
 
@@ -653,10 +662,11 @@ async def admin_back_handler(callback: CallbackQuery, state: FSMContext) -> None
         await callback.message.edit_text(
             text=t("admin-panel"), reply_markup=admin_menu_keyboard()
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text=t("admin-panel"), reply_markup=admin_menu_keyboard()
         )
+        logger.exception(e)
     await callback.answer()
 
 

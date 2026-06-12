@@ -49,11 +49,12 @@ async def special_offers_handler(callback: CallbackQuery) -> None:
             text="💫 <b>Специальные предложения</b>\n\nВыберите интересующий вас раздел:",
             reply_markup=new_section_keyboard(),
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text="💫 <b>Специальные предложения</b>\n\nВыберите интересующий вас раздел:",
             reply_markup=new_section_keyboard(),
         )
+        logger.exception(e)
     await callback.answer()
 
 
@@ -66,11 +67,12 @@ async def back_today_handler(callback: CallbackQuery) -> None:
             text=t("menu-back-today"),
             reply_markup=back_to_main_menu_keyboard(),
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text=t("menu-back-today"),
             reply_markup=back_to_main_menu_keyboard(),
         )
+        logger.exception(e)
     await callback.answer()
 
 
@@ -79,6 +81,7 @@ async def my_bonuses_handler(callback: CallbackQuery, state: FSMContext) -> None
     """
     Обработчик кнопки '💰 Мои бонусы'
     :param callback: CallbackQuery
+    :param state: Флажок состояния
     """
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Мои бонусы'")
 
@@ -147,7 +150,7 @@ async def my_bonuses_handler(callback: CallbackQuery, state: FSMContext) -> None
             ),
             reply_markup=back_to_main_menu_keyboard(),
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text=(
                 f"<b>Ваш ID: {id_quickresto}</b>\n"
@@ -157,7 +160,7 @@ async def my_bonuses_handler(callback: CallbackQuery, state: FSMContext) -> None
             ),
             reply_markup=back_to_main_menu_keyboard(),
         )
-
+        logger.exception(e)
     await callback.answer()
 
 
@@ -216,10 +219,11 @@ async def pick_up_gift_handler(callback: CallbackQuery, state: FSMContext) -> No
             await callback.message.edit_text(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
-        except Exception:
+        except Exception as e:
             await callback.message.answer(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
+            logger.exception(e)
         await callback.answer()
 
     elif is_claimed:
@@ -232,10 +236,11 @@ async def pick_up_gift_handler(callback: CallbackQuery, state: FSMContext) -> No
             await callback.message.edit_text(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
-        except Exception:
+        except Exception as e:
             await callback.message.answer(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
+            logger.exception(e)
         await callback.answer()
 
 
@@ -286,10 +291,11 @@ async def bonuses_will_soon_burn_out_handler(callback: CallbackQuery) -> None:
         await callback.message.edit_text(
             text=message_text, reply_markup=back_to_main_menu_keyboard()
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text=message_text, reply_markup=back_to_main_menu_keyboard()
         )
+        logger.exception(e)
     await callback.answer()
 
 
@@ -323,10 +329,11 @@ async def twist_handler(callback: CallbackQuery, state: FSMContext) -> None:
             await callback.message.edit_text(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
-        except Exception:
+        except Exception as e:
             await callback.message.answer(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
+            logger.exception(e)
         await callback.answer()
         return
 
@@ -373,10 +380,11 @@ async def twist_handler(callback: CallbackQuery, state: FSMContext) -> None:
             await callback.message.edit_text(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
-        except Exception:
+        except Exception as e:
             await callback.message.answer(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
+            logger.exception(e)
         return
     if bonus == "Кальян на выбор":
         text = t("hookah-winning-message")
@@ -396,10 +404,11 @@ async def twist_handler(callback: CallbackQuery, state: FSMContext) -> None:
             await callback.message.edit_text(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
-        except Exception:
+        except Exception as e:
             await callback.message.answer(
                 text=text, reply_markup=back_to_main_menu_keyboard()
             )
+            logger.exception(e)
         # Добавляем бонус клиенту, если выпал денежный бонус
         update_customer_bonus(
             customer_id=id_quickresto,  # ID клиента в QuickResto
@@ -497,11 +506,12 @@ async def about_institution_handler(callback: CallbackQuery) -> None:
             text=t("menu-about-institution"),
             reply_markup=back_to_main_menu_keyboard(),
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text=t("menu-about-institution"),
             reply_markup=back_to_main_menu_keyboard(),
         )
+        logger.exception(e)
     await callback.answer()
 
 
@@ -520,7 +530,7 @@ async def privacy_policy_handler(callback: CallbackQuery) -> None:
             ),
             reply_markup=privacy_policy_keyboard(),
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text=(
                 "🔒 <b>Политика конфиденциальности и правила системы лояльности</b>\n\n"
@@ -531,4 +541,5 @@ async def privacy_policy_handler(callback: CallbackQuery) -> None:
             ),
             reply_markup=privacy_policy_keyboard(),
         )
+        logger.exception(e)
     await callback.answer()
