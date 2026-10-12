@@ -7,44 +7,22 @@ from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from config import OWNER_IDS, bot
 from keyboards.keyboards import (
-    admin_menu_keyboard,
-    admins_menu_keyboard,
-    back_to_admin_menu_keyboard,
-    back_to_admins_menu_keyboard,
-    broadcast_confirm_keyboard,
-    broadcast_type_keyboard,
+    admin_menu_keyboard, admins_menu_keyboard, back_to_admin_menu_keyboard, back_to_admins_menu_keyboard,
+    broadcast_confirm_keyboard, broadcast_type_keyboard,
 )
 from services.database import (
-    RegisteredPersons,
-    add_admin as db_add_admin,
-    delete_registered_person,
-    delete_start_person,
-    get_all_admins,
-    get_all_user_ids,
-    get_all_winners,
-    get_broadcast_stats,
-    get_client_levels_stats,
-    get_registered_persons,
-    get_registered_persons_count,
-    get_start_persons,
-    get_start_persons_count,
-    is_admin_in_db,
-    is_owner_in_db,
-    log_marketing_message,
-    remove_admin as db_remove_admin,
+    RegisteredPersons, add_admin as db_add_admin, delete_registered_person, delete_start_person, get_all_admins,
+    get_all_user_ids, get_all_winners, get_broadcast_stats, get_client_levels_stats, get_registered_persons,
+    get_registered_persons_count, get_start_persons, get_start_persons_count, is_admin_in_db, is_owner_in_db,
+    log_marketing_message, remove_admin as db_remove_admin,
 )
 from services.excel_service import (
-    write_registered_users_to_excel,
-    write_users_to_excel,
-    write_winners_to_excel,
+    write_registered_users_to_excel, write_users_to_excel, write_winners_to_excel,
 )
 from services.i18n import t
 from services.quickresto_api import delete_customer, print_client_info
 from states.user_states import (
-    AdminManagementState,
-    BroadcastState,
-    DeleteUserState,
-    SearchUserState,
+    AdminManagementState, BroadcastState, DeleteUserState, SearchUserState,
 )
 from utils.logger import logger
 
