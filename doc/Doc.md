@@ -198,6 +198,7 @@
 **Использование:**
 
 ```bash
+
 python migrate_clients_to_db.py
 ```
 
@@ -350,6 +351,7 @@ python migrate_clients_to_db.py
 **Функции:**
 
 ```python
+
 def normalize_phone_number(phone: str) -> str:
     """
     Нормализация номера телефона к формату 79999999999.
@@ -389,6 +391,7 @@ def is_valid_phone(phone: str) -> bool:
 **Функции:**
 
 ```python
+
 def get_level(accumulation: float) -> str:
     """Определение уровня по накопительной сумме."""
 
@@ -728,7 +731,9 @@ for level in levels:
 1. Проверьте количество зарегистрированных пользователей:
    ```python
    from services.database import get_registered_persons_count
+   
    print(get_registered_persons_count())
+   
    ```
 2. Если 0 — пользователи ещё не регистрировались в боте
 3. Попросите пользователей отправить номер телефона через `/start`

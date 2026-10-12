@@ -48,7 +48,9 @@ async def send_birthday_bonus() -> dict:
 
                 full_data = print_full_client_info(id_quickresto)
                 # Обновляем дату начисления бонусов (для отслеживания сгорания)
-                update_bonus_accrual_date(id_telegram=id_telegram, bonus_amount=full_data.get("bonus_ledger"))
+                update_bonus_accrual_date(
+                    id_telegram=id_telegram, bonus_amount=full_data.get("bonus_ledger")
+                )
 
                 # Отправляем поздравление пользователю
                 try:

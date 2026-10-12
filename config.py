@@ -12,34 +12,54 @@ load_dotenv()
 
 """Считываем данные из файла .env для получения токена бота и ID владельца бота"""
 
-TOKEN: str = os.getenv("BOT_TOKEN")  # Токен бота можно получить с помощью https://t.me/BotFather
+TOKEN: str = os.getenv(
+    "BOT_TOKEN"
+)  # Токен бота можно получить с помощью https://t.me/BotFather
 
 # ID владельцев бота (поддерживается несколько администраторов через запятую)
 # Пример: OWNER_ID=535185511,698251317
-OWNER_IDS: list[int] = [int(x.strip()) for x in os.getenv("OWNER_ID", "").split(",") if x.strip()]
+OWNER_IDS: list[int] = [
+    int(x.strip()) for x in os.getenv("OWNER_ID", "").split(",") if x.strip()
+]
 
 """QuickResto API"""
 
-layer_name_quickresto: str = os.getenv("LAYER_NAME_QUICKRESTO")  # Извлекаем значение из .env файла
-username_quickresto: str = os.getenv("USERNAME_QUICKRESTO")  # Извлекаем значение из .env файла
-password_quickresto: str = os.getenv("PASSWORD_QUICKRESTO")  # Извлекаем значение из .env файла
+layer_name_quickresto: str = os.getenv(
+    "LAYER_NAME_QUICKRESTO"
+)  # Извлекаем значение из .env файла
+username_quickresto: str = os.getenv(
+    "USERNAME_QUICKRESTO"
+)  # Извлекаем значение из .env файла
+password_quickresto: str = os.getenv(
+    "PASSWORD_QUICKRESTO"
+)  # Извлекаем значение из .env файла
 
 """Считывание данных для прокси из файла .env"""
 
-USER_PROXY = os.getenv("USER_PROXY")  # Извлекаем значение из .env файла. Username для прокси
-PASSWORD_PROXY = os.getenv("PASSWORD_PROXY")  # Извлекаем значение из .env файла. Password для прокси
-PORT_PROXY = os.getenv("PORT_PROXY")  # Извлекаем значение из .env файла. Port для прокси
+USER_PROXY = os.getenv(
+    "USER_PROXY"
+)  # Извлекаем значение из .env файла. Username для прокси
+PASSWORD_PROXY = os.getenv(
+    "PASSWORD_PROXY"
+)  # Извлекаем значение из .env файла. Password для прокси
+PORT_PROXY = os.getenv(
+    "PORT_PROXY"
+)  # Извлекаем значение из .env файла. Port для прокси
 IP_PROXY = os.getenv("IP_PROXY")  # Извлекаем значение из .env файла. IP для прокси
 
 storage = MemoryStorage()  # Создаем объект MemoryStorage
 dp = Dispatcher(storage=storage)  # Создаем объект Dispatcher
 
 # Используем SOCKS5 прокси через URL
-session = AiohttpSession(proxy=f"socks5://{USER_PROXY}:{PASSWORD_PROXY}@{IP_PROXY}:{PORT_PROXY}")
+session = AiohttpSession(
+    proxy=f"socks5://{USER_PROXY}:{PASSWORD_PROXY}@{IP_PROXY}:{PORT_PROXY}"
+)
 
 bot = Bot(
     token=TOKEN,  # Токен бота
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML),  # Устанавливаем parse_mode для HTML
+    default=DefaultBotProperties(
+        parse_mode=ParseMode.HTML
+    ),  # Устанавливаем parse_mode для HTML
     session=session,  # Устанавливаем сессию для бота и прокси
 )
 

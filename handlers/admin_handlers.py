@@ -7,22 +7,44 @@ from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from config import OWNER_IDS, bot
 from keyboards.keyboards import (
-    admin_menu_keyboard, admins_menu_keyboard, back_to_admin_menu_keyboard, back_to_admins_menu_keyboard,
-    broadcast_confirm_keyboard, broadcast_type_keyboard,
+    admin_menu_keyboard,
+    admins_menu_keyboard,
+    back_to_admin_menu_keyboard,
+    back_to_admins_menu_keyboard,
+    broadcast_confirm_keyboard,
+    broadcast_type_keyboard,
 )
 from services.database import (
-    RegisteredPersons, add_admin as db_add_admin, delete_registered_person, delete_start_person, get_all_admins,
-    get_all_user_ids, get_all_winners, get_broadcast_stats, get_client_levels_stats, get_registered_persons,
-    get_registered_persons_count, get_start_persons, get_start_persons_count, is_admin_in_db, is_owner_in_db,
-    log_marketing_message, remove_admin as db_remove_admin,
+    RegisteredPersons,
+    add_admin as db_add_admin,
+    delete_registered_person,
+    delete_start_person,
+    get_all_admins,
+    get_all_user_ids,
+    get_all_winners,
+    get_broadcast_stats,
+    get_client_levels_stats,
+    get_registered_persons,
+    get_registered_persons_count,
+    get_start_persons,
+    get_start_persons_count,
+    is_admin_in_db,
+    is_owner_in_db,
+    log_marketing_message,
+    remove_admin as db_remove_admin,
 )
 from services.excel_service import (
-    write_registered_users_to_excel, write_users_to_excel, write_winners_to_excel,
+    write_registered_users_to_excel,
+    write_users_to_excel,
+    write_winners_to_excel,
 )
 from services.i18n import t
 from services.quickresto_api import delete_customer, print_client_info
 from states.user_states import (
-    AdminManagementState, BroadcastState, DeleteUserState, SearchUserState,
+    AdminManagementState,
+    BroadcastState,
+    DeleteUserState,
+    SearchUserState,
 )
 from utils.logger import logger
 
@@ -228,7 +250,8 @@ async def broadcast_cancel_handler(callback: CallbackQuery, state: FSMContext) -
 
     await state.clear()
     await callback.message.answer(
-        text=t("broadcast-cancelled"), reply_markup=back_to_admin_menu_keyboard()
+        text=t("broadcast-cancelled"),
+        reply_markup=back_to_admin_menu_keyboard()
     )
     await callback.answer()
 
@@ -247,7 +270,8 @@ async def broadcast_cancel_command_handler(message: Message, state: FSMContext) 
 
     await state.clear()
     await message.answer(
-        text="❌ Операция отменена.", reply_markup=back_to_admin_menu_keyboard()
+        text="❌ Операция отменена.",
+        reply_markup=back_to_admin_menu_keyboard()
     )
 
 
@@ -262,7 +286,12 @@ async def broadcast_receive_text(message: Message, state: FSMContext) -> None:
     await state.update_data(message_text=text, message_type="text")
 
     await message.answer(
-        text=t("broadcast-confirm-title", text=text, count=len(get_all_user_ids())),
+        text=t("broadcast-confirm-title",
+               text=text,
+               count=len(
+                   get_all_user_ids()
+               )
+               ),
         reply_markup=broadcast_confirm_keyboard(),
     )
 
@@ -310,7 +339,9 @@ async def broadcast_receive_video(message: Message, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == "broadcast_confirm_send")
-async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMContext) -> None:
+async def broadcast_confirm_send_handler(
+        callback: CallbackQuery, state: FSMContext
+) -> None:
     """
     Подтверждение и отправка рассылки
     """
@@ -360,7 +391,9 @@ async def broadcast_confirm_send_handler(callback: CallbackQuery, state: FSMCont
             if "bot was blocked" in str(e).lower():
                 total_blocked += 1
                 log_marketing_message(
-                    id_telegram=user_id, message_text="Blocked", message_type="blocked"
+                    id_telegram=user_id,
+                    message_text="Blocked",
+                    message_type="blocked"
                 )
             logger.error(f"Не удалось отправить сообщение пользователю {user_id}: {e}")
 
@@ -577,10 +610,14 @@ async def delete_user_id_handler(message: Message, state: FSMContext) -> None:
     """
     id_user = message.text
 
-    logger.info(f"Администратор {message.from_user.id} ввел ID клиента QuickResto: {id_user}")
+    logger.info(
+        f"Администратор {message.from_user.id} ввел ID клиента QuickResto: {id_user}"
+    )
 
     # Получаем ID пользователя в Telegram по ID QuickResto
-    user = RegisteredPersons.get_or_none(RegisteredPersons.id_quickresto == int(id_user))
+    user = RegisteredPersons.get_or_none(
+        RegisteredPersons.id_quickresto == int(id_user)
+    )
     id_telegram = user.id_telegram if user else None
 
     # Удаляем клиента QuickResto
@@ -625,10 +662,11 @@ async def admin_back_handler(callback: CallbackQuery, state: FSMContext) -> None
         await callback.message.edit_text(
             text=t("admin-panel"), reply_markup=admin_menu_keyboard()
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text=t("admin-panel"), reply_markup=admin_menu_keyboard()
         )
+        logger.exception(e)
     await callback.answer()
 
 

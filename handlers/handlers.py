@@ -1,12 +1,21 @@
 from aiogram import F, Router
 from aiogram.filters import CommandStart
-from aiogram.types import CallbackQuery, Message
-
+from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
+from aiogram.fsm.context import FSMContext
 from config import OWNER_IDS
-from keyboards.keyboards import consent_keyboard, main_menu_keyboard, main_menu_keyboard_admin
-from keyboards.keyboards import contact_keyboard
-from services.database import add_consent, has_consent, is_user_registered, write_to_db_start_person
+from keyboards.keyboards import (
+    consent_keyboard,
+    main_menu_keyboard,
+    main_menu_keyboard_admin,
+)
+from services.database import (
+    add_consent,
+    has_consent,
+    is_user_registered,
+    write_to_db_start_person,
+)
 from services.i18n import t
+from states.user_states import ConsentState
 from utils.logger import logger
 
 router = Router(name=__name__)
@@ -18,7 +27,7 @@ router = Router(name=__name__)
 
 
 @router.message(CommandStart())
-async def command_start_handler(message: Message) -> None:
+async def command_start_handler(message: Message, state: FSMContext) -> None:
     """
     Этот обработчик получает сообщения с командой '/start'
     """
@@ -61,11 +70,20 @@ async def command_start_handler(message: Message) -> None:
             )
             return
 
+        """
+        Отправляем пользователю сообщение, о том, чно ему нужно отправить свой контакт, методом ввода номера 
+        телефона (ввода текста).
+        """
+
         # Пользователь дал согласие, но ещё не зарегистрирован — просим номер телефона
         logger.info(
             f"Отправка запроса номера телефона пользователю {message.from_user.id}"
         )
-        await message.answer(text=t("greet-message"), reply_markup=contact_keyboard())
+        await message.answer(
+            text=t("greet-message"),
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        await state.set_state(ConsentState.waiting_to_phone_user)
         return
 
     # Пользователь не давал согласие — запрашиваем его
@@ -80,7 +98,7 @@ async def command_start_handler(message: Message) -> None:
 
 
 @router.callback_query(F.data == "consent_given")
-async def consent_given_handler(callback: CallbackQuery) -> None:
+async def consent_given_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """
     Обработчик кнопки «Даю согласие на обработку персональных данных»
     """
@@ -93,8 +111,12 @@ async def consent_given_handler(callback: CallbackQuery) -> None:
     # Добавляем согласие в базу данных
     add_consent(id_telegram)
 
+    await state.set_state(ConsentState.waiting_to_phone_user)
+
     await callback.message.answer(
-        text=t("consent-given"), reply_markup=contact_keyboard(), parse_mode="HTML"
+        text=t("consent-given"),
+        reply_markup=ReplyKeyboardRemove(),
+        parse_mode="HTML",
     )
     await callback.answer()
 
@@ -116,7 +138,7 @@ async def consent_declined_handler(callback: CallbackQuery) -> None:
 
 
 @router.callback_query(F.data == "back_to_main_menu")
-async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
+async def back_to_main_menu_handler(callback: CallbackQuery, state: FSMContext) -> None:
     """
     Обработчик кнопки "В главное меню"
     """
@@ -135,11 +157,12 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
                 text=t("main-menu"),
                 reply_markup=main_menu_keyboard_admin(),
             )
-        except Exception:
+        except Exception as e:
             await callback.message.answer(
                 text=t("main-menu"),
                 reply_markup=main_menu_keyboard_admin(),
             )
+            logger.exception(e)
         await callback.answer()
         return
 
@@ -167,11 +190,12 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
                     text=t("main-menu"),
                     reply_markup=main_menu_keyboard(),
                 )
-            except Exception:
+            except Exception as e:
                 await callback.message.answer(
                     text=t("main-menu"),
                     reply_markup=main_menu_keyboard(),
                 )
+                logger.exception(e)
             await callback.answer()
             return
 
@@ -179,16 +203,17 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
         logger.info(
             f"Отправка запроса номера телефона пользователю {callback.from_user.id}"
         )
+        await state.set_state(ConsentState.waiting_to_phone_user)
         try:
             await callback.message.edit_text(
                 text=t("greet-message"),
-                reply_markup=contact_keyboard(),
             )
-        except Exception:
+        except Exception as e:
             await callback.message.answer(
                 text=t("greet-message"),
-                reply_markup=contact_keyboard(),
+                reply_markup=ReplyKeyboardRemove(),
             )
+            logger.exception(e)
         await callback.answer()
         return
 
@@ -202,10 +227,11 @@ async def back_to_main_menu_handler(callback: CallbackQuery) -> None:
             reply_markup=consent_keyboard(),
             parse_mode="HTML",
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text=t("consent-title"),
             reply_markup=consent_keyboard(),
             parse_mode="HTML",
         )
+        logger.exception(e)
     await callback.answer()

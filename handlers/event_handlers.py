@@ -8,11 +8,19 @@ from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_IDS
 from keyboards.keyboards import (
-    admin_menu_keyboard, back_to_events_menu_keyboard, event_action_keyboard, event_confirm_keyboard,
-    events_menu_keyboard
+    admin_menu_keyboard,
+    back_to_events_menu_keyboard,
+    event_action_keyboard,
+    event_confirm_keyboard,
+    events_menu_keyboard,
 )
 from services.database import is_admin_in_db
-from services.events_json import create_event_json, delete_event_json, get_all_events_json, update_event_json
+from services.events_json import (
+    create_event_json,
+    delete_event_json,
+    get_all_events_json,
+    update_event_json,
+)
 from services.i18n import t
 from states.user_states import EventState
 from utils.logger import logger
@@ -502,7 +510,8 @@ async def event_delete_direct_handler(callback: CallbackQuery) -> None:
         # Редактируем сообщение, убирая клавиатуру
         try:
             await callback.message.edit_reply_markup(reply_markup=None)
-        except Exception:
+        except Exception as e:
+            logger.exception(e)
             pass
     else:
         await callback.answer("❌ Ошибка при удалении мероприятия", show_alert=True)
@@ -527,9 +536,10 @@ async def events_back_handler(callback: CallbackQuery, state: FSMContext) -> Non
         await callback.message.edit_text(
             text=t("events-menu-title"), reply_markup=events_menu_keyboard()
         )
-    except Exception:
+    except Exception as e:
         await callback.message.answer(
             text=t("events-menu-title"), reply_markup=events_menu_keyboard()
         )
+        logger.exception(e)
 
     await callback.answer()
