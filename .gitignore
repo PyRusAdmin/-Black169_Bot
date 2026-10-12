@@ -170,3 +170,5 @@ cython_debug/
 .vscode
 /data/clients_levels.json
 /data/events/
+/.gigaide/
+/Текстовый документ.txt
