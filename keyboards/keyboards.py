@@ -267,6 +267,12 @@ def admin_menu_keyboard():
             ],
             [
                 InlineKeyboardButton(
+                    text="Редактировать меню акций",
+                    callback_data="edit_promotions",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
                     text="🏠 В главное меню",
                     callback_data="back_to_main_menu",
                     style="danger",

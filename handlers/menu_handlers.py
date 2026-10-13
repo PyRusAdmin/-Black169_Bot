@@ -1,29 +1,42 @@
+import json
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
 from keyboards.keyboards import (
-    twist_keyboard, new_section_keyboard, contacts_keyboard, back_to_main_menu_keyboard, privacy_policy_keyboard,
+    twist_keyboard,
+    new_section_keyboard,
+    contacts_keyboard,
+    back_to_main_menu_keyboard,
+    privacy_policy_keyboard,
 )
 from services.bonus_operations import (
-    random_bonus, generate_promo_code, receives_information_about_user_and_accrues_bonuses,
+    random_bonus,
+    generate_promo_code,
+    receives_information_about_user_and_accrues_bonuses,
     updates_bonuses_in_the_database,
 )
 
 # Формируем сообщение с уровнем клиента
 from services.client_levels import get_level_description, get_next_level_info
 from services.database import (
-    get_user_bonus, has_user_spun_today, write_spin_result, write_to_db_registered_person,
+    get_user_bonus,
+    has_user_spun_today,
+    write_spin_result,
+    write_to_db_registered_person,
 )
 
 # Формируем сообщение с информацией о бонусах пользователя
 from services.database import get_user_burning_bonus_info
 from services.database import (
-    has_user_claimed_gift_bonus, mark_gift_bonus_claimed, get_user_info,
+    has_user_claimed_gift_bonus,
+    mark_gift_bonus_claimed,
+    get_user_info,
 )
 from services.i18n import t
 from services.quickresto_api import print_full_client_info, update_customer_bonus
-from states.user_states import ConsentState
+from states.user_states import ConsentState, EditUserStateText
 from utils.logger import logger
 
 router = Router(name=__name__)
@@ -423,14 +436,88 @@ async def twist_handler(callback: CallbackQuery, state: FSMContext) -> None:
         return
 
 
+def load_bot_info(messages: str) -> str:
+    """Загрузка текста информации из JSON-файла."""
+    with open(messages, "r", encoding="utf-8") as json_file:
+        data = json.load(json_file)
+    return data
+
+
+def save_bot_info(data: str, file_path: str) -> None:
+    """Сохранение текста информации в JSON-файл."""
+    with open(file_path, "w", encoding="utf-8") as json_file:
+        json.dump(data, json_file, ensure_ascii=False, indent=4)
+
+
 @router.callback_query(F.data == "promotions")
 async def promotions_handler(callback: CallbackQuery) -> None:
     """Обработчик кнопки 'Акции'"""
     logger.info(f"Пользователь {callback.from_user.id} нажал 'Акции'")
+
     await callback.message.answer(
-        text=t("menu-promotions"), reply_markup=back_to_main_menu_keyboard()
+        text=load_bot_info(messages="locales/menu_promotions.json"),
+        reply_markup=back_to_main_menu_keyboard(),
     )
+
     await callback.answer()
+
+
+@router.callback_query(F.data == "edit_promotions")
+async def edit_promotions_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    Обработчик кнопки 'Редактировать Акции'.
+    Проверяет права администратора и переводит в состояние ожидания нового текста.
+
+    :param callback: CallbackQuery от нажатия кнопки
+    :param state: FSM-контекст для управления состоянием
+    :return: None
+    """
+    user_id = callback.from_user.id
+    logger.info(f"Пользователь {user_id} нажал 'Редактировать Акции'")
+    # Запрашиваем новый текст у администратора
+    await callback.message.answer(
+        text=(
+            "✏️ <b>Редактирование раздела 'Акции'</b>\n\n"
+            "Введите новый текст, используя разметку HTML (например, &lt;b&gt;, &lt;i&gt;)."
+        ),
+        reply_markup=back_to_main_menu_keyboard(),
+    )
+    # Устанавливаем FSM состояние ожидания ввода текста акций
+    await state.set_state(EditUserStateText.edit_promotions_handler)
+    # Подтверждаем обработку callback-запроса (убираем индикатор загрузки)
+    await callback.answer()
+
+
+# Обработчик текстовых сообщений (для админа, чтобы обновить информацию)
+@router.message(EditUserStateText.edit_promotions_handler)
+async def update_info(message: Message, state: FSMContext) -> None:
+    """
+    Обработчик сохранения обновлённого текста акций.
+    Сохраняет введённый HTML-текст в JSON и очищает состояние.
+
+    :param message: Входящее текстовое сообщение
+    :param state: FSM-контекст
+    :return: None
+    """
+    user_id = message.from_user.id
+    logger.info(f"Администратор {user_id} отправил текст для обновления акций")
+    # Проверяем наличие текста в сообщении
+    if not message.text:
+        await message.reply("⚠️ Пожалуйста, отправьте текстовое сообщение.")
+        return
+    try:
+        # Сохраняем текст с HTML-разметкой в JSON-файл
+        save_bot_info(message.html_text, file_path="locales/menu_promotions.json")
+        await message.reply(
+            "✅ <b>Информация об акциях успешно обновлена!</b>",
+            reply_markup=back_to_main_menu_keyboard(),
+        )
+        logger.info(f"Информация об акциях успешно обновлена администратором {user_id}")
+    except Exception as e:
+        logger.exception(f"Ошибка при сохранении акций: {e}")
+        await message.reply("❌ Произошла ошибка при сохранении данных.")
+    # Очищаем состояние FSM
+    await state.clear()
 
 
 @router.callback_query(F.data == "events")
